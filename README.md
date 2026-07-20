@@ -13,14 +13,14 @@ A real-time collaborative platform built with the MERN stack. Think Excalidraw m
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
+| Layer    | Technology                                                                                  |
+| -------- | ------------------------------------------------------------------------------------------- |
 | Frontend | React 18, TypeScript, Vite 8, Tailwind CSS 3, Redux Toolkit, TanStack Query, React Router 6 |
-| Backend | Node.js, Express 5, TypeScript, Socket.io 4 |
-| Database | MongoDB (Mongoose 9) |
-| Auth | JWT (access + refresh tokens), bcryptjs, httpOnly cookies |
-| Tooling | npm workspaces, Prettier, Husky, lint-staged, concurrently |
-| DevOps | Docker, Docker Compose, MongoDB 7, Redis 7 |
+| Backend  | Node.js, Express 5, TypeScript, Socket.io 4                                                 |
+| Database | MongoDB (Mongoose 9)                                                                        |
+| Auth     | JWT (access + refresh tokens), bcryptjs, httpOnly cookies                                   |
+| Tooling  | npm workspaces, Prettier, Husky, lint-staged, concurrently                                  |
+| DevOps   | Docker, Docker Compose, MongoDB 7, Redis 7                                                  |
 
 ## Project Structure
 
@@ -76,6 +76,7 @@ npm install
 Create environment files:
 
 **server/.env**
+
 ```
 PORT=5000
 NODE_ENV=development
@@ -87,6 +88,7 @@ CORS_ORIGIN=http://localhost:5173
 ```
 
 **client/.env**
+
 ```
 VITE_API_URL=http://localhost:5000
 ```
@@ -109,25 +111,25 @@ This starts both client (http://localhost:5173) and server (http://localhost:500
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start client and server in development mode |
-| `npm run build` | Build both client and server for production |
-| `npm run lint` | Run Prettier checks across all workspaces |
-| `npm run format` | Auto-format code with Prettier |
+| Command          | Description                                 |
+| ---------------- | ------------------------------------------- |
+| `npm run dev`    | Start client and server in development mode |
+| `npm run build`  | Build both client and server for production |
+| `npm run lint`   | Run Prettier checks across all workspaces   |
+| `npm run format` | Auto-format code with Prettier              |
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/health` | Health check |
-| POST | `/api/auth/register` | Register new user |
-| POST | `/api/auth/login` | Login |
-| POST | `/api/auth/logout` | Logout (clears refresh token) |
-| POST | `/api/auth/refresh-token` | Refresh access token |
-| POST | `/api/auth/forgot-password` | Request password reset |
-| POST | `/api/auth/reset-password` | Reset password with token |
-| GET | `/api/auth/me` | Get current user (requires auth) |
+| Method | Endpoint                    | Description                      |
+| ------ | --------------------------- | -------------------------------- |
+| GET    | `/api/health`               | Health check                     |
+| POST   | `/api/auth/register`        | Register new user                |
+| POST   | `/api/auth/login`           | Login                            |
+| POST   | `/api/auth/logout`          | Logout (clears refresh token)    |
+| POST   | `/api/auth/refresh-token`   | Refresh access token             |
+| POST   | `/api/auth/forgot-password` | Request password reset           |
+| POST   | `/api/auth/reset-password`  | Reset password with token        |
+| GET    | `/api/auth/me`              | Get current user (requires auth) |
 
 ## Roadmap
 

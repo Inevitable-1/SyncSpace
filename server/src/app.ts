@@ -6,6 +6,10 @@ import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import authRoutes from './routes/auth.js';
+import workspaceRoutes from './routes/workspace.js';
+import roomRoutes from './routes/room.js';
+import activityRoutes from './routes/activity.js';
+import notificationRoutes from './routes/notification.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { logger } from './utils/logger.js';
 
@@ -31,6 +35,10 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/workspaces', workspaceRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/activities', activityRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 io.on('connection', (socket) => {
   logger.info(`Client connected: ${socket.id}`);

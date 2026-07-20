@@ -1,30 +1,22 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './components/common/Toast';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import DashboardLayout from './components/layout/DashboardLayout';
+import DashboardHome from './pages/dashboard/DashboardHome';
+import WorkspacesPage from './pages/dashboard/WorkspacesPage';
+import RoomsPage from './pages/dashboard/RoomsPage';
+import SharedWithMePage from './pages/dashboard/SharedWithMePage';
+import ActivityPage from './pages/dashboard/ActivityPage';
+import TrashPage from './pages/dashboard/TrashPage';
+import NotificationsPage from './pages/dashboard/NotificationsPage';
+import SettingsPage from './pages/dashboard/SettingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import type { RootState } from './store';
-
-function Dashboard() {
-  return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <nav className="border-b border-gray-800 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="text-xl font-bold">
-            SyncSpace
-          </Link>
-          <span className="text-gray-400 text-sm">Dashboard</span>
-        </div>
-      </nav>
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold mb-4">Welcome to SyncSpace</h1>
-        <p className="text-gray-400">You are authenticated and can access the dashboard.</p>
-      </div>
-    </div>
-  );
-}
 
 function Landing() {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -64,24 +56,55 @@ function Landing() {
   );
 }
 
+function NotFound() {
+  return (
+    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-6xl font-bold mb-4 text-indigo-500">404</h1>
+        <p className="text-gray-400 text-lg mb-8">Page not found</p>
+        <Link
+          to="/"
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition"
+        >
+          Go Home
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<DashboardHome />} />
+              <Route path="workspaces" element={<WorkspacesPage />} />
+              <Route path="rooms" element={<RoomsPage />} />
+              <Route path="shared" element={<SharedWithMePage />} />
+              <Route path="activity" element={<ActivityPage />} />
+              <Route path="trash" element={<TrashPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
