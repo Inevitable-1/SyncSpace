@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   PlusIcon,
@@ -27,6 +28,7 @@ import type { Workspace } from '../../types';
 
 export default function WorkspacesPage() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { workspaces, isLoading } = useSelector((state: RootState) => state.workspace);
   const { rooms } = useSelector((state: RootState) => state.room);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -155,91 +157,86 @@ export default function WorkspacesPage() {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((ws, i) => (
-            <motion.div
-              key={ws._id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
-              className="card-hover p-5"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center"
-                  style={{ background: ws.color || '#6366f1' }}
-                >
-                  <span className="text-white font-bold">{ws.name.charAt(0).toUpperCase()}</span>
-                </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => handleShare(ws)}
-                    className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-                    style={{ color: 'var(--text-tertiary)' }}
-                    title="Share"
-                  >
-                    <ShareIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(ws)}
-                    className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-                    style={{ color: 'var(--text-tertiary)' }}
-                    title="Edit"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setDeletingWs(ws)}
-                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    title="Delete"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <p className="font-semibold mb-1 truncate" style={{ color: 'var(--text-primary)' }}>
-                {ws.name}
-              </p>
-              {ws.description && (
-                <p className="text-sm mb-3 line-clamp-2" style={{ color: 'var(--text-tertiary)' }}>
-                  {ws.description}
-                </p>
-              )}
-              <div
-                className="flex items-center justify-between pt-3 border-t"
-                style={{ borderColor: 'var(--border-light)' }}
+          {filtered.map((ws, i) => {
+            const roomCount = rooms.filter((r) =>
+              typeof r.workspace === 'object' ? r.workspace._id === ws._id : r.workspace === ws._id,
+            ).length;
+            return (
+              <motion.div
+                key={ws._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="card-hover p-5 cursor-pointer"
+                onClick={() => navigate(`/dashboard/workspaces/${ws._id}`)}
               >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="text-xs flex items-center gap-1"
+                <div className="flex items-start justify-between mb-3">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center"
+                    style={{ background: ws.color || '#6366f1' }}
+                  >
+                    <span className="text-white font-bold">{ws.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleShare(ws)}
+                      className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
+                      style={{ color: 'var(--text-tertiary)' }}
+                      title="Share"
+                    >
+                      <ShareIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleEdit(ws)}
+                      className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
+                      style={{ color: 'var(--text-tertiary)' }}
+                      title="Edit"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingWs(ws)}
+                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                      title="Delete"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <p className="font-semibold mb-1 truncate" style={{ color: 'var(--text-primary)' }}>
+                  {ws.name}
+                </p>
+                {ws.description && (
+                  <p
+                    className="text-sm mb-3 line-clamp-2"
                     style={{ color: 'var(--text-tertiary)' }}
                   >
-                    <UserIcon className="w-3 h-3" />
-                    {ws.owner === user?.id ? 'You' : 'Owner'}
-                  </span>
+                    {ws.description}
+                  </p>
+                )}
+                <div
+                  className="flex items-center justify-between pt-3 border-t"
+                  style={{ borderColor: 'var(--border-light)' }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="text-xs flex items-center gap-1"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      <UserIcon className="w-3 h-3" />
+                      {ws.owner === user?.id ? 'You' : 'Owner'}
+                    </span>
+                    <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      {roomCount} room{roomCount !== 1 ? 's' : ''}
+                    </span>
+                  </div>
                   <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                    {
-                      rooms.filter((r) =>
-                        typeof r.workspace === 'object'
-                          ? r.workspace._id === ws._id
-                          : r.workspace === ws._id,
-                      ).length
-                    }{' '}
-                    room
-                    {rooms.filter((r) =>
-                      typeof r.workspace === 'object'
-                        ? r.workspace._id === ws._id
-                        : r.workspace === ws._id,
-                    ).length !== 1
-                      ? 's'
-                      : ''}
+                    {new Date(ws.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  {new Date(ws.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
 

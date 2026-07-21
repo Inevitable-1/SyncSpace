@@ -15,6 +15,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  isDemo: false,
 };
 
 export const register = createAsyncThunk(
@@ -105,6 +106,7 @@ function loadInitialAuth(): {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  isDemo: boolean;
 } {
   try {
     const stored = localStorage.getItem('auth');
@@ -115,13 +117,14 @@ function loadInitialAuth(): {
           user: parsed.state.user,
           accessToken: parsed.state.accessToken,
           isAuthenticated: true,
+          isDemo: parsed.state.isDemo ?? false,
         };
       }
     }
   } catch {
     localStorage.removeItem('auth');
   }
-  return { user: null, accessToken: null, isAuthenticated: false };
+  return { user: null, accessToken: null, isAuthenticated: false, isDemo: false };
 }
 
 const savedAuth = loadInitialAuth();
@@ -133,6 +136,7 @@ const authSlice = createSlice({
     user: savedAuth.user,
     accessToken: savedAuth.accessToken,
     isAuthenticated: savedAuth.isAuthenticated,
+    isDemo: savedAuth.isDemo,
   },
   reducers: {
     clearError(state) {
@@ -140,6 +144,30 @@ const authSlice = createSlice({
     },
     setUser(state, action: PayloadAction<User>) {
       state.user = action.payload;
+    },
+    demoLogin(state) {
+      state.user = {
+        id: 'demo-user-001',
+        name: 'Alex Johnson',
+        email: 'alex@syncspace.demo',
+        avatar: '',
+        isEmailVerified: true,
+      };
+      state.accessToken = 'demo-token';
+      state.isAuthenticated = true;
+      state.isDemo = true;
+      state.error = null;
+      localStorage.setItem(
+        'auth',
+        JSON.stringify({
+          state: {
+            user: state.user,
+            accessToken: state.accessToken,
+            isAuthenticated: true,
+            isDemo: true,
+          },
+        }),
+      );
     },
   },
   extraReducers: (builder) => {
@@ -153,6 +181,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
+        state.isDemo = false;
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
@@ -167,6 +196,7 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
+        state.isDemo = false;
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -176,6 +206,7 @@ const authSlice = createSlice({
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
+        state.isDemo = false;
       })
       .addCase(fetchMe.pending, (state) => {
         state.isLoading = true;
@@ -216,5 +247,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, setUser } = authSlice.actions;
+export const { clearError, setUser, demoLogin } = authSlice.actions;
 export default authSlice.reducer;

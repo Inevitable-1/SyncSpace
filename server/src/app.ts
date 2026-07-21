@@ -10,8 +10,9 @@ import workspaceRoutes from './routes/workspace.js';
 import roomRoutes from './routes/room.js';
 import activityRoutes from './routes/activity.js';
 import notificationRoutes from './routes/notification.js';
+import whiteboardRoutes from './routes/whiteboard.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { logger } from './utils/logger.js';
+import { initializeSocketHandlers } from './socket/whiteboardHandler.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -39,14 +40,9 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/whiteboards', whiteboardRoutes);
 
-io.on('connection', (socket) => {
-  logger.info(`Client connected: ${socket.id}`);
-
-  socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
-  });
-});
+initializeSocketHandlers(io);
 
 app.use(errorHandler);
 

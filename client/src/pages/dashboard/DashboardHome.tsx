@@ -1,69 +1,118 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  PlusIcon,
-  ArrowRightIcon,
-  FolderIcon,
-  ClockIcon,
-  UserGroupIcon,
-  DocumentTextIcon,
-  FireIcon,
-  ChartBarIcon,
-} from '../../components/Icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PlusIcon, ArrowRightIcon } from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import CreateWorkspaceModal from '../../components/common/CreateWorkspaceModal';
+import CreateRoomModal from '../../components/common/CreateRoomModal';
 import { useToast } from '../../components/common/Toast';
 import { fetchWorkspaces, createWorkspace } from '../../features/workspace/workspaceSlice';
-import { fetchRooms } from '../../features/room/roomSlice';
-import { roomService } from '../../services/roomService';
+import { fetchRooms, createRoom } from '../../features/room/roomSlice';
+import { activityService } from '../../services/activityService';
 import type { RootState, AppDispatch } from '../../store';
+import type { Activity } from '../../types';
 
-const statCards = [
-  {
-    label: 'Total Workspaces',
-    key: 'totalWorkspaces' as const,
-    icon: FolderIcon,
-    color: 'bg-indigo-600',
-    growthKey: 'workspaces' as const,
-  },
-  {
-    label: 'Total Rooms',
-    key: 'totalRooms' as const,
-    icon: ClockIcon,
-    color: 'bg-emerald-600',
-    growthKey: 'rooms' as const,
-  },
-  {
-    label: 'Files Shared',
-    key: 'filesShared' as const,
-    icon: DocumentTextIcon,
-    color: 'bg-amber-600',
-    growthKey: 'activity' as const,
-  },
-  {
-    label: 'Online Members',
-    key: 'onlineMembers' as const,
-    icon: UserGroupIcon,
-    color: 'bg-rose-600',
-    growthKey: 'members' as const,
-  },
-  {
-    label: 'Active Sessions',
-    key: 'activeSessions' as const,
-    icon: FireIcon,
-    color: 'bg-orange-600',
-    growthKey: 'rooms' as const,
-  },
-  {
-    label: 'Recent Activity',
-    key: 'recentActivity' as const,
-    icon: ChartBarIcon,
-    color: 'bg-cyan-600',
-    growthKey: 'activity' as const,
-  },
+const GRADIENTS = [
+  'from-indigo-500 to-purple-600',
+  'from-emerald-500 to-teal-600',
+  'from-amber-500 to-orange-600',
+  'from-rose-500 to-pink-600',
+  'from-cyan-500 to-blue-600',
+  'from-violet-500 to-fuchsia-600',
 ];
+
+const QUICK_CREATE_ITEMS = [
+  { label: 'Workspace', icon: 'folder', color: 'bg-indigo-600', type: 'workspace' },
+  { label: 'Whiteboard', icon: 'paint', color: 'bg-purple-600', type: 'whiteboard' },
+  { label: 'Code Session', icon: 'code', color: 'bg-emerald-600', type: 'code' },
+  { label: 'Room', icon: 'room', color: 'bg-blue-600', type: 'room' },
+] as const;
+
+const ROOM_TYPE_COLORS: Record<string, string> = {
+  whiteboard: 'bg-purple-600',
+  code: 'bg-emerald-600',
+  document: 'bg-blue-600',
+};
+
+function QuickCreateIcon({ icon }: { icon: string }) {
+  switch (icon) {
+    case 'folder':
+      return (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+        </svg>
+      );
+    case 'paint':
+      return (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+      );
+    case 'code':
+      return (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <polyline points="16 18 22 12 16 6" />
+          <polyline points="8 6 2 12 8 18" />
+        </svg>
+      );
+    case 'room':
+      return (
+        <svg
+          className="w-5 h-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <path d="M8 21h8M12 17v4" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+function ActivityIcon({ action }: { action: string }) {
+  if (action.includes('created')) return <div className="w-2 h-2 rounded-full bg-emerald-500" />;
+  if (action.includes('joined')) return <div className="w-2 h-2 rounded-full bg-blue-500" />;
+  if (action.includes('deleted')) return <div className="w-2 h-2 rounded-full bg-red-500" />;
+  if (action.includes('updated') || action.includes('edited'))
+    return <div className="w-2 h-2 rounded-full bg-amber-500" />;
+  return <div className="w-2 h-2 rounded-full bg-gray-400" />;
+}
+
+function timeAgo(date: string): string {
+  const now = Date.now();
+  const diff = now - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(date).toLocaleDateString();
+}
 
 export default function DashboardHome() {
   const dispatch = useDispatch<AppDispatch>();
@@ -72,30 +121,18 @@ export default function DashboardHome() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { workspaces, isLoading: wsLoading } = useSelector((state: RootState) => state.workspace);
   const { rooms, isLoading: roomLoading } = useSelector((state: RootState) => state.room);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [quickJoinCode, setQuickJoinCode] = useState('');
-  const [stats, setStats] = useState({
-    totalWorkspaces: 0,
-    totalRooms: 0,
-    filesShared: 0,
-    onlineMembers: 0,
-    activeSessions: 0,
-    recentActivity: 0,
-    projectsCreated: 0,
-    growth: {
-      workspaces: 0,
-      rooms: 0,
-      members: 0,
-      activity: 0,
-    },
-  });
+
+  const [showCreateWsModal, setShowCreateWsModal] = useState(false);
+  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
+  const [showFAB, setShowFAB] = useState(false);
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
     dispatch(fetchRooms(undefined));
-    roomService
-      .getStats()
-      .then(setStats)
+    activityService
+      .getAll()
+      .then(setActivities)
       .catch(() => {});
   }, [dispatch]);
 
@@ -108,20 +145,35 @@ export default function DashboardHome() {
   }) => {
     dispatch(createWorkspace(data)).then((action) => {
       if (action.meta.requestStatus === 'fulfilled') {
-        showToast('Workspace created successfully!', 'success');
-        setShowCreateModal(false);
-      } else {
-        showToast('Failed to create workspace', 'error');
+        showToast('Workspace created!', 'success');
+        setShowCreateWsModal(false);
       }
     });
   };
 
-  const handleQuickJoin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (quickJoinCode.trim()) {
-      navigate(`/dashboard/rooms?join=${quickJoinCode.trim()}`);
-      setQuickJoinCode('');
-    }
+  const handleCreateRoom = useCallback(
+    (data: { name: string; type: string; workspaceId: string }) => {
+      dispatch(createRoom(data)).then((action) => {
+        if (action.meta.requestStatus === 'fulfilled') {
+          showToast('Room created!', 'success');
+          setShowCreateRoomModal(false);
+          const roomId = (action.payload as { _id: string })?._id;
+          const roomType = data.type;
+          if (roomId && roomType === 'whiteboard') {
+            navigate(`/whiteboard/${roomId}`);
+          } else if (roomId) {
+            navigate(`/dashboard/rooms/${roomId}`);
+          }
+        }
+      });
+    },
+    [dispatch, showToast, navigate],
+  );
+
+  const handleFABAction = (type: string) => {
+    setShowFAB(false);
+    if (type === 'workspace') setShowCreateWsModal(true);
+    else setShowCreateRoomModal(true);
   };
 
   const recentRooms = [...rooms]
@@ -129,133 +181,178 @@ export default function DashboardHome() {
     .slice(0, 5);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-16">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="rounded-2xl p-6 sm:p-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white relative overflow-hidden"
       >
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyem0wLTR2Mkg4VjI4aDI4em0wLTRWMjBIMFYyMGgyOHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
-        <div className="relative">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-            Welcome back, {user?.name?.split(' ')[0] || 'there'}!
-          </h1>
-          <p className="text-white/80 text-sm sm:text-base">
-            Ready to collaborate? Pick up where you left off or start something new.
-          </p>
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+              Welcome back, {user?.name?.split(' ')[0] || 'there'}!
+            </h1>
+            <p className="text-white/80 text-sm sm:text-base">
+              {workspaces.length === 0 && rooms.length === 0
+                ? 'Create your first workspace to get started.'
+                : `You have ${workspaces.length} workspace${workspaces.length !== 1 ? 's' : ''} and ${rooms.length} room${rooms.length !== 1 ? 's' : ''}.`}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateWsModal(true)}
+            className="px-5 py-2.5 bg-white text-indigo-600 rounded-xl font-semibold text-sm hover:bg-white/90 transition-all shadow-lg whitespace-nowrap"
+          >
+            + New Workspace
+          </button>
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {statCards.map((stat, i) => {
-          const statValue: Record<string, number> = {
-            totalWorkspaces: stats.totalWorkspaces,
-            totalRooms: stats.totalRooms,
-            filesShared: stats.filesShared,
-            onlineMembers: stats.onlineMembers,
-            activeSessions: stats.activeSessions,
-            recentActivity: stats.recentActivity,
-          };
-          const value = statValue[stat.key] || 0;
-          const growth = stats.growth[stat.growthKey] || 0;
-          return (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+              My Workspaces
+            </h2>
+            <button
+              onClick={() => navigate('/dashboard/workspaces')}
+              className="text-sm text-indigo-500 hover:text-indigo-400 font-medium flex items-center gap-1"
+            >
+              View all <ArrowRightIcon className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {wsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[1, 2].map((i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          ) : workspaces.length === 0 ? (
             <motion.div
-              key={stat.key}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-              className="card-hover p-5"
+              className="card p-8 text-center"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div
-                  className={`w-11 h-11 rounded-xl ${stat.color} flex items-center justify-center`}
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-indigo-600/10 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-indigo-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
                 >
-                  <stat.icon className="w-5 h-5 text-white" />
-                </div>
-                <div
-                  className={`flex items-center gap-1 text-xs font-medium ${
-                    growth >= 0 ? 'text-emerald-500' : 'text-red-500'
-                  }`}
-                >
-                  <span className="text-[10px]">{growth >= 0 ? '&#9650;' : '&#9660;'}</span>
-                  {Math.abs(growth)}%
-                </div>
+                  <path d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+                </svg>
               </div>
-              <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {value}
+              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                No workspaces yet
               </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                {stat.label}
+              <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
+                Create a workspace to start collaborating with your team.
               </p>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="card p-6"
-        >
-          <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Quick Actions
-          </h2>
-          <div className="space-y-3">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed transition-all hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/10"
-              style={{ borderColor: 'var(--border-color)' }}
-            >
-              <div className="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center">
-                <PlusIcon className="w-5 h-5 text-white" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
-                  Create New Workspace
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  Start a new collaborative space
-                </p>
-              </div>
-            </button>
-            <form onSubmit={handleQuickJoin} className="flex gap-2">
-              <input
-                type="text"
-                value={quickJoinCode}
-                onChange={(e) => setQuickJoinCode(e.target.value)}
-                className="input-base flex-1"
-                placeholder="Paste invite code to quick join..."
-              />
-              <button
-                type="submit"
-                className="btn-primary whitespace-nowrap"
-                disabled={!quickJoinCode.trim()}
-              >
-                Join
+              <button onClick={() => setShowCreateWsModal(true)} className="btn-primary">
+                Create Workspace
               </button>
-            </form>
-          </div>
-        </motion.div>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {workspaces.slice(0, 4).map((ws, i) => {
+                const gradient = GRADIENTS[i % GRADIENTS.length];
+                const wsRooms = rooms.filter(
+                  (r) =>
+                    (typeof r.workspace === 'object' ? r.workspace._id : r.workspace) === ws._id,
+                );
+                return (
+                  <motion.div
+                    key={ws._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    className="card-hover overflow-hidden cursor-pointer group"
+                    onClick={() => navigate(`/dashboard/workspaces/${ws._id}`)}
+                  >
+                    <div className={`h-24 bg-gradient-to-br ${gradient} relative`}>
+                      <div className="absolute inset-0 bg-black/10" />
+                      <div className="absolute top-3 left-3 w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                        <span className="text-white font-bold text-lg">
+                          {ws.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      {ws.isPublic && (
+                        <span className="absolute top-3 right-3 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white/20 text-white backdrop-blur-sm">
+                          Public
+                        </span>
+                      )}
+                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="px-3 py-1 rounded-lg bg-white/20 text-white text-xs font-medium backdrop-blur-sm">
+                          Open →
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p
+                        className="font-semibold text-sm truncate"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        {ws.name}
+                      </p>
+                      {ws.description && (
+                        <p
+                          className="text-xs mt-1 line-clamp-2"
+                          style={{ color: 'var(--text-tertiary)' }}
+                        >
+                          {ws.description}
+                        </p>
+                      )}
+                      <div
+                        className="flex items-center justify-between mt-3 pt-3 border-t"
+                        style={{ borderColor: 'var(--border-light)' }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="flex -space-x-1.5">
+                            {[0, 1, 2].slice(0, Math.min(3, ws.members.length + 1)).map((j) => (
+                              <div
+                                key={j}
+                                className="w-5 h-5 rounded-full border-2 border-[var(--bg-card)] flex items-center justify-center text-[8px] font-bold text-white"
+                                style={{
+                                  background:
+                                    j === 0
+                                      ? ws.color || '#6366f1'
+                                      : ['#818cf8', '#a78bfa', '#c084fc'][j - 1],
+                                }}
+                              >
+                                {j === 0 ? user?.name?.charAt(0) || 'Y' : ''}
+                              </div>
+                            ))}
+                          </div>
+                          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                            {ws.members.length + 1} member{ws.members.length + 1 !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                          {wsRooms.length} room{wsRooms.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="card p-6"
-        >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
               Recent Rooms
             </h2>
             <button
               onClick={() => navigate('/dashboard/rooms')}
-              className="text-sm text-indigo-500 hover:text-indigo-400 font-medium"
+              className="text-sm text-indigo-500 hover:text-indigo-400 font-medium flex items-center gap-1"
             >
-              View all
+              View all <ArrowRightIcon className="w-3.5 h-3.5" />
             </button>
           </div>
+
           {roomLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -263,111 +360,300 @@ export default function DashboardHome() {
               ))}
             </div>
           ) : recentRooms.length === 0 ? (
-            <p className="text-sm py-8 text-center" style={{ color: 'var(--text-tertiary)' }}>
-              No rooms yet.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {recentRooms.map((room) => (
-                <button
-                  key={room._id}
-                  onClick={() => navigate('/dashboard/rooms')}
-                  className="w-full flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-[var(--bg-hover)]"
-                  style={{ background: 'var(--bg-tertiary)' }}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="card p-8 text-center"
+            >
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-purple-600/10 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-purple-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-indigo-600/20 flex items-center justify-center">
-                      <span className="text-indigo-500 text-xs font-bold uppercase">
-                        {room.type.charAt(0)}
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <path d="M8 21h8M12 17v4" />
+                </svg>
+              </div>
+              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                No rooms yet
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                Create a room in a workspace to start collaborating.
+              </p>
+            </motion.div>
+          ) : (
+            <div className="space-y-3">
+              {recentRooms.map((room, i) => {
+                const wsName = typeof room.workspace === 'object' ? room.workspace.name : '';
+                return (
+                  <motion.div
+                    key={room._id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() =>
+                      room.type === 'whiteboard'
+                        ? navigate(`/whiteboard/${room._id}`)
+                        : navigate(`/dashboard/rooms/${room._id}`)
+                    }
+                    className="card-hover p-4 flex items-center gap-4 cursor-pointer"
+                  >
+                    <div
+                      className={`w-11 h-11 rounded-xl ${ROOM_TYPE_COLORS[room.type] || 'bg-gray-600'} flex items-center justify-center flex-shrink-0`}
+                    >
+                      <span className="text-white text-xs font-bold uppercase">
+                        {room.type === 'whiteboard' ? '🎨' : room.type === 'code' ? '</>' : '📝'}
                       </span>
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                        {room.name}
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        {room.type} &middot; {new Date(room.updatedAt).toLocaleDateString()}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p
+                          className="font-medium text-sm truncate"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          {room.name}
+                        </p>
+                        {room.isActive && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-500/10 text-green-600 dark:text-green-400">
+                            Live
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                        {wsName} · {room.type} · {timeAgo(room.updatedAt)}
                       </p>
                     </div>
-                  </div>
-                  <ArrowRightIcon className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
-                </button>
-              ))}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                        {room.participants.length} 👤
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (room.type === 'whiteboard') navigate(`/whiteboard/${room._id}`);
+                          else navigate(`/dashboard/rooms/${room._id}`);
+                        }}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-all"
+                      >
+                        Open
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
-        </motion.div>
+        </div>
+
+        <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="card p-5"
+          >
+            <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              Activity Feed
+            </h3>
+            {activities.length === 0 ? (
+              <p className="text-xs text-center py-6" style={{ color: 'var(--text-tertiary)' }}>
+                No activity yet
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-80 overflow-y-auto scrollbar-thin">
+                {activities.slice(0, 10).map((act, i) => {
+                  const userName =
+                    typeof act.user === 'object' && act.user !== null
+                      ? (act.user as { name: string }).name
+                      : 'Someone';
+                  return (
+                    <motion.div
+                      key={act._id}
+                      initial={{ opacity: 0, x: -5 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      className="flex items-start gap-3 py-2"
+                    >
+                      <div className="mt-1 flex-shrink-0">
+                        <ActivityIcon action={act.action} />
+                      </div>
+                      <div className="min-w-0">
+                        <p
+                          className="text-xs leading-relaxed"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
+                          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                            {userName}
+                          </span>{' '}
+                          {act.action}
+                          {act.entityName && (
+                            <>
+                              {' '}
+                              <span className="font-medium text-indigo-500">{act.entityName}</span>
+                            </>
+                          )}
+                        </p>
+                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                          {timeAgo(act.createdAt)}
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="card p-5"
+          >
+            <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setShowCreateWsModal(true)}
+                className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-dashed transition-all hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/10"
+                style={{ borderColor: 'var(--border-color)' }}
+              >
+                <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
+                  <PlusIcon className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                  Workspace
+                </span>
+              </button>
+              <button
+                onClick={() => setShowCreateRoomModal(true)}
+                className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-dashed transition-all hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10"
+                style={{ borderColor: 'var(--border-color)' }}
+              >
+                <div className="w-9 h-9 rounded-lg bg-purple-600 flex items-center justify-center">
+                  <PlusIcon className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                  Room
+                </span>
+              </button>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="card p-5"
+          >
+            <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+              Workspace Stats
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Workspaces
+                </span>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {workspaces.length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Rooms
+                </span>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {rooms.length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Whiteboards
+                </span>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {rooms.filter((r) => r.type === 'whiteboard').length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Code Sessions
+                </span>
+                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {rooms.filter((r) => r.type === 'code').length}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="card p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Workspaces
-          </h2>
-          <button
-            onClick={() => navigate('/dashboard/workspaces')}
-            className="text-sm text-indigo-500 hover:text-indigo-400 font-medium"
+      <AnimatePresence>
+        {showFAB && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40"
+            onClick={() => setShowFAB(false)}
           >
-            View all
-          </button>
-        </div>
-        {wsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <CardSkeleton key={i} />
-            ))}
-          </div>
-        ) : workspaces.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-sm mb-3" style={{ color: 'var(--text-tertiary)' }}>
-              No workspaces yet
-            </p>
-            <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-              Create Your First Workspace
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {workspaces.slice(0, 6).map((ws) => (
-              <button
-                key={ws._id}
-                onClick={() => navigate('/dashboard/workspaces')}
-                className="card-hover p-4 text-left"
-              >
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                  style={{ background: ws.color || '#6366f1' }}
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
+            <div className="absolute bottom-24 right-6 z-50 space-y-3">
+              {QUICK_CREATE_ITEMS.map((item, i) => (
+                <motion.button
+                  key={item.type}
+                  initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFABAction(item.type);
+                  }}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-lg hover:shadow-xl transition-all"
                 >
-                  <span className="text-white font-bold text-sm">
-                    {ws.name.charAt(0).toUpperCase()}
+                  <div
+                    className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center`}
+                  >
+                    <QuickCreateIcon icon={item.icon} />
+                  </div>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {item.label}
                   </span>
-                </div>
-                <p
-                  className="font-medium text-sm truncate"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  {ws.name}
-                </p>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                  {ws.members.length} member{ws.members.length !== 1 ? 's' : ''} &middot;{' '}
-                  {new Date(ws.updatedAt).toLocaleDateString()}
-                </p>
-              </button>
-            ))}
-          </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
         )}
-      </motion.div>
+      </AnimatePresence>
+
+      <button
+        onClick={() => setShowFAB((v) => !v)}
+        className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-xl hover:bg-indigo-700 hover:shadow-2xl transition-all flex items-center justify-center"
+      >
+        <motion.div animate={{ rotate: showFAB ? 45 : 0 }} transition={{ duration: 0.2 }}>
+          <PlusIcon className="w-6 h-6" />
+        </motion.div>
+      </button>
 
       <CreateWorkspaceModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        isOpen={showCreateWsModal}
+        onClose={() => setShowCreateWsModal(false)}
         onSubmit={handleCreateWorkspace}
         isLoading={wsLoading}
       />
+
+      {showCreateRoomModal && (
+        <CreateRoomModal
+          isOpen={showCreateRoomModal}
+          onClose={() => setShowCreateRoomModal(false)}
+          onSubmit={handleCreateRoom}
+          isLoading={roomLoading}
+        />
+      )}
     </div>
   );
 }

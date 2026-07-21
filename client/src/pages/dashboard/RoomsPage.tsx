@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   PlusIcon,
@@ -37,6 +37,7 @@ export default function RoomsPage() {
   const { workspaces } = useSelector((state: RootState) => state.workspace);
   const { user } = useSelector((state: RootState) => state.auth);
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -189,7 +190,11 @@ export default function RoomsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="card-hover p-5"
+                className="card-hover p-5 cursor-pointer"
+                onClick={() => {
+                  if (room.type === 'whiteboard') navigate(`/whiteboard/${room._id}`);
+                  else navigate(`/dashboard/rooms/${room._id}`);
+                }}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">

@@ -15,6 +15,9 @@ import ActivityPage from './pages/dashboard/ActivityPage';
 import TrashPage from './pages/dashboard/TrashPage';
 import NotificationsPage from './pages/dashboard/NotificationsPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
+import WorkspaceDetailPage from './pages/dashboard/WorkspaceDetailPage';
+import RoomDetailPage from './pages/dashboard/RoomDetailPage';
+import WhiteboardPage from './pages/WhiteboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import type { RootState } from './store';
 
@@ -94,13 +97,23 @@ export default function App() {
             >
               <Route index element={<DashboardHome />} />
               <Route path="workspaces" element={<WorkspacesPage />} />
+              <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
               <Route path="rooms" element={<RoomsPage />} />
+              <Route path="rooms/:id" element={<RoomDetailPage />} />
               <Route path="shared" element={<SharedWithMePage />} />
               <Route path="activity" element={<ActivityPage />} />
               <Route path="trash" element={<TrashPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
+            <Route
+              path="/whiteboard/:roomId"
+              element={
+                <ProtectedRoute>
+                  <WhiteboardPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

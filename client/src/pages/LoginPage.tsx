@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, clearError } from '../features/auth/authSlice';
+import { login, demoLogin, clearError } from '../features/auth/authSlice';
 import type { AppDispatch } from '../store';
 import type { RootState } from '../store';
 import AuthLayout from '../components/AuthLayout';
@@ -27,20 +27,8 @@ export default function LoginPage() {
   }
 
   function handleDemoLogin() {
-    const demoUser = {
-      id: 'demo-user-001',
-      name: 'Alex Johnson',
-      email: 'alex@syncspace.demo',
-      avatar: '',
-      isEmailVerified: true,
-    };
-    localStorage.setItem(
-      'auth',
-      JSON.stringify({
-        state: { user: demoUser, accessToken: 'demo-token', isAuthenticated: true },
-      }),
-    );
-    window.location.href = '/dashboard';
+    dispatch(demoLogin());
+    navigate('/dashboard', { replace: true });
   }
 
   return (

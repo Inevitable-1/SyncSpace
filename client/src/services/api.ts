@@ -25,18 +25,31 @@ function processQueue(error: unknown, token: string | null) {
   failedQueue = [];
 }
 
-api.interceptors.request.use((config) => {
+function getStoredToken(): string | null {
+  try {
+    const stored = localStorage.getItem('auth');
+    if (stored) {
+      return JSON.parse(stored)?.state?.accessToken ?? null;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function setStoredToken(token: string) {
   const stored = localStorage.getItem('auth');
   if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      const token = parsed?.state?.accessToken;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch {
-      // ignore
-    }
+    const parsed = JSON.parse(stored);
+    parsed.state.accessToken = token;
+    localStorage.setItem('auth', JSON.stringify(parsed));
+  }
+}
+
+api.interceptors.request.use((config) => {
+  const token = getStoredToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -47,6 +60,10 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    if (getStoredToken() === 'demo-token') {
       return Promise.reject(error);
     }
 
@@ -72,13 +89,7 @@ api.interceptors.response.use(
       );
 
       const newToken = data.data.accessToken;
-
-      const stored = localStorage.getItem('auth');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        parsed.state.accessToken = newToken;
-        localStorage.setItem('auth', JSON.stringify(parsed));
-      }
+      setStoredToken(newToken);
 
       processQueue(null, newToken);
       originalRequest.headers.Authorization = `Bearer ${newToken}`;

@@ -12,6 +12,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  isDemo: boolean;
 }
 
 export interface LoginRequest {
@@ -141,4 +142,55 @@ export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
+}
+
+export type ToolType =
+  'pointer' | 'hand' | 'pencil' | 'line' | 'rectangle' | 'circle' | 'arrow' | 'text' | 'eraser';
+
+export interface WhiteboardObject {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  points?: number[];
+  text?: string;
+  stroke?: string;
+  fill?: string;
+  strokeWidth?: number;
+  opacity?: number;
+  fontSize?: number;
+  fontFamily?: string;
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
+  closed?: boolean;
+  radiusX?: number;
+  radiusY?: number;
+  tension?: number;
+  lineCap?: string;
+  lineJoin?: string;
+  [key: string]: unknown;
+}
+
+export interface WhiteboardUser {
+  socketId: string;
+  userId: string;
+  userName: string;
+  color: string;
+  x?: number;
+  y?: number;
+}
+
+export interface WhiteboardState {
+  objects: WhiteboardObject[];
+  selectedIds: string[];
+  tool: ToolType;
+  strokeColor: string;
+  fillColor: string;
+  strokeWidth: number;
+  opacity: number;
+  fontSize: number;
+  fontFamily: string;
 }

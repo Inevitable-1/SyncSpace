@@ -5,7 +5,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/syncsp
 
 async function connectDB(): Promise<void> {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 3000 });
     logger.info('Connected to MongoDB');
   } catch (error) {
     logger.warn('MongoDB not available - server running without database');
