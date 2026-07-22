@@ -9,14 +9,10 @@ import {
   restoreWorkspace,
   getTrash,
   searchWorkspaces,
-  addMember,
-  removeMember,
-  getMembers,
   regenerateInviteCode,
   joinByInviteCode,
 } from '../controllers/workspace.js';
 import { authenticate } from '../middleware/auth.js';
-import { errorHandler } from '../middleware/errorHandler.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
@@ -47,12 +43,7 @@ router.get('/:id', asyncHandler(getWorkspace));
 router.put('/:id', updateValidation, asyncHandler(updateWorkspace));
 router.delete('/:id', asyncHandler(deleteWorkspace));
 router.post('/:id/restore', asyncHandler(restoreWorkspace));
-router.get('/:id/members', asyncHandler(getMembers));
-router.post('/:id/members', asyncHandler(addMember));
-router.delete('/:id/members/:memberId', asyncHandler(removeMember));
 router.post('/:id/invite-code', asyncHandler(regenerateInviteCode));
 router.post('/join', asyncHandler(joinByInviteCode));
-
-router.use(errorHandler);
 
 export default router;

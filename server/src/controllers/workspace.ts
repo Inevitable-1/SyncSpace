@@ -129,52 +129,6 @@ export async function searchWorkspaces(req: AuthRequest, res: Response): Promise
   });
 }
 
-export async function addMember(req: AuthRequest, res: Response): Promise<void> {
-  if (!req.user) {
-    throw new AppError('Not authenticated', 401);
-  }
-
-  const workspaceId = req.params.id as string;
-  const { userId: memberUserId } = req.body;
-  const workspace = await workspaceService.addMember(workspaceId, req.user.userId, memberUserId);
-
-  res.json({
-    success: true,
-    message: 'Member added',
-    data: { workspace },
-  });
-}
-
-export async function removeMember(req: AuthRequest, res: Response): Promise<void> {
-  if (!req.user) {
-    throw new AppError('Not authenticated', 401);
-  }
-
-  const workspaceId = req.params.id as string;
-  const memberId = req.params.memberId as string;
-  const workspace = await workspaceService.removeMember(workspaceId, req.user.userId, memberId);
-
-  res.json({
-    success: true,
-    message: 'Member removed',
-    data: { workspace },
-  });
-}
-
-export async function getMembers(req: AuthRequest, res: Response): Promise<void> {
-  if (!req.user) {
-    throw new AppError('Not authenticated', 401);
-  }
-
-  const workspaceId = req.params.id as string;
-  const data = await workspaceService.getMembers(workspaceId);
-
-  res.json({
-    success: true,
-    data,
-  });
-}
-
 export async function regenerateInviteCode(req: AuthRequest, res: Response): Promise<void> {
   if (!req.user) {
     throw new AppError('Not authenticated', 401);

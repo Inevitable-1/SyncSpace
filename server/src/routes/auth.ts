@@ -10,7 +10,6 @@ import {
   resetPassword,
 } from '../controllers/auth.js';
 import { authenticate } from '../middleware/auth.js';
-import { errorHandler } from '../middleware/errorHandler.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
@@ -42,7 +41,5 @@ router.post('/logout', asyncHandler(logout));
 router.post('/forgot-password', forgotPasswordValidation, asyncHandler(forgotPassword));
 router.post('/reset-password', resetPasswordValidation, asyncHandler(resetPassword));
 router.get('/me', authenticate, asyncHandler(getMe));
-
-router.use(errorHandler);
 
 export default router;

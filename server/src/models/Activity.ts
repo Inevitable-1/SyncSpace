@@ -12,6 +12,7 @@ export type ActivityAction =
   | 'joined room'
   | 'left room'
   | 'added member'
+  | 'added member to workspace'
   | 'removed member'
   | 'updated member role'
   | 'suspended member'

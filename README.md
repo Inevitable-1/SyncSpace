@@ -117,31 +117,58 @@ This starts both client (http://localhost:5173) and server (http://localhost:500
 
 ## API Endpoints
 
-| Method | Endpoint                    | Description                      |
-| ------ | --------------------------- | -------------------------------- |
-| GET    | `/api/health`               | Health check                     |
-| POST   | `/api/auth/register`        | Register new user                |
-| POST   | `/api/auth/login`           | Login                            |
-| POST   | `/api/auth/logout`          | Logout (clears refresh token)    |
-| POST   | `/api/auth/refresh-token`   | Refresh access token             |
-| POST   | `/api/auth/forgot-password` | Request password reset           |
-| POST   | `/api/auth/reset-password`  | Reset password with token        |
-| GET    | `/api/auth/me`              | Get current user (requires auth) |
-| GET    | `/api/workspaces`           | List workspaces                  |
-| POST   | `/api/workspaces`           | Create workspace                 |
-| GET    | `/api/workspaces/:id`       | Get workspace by ID              |
-| PUT    | `/api/workspaces/:id`       | Update workspace                 |
-| DELETE | `/api/workspaces/:id`       | Soft-delete workspace            |
-| GET    | `/api/rooms`                | List rooms                       |
-| POST   | `/api/rooms`                | Create room                      |
-| GET    | `/api/rooms/:id`            | Get room by ID                   |
-| PUT    | `/api/rooms/:id`            | Update room                      |
-| DELETE | `/api/rooms/:id`            | Soft-delete room                 |
-| POST   | `/api/rooms/join/:code`     | Join room by invite code         |
-| GET    | `/api/rooms/stats`          | Room statistics                  |
-| GET    | `/api/whiteboard/:roomId`   | Get whiteboard data              |
-| PUT    | `/api/whiteboard/:roomId`   | Save whiteboard data             |
-| GET    | `/api/activities`           | Activity feed                    |
+| Method | Endpoint                              | Description                          |
+| ------ | ------------------------------------- | ------------------------------------ |
+| GET    | `/api/health`                         | Health check                         |
+| POST   | `/api/auth/register`                  | Register new user                    |
+| POST   | `/api/auth/login`                     | Login                                |
+| POST   | `/api/auth/logout`                    | Logout (clears refresh token)        |
+| POST   | `/api/auth/refresh-token`             | Refresh access token                 |
+| POST   | `/api/auth/forgot-password`           | Request password reset               |
+| POST   | `/api/auth/reset-password`            | Reset password with token            |
+| GET    | `/api/auth/me`                        | Get current user (requires auth)     |
+| GET    | `/api/workspaces`                     | List workspaces                      |
+| POST   | `/api/workspaces`                     | Create workspace                     |
+| GET    | `/api/workspaces/:id`                 | Get workspace by ID                  |
+| PUT    | `/api/workspaces/:id`                 | Update workspace                     |
+| DELETE | `/api/workspaces/:id`                 | Soft-delete workspace                |
+| POST   | `/api/workspaces/:id/restore`         | Restore workspace from trash         |
+| GET    | `/api/workspaces/trash`               | Get trashed items                    |
+| GET    | `/api/workspaces/search`              | Search workspaces                    |
+| POST   | `/api/workspaces/:id/invite-code`     | Regenerate invite code               |
+| POST   | `/api/workspaces/join`                | Join workspace by invite code        |
+| GET    | `/api/workspaces/:id/members`         | List workspace members (paginated)   |
+| POST   | `/api/workspaces/:id/members`         | Add member to workspace              |
+| DELETE | `/api/workspaces/:id/members/:mid`    | Remove member from workspace         |
+| PUT    | `/api/workspaces/:id/members/:mid/role`    | Update member role              |
+| POST   | `/api/workspaces/:id/members/:mid/suspend`  | Suspend member                 |
+| POST   | `/api/workspaces/:id/members/:mid/reactivate` | Reactivate member            |
+| GET    | `/api/workspaces/:id/members/stats`   | Member statistics                    |
+| GET    | `/api/workspaces/:id/invites`         | List workspace invites (paginated)   |
+| POST   | `/api/workspaces/:id/invites`         | Send invite to email                 |
+| DELETE | `/api/workspaces/:id/invites/:iid`    | Revoke an invite                     |
+| GET    | `/api/workspaces/:id/invites/stats`   | Invite statistics                    |
+| GET    | `/api/invites/pending`                | Get pending invites for current user |
+| POST   | `/api/invites/:token/accept`          | Accept invite by token               |
+| POST   | `/api/invites/:token/decline`         | Decline invite by token              |
+| GET    | `/api/rooms`                          | List rooms                           |
+| POST   | `/api/rooms`                          | Create room                          |
+| GET    | `/api/rooms/:id`                      | Get room by ID                       |
+| PUT    | `/api/rooms/:id`                      | Update room                          |
+| DELETE | `/api/rooms/:id`                      | Soft-delete room                     |
+| POST   | `/api/rooms/:id/restore`              | Restore room from trash              |
+| POST   | `/api/rooms/join`                     | Join room by invite code             |
+| GET    | `/api/rooms/stats`                    | Room statistics                      |
+| GET    | `/api/whiteboards/:roomId`            | Get whiteboard data                  |
+| PUT    | `/api/whiteboards/:roomId`            | Save whiteboard data                 |
+| GET    | `/api/activities`                     | Activity feed                        |
+| DELETE | `/api/activities/clear`               | Clear all activities                 |
+| DELETE | `/api/activities/:id`                 | Delete single activity               |
+| GET    | `/api/notifications`                  | List notifications                   |
+| PUT    | `/api/notifications/read-all`         | Mark all as read                     |
+| PUT    | `/api/notifications/:id/read`         | Mark notification as read            |
+| DELETE | `/api/notifications/:id`              | Delete notification                  |
+| DELETE | `/api/notifications/clear`            | Clear all notifications              |
 
 ## Day 3 Progress
 
@@ -219,11 +246,89 @@ This starts both client (http://localhost:5173) and server (http://localhost:500
 - Mobile-friendly navigation with slide-out sidebar overlay
 - Adaptive typography and spacing across breakpoints
 
+## Day 4 Progress
+
+### Member Management System
+
+- `Member` model with roles (owner/admin/member) and statuses (active/invited/suspended)
+- `MemberService` with full CRUD: add, remove, update role, suspend, reactivate
+- `MemberRepository` with pagination, search, and filtering
+- Member routes mounted at `/api/workspaces/:id/members` (7 endpoints)
+- Member Redux slice with async thunks for all operations
+- Member service layer on the client for API calls
+
+### Invite System
+
+- `Invite` model with email, token, 7-day expiry, and status tracking
+- `InviteService` with create, accept, decline, revoke, and user-pending lookup
+- `InviteRepository` with paginated queries and email-based lookup
+- Invite routes mounted at `/api/workspaces/:id/invites` (6 workspace-scoped endpoints)
+- Global invite routes at `/api/invites` for pending, accept, and decline (3 endpoints)
+- Invite Redux slice with async thunks
+- Invite service layer on the client
+
+### Enterprise Backend Architecture
+
+- Controller → Service → Repository → Model layered architecture
+- DTOs for data transfer and query parameter typing (`MemberQueryDto`, `InviteQueryDto`)
+- Repository pattern with reusable query builders
+- Pagination support with consistent `PaginatedResponse<T>` type
+- Input validation via `express-validator` on all routes
+- Consistent error handling with `AppError` class
+- Activity logging for all member and invite operations
+- Notification system integration for workspace events
+
+### Reusable UI Components (16+)
+
+- `Button` with variants (primary, secondary, danger, ghost), sizes, loading state
+- `Input` with label, error state, helper text, icon support
+- `Card` with hover effects and click handlers
+- `Badge` with color variants for status and role indicators
+- `Avatar` with initials fallback and size options
+- `Dropdown` with keyboard navigation and search
+- `Tooltip` with positioning options
+- `Tabs` with animated indicator and content panels
+- `Toggle` for boolean settings
+- `Alert` for status messages
+- `ProgressBar` with labels and color variants
+- `Breadcrumbs` for navigation hierarchy
+- `StatCard` for dashboard metrics
+- `SearchInput` with debounce and clear button
+- `Pagination` with page navigation and item count
+- `GlobalSearch` with Cmd+K shortcut and workspace/room search
+- Skeleton components: `CardSkeleton`, `StatCardSkeleton`, `TableSkeleton`
+
+### Dashboard Charts
+
+- `SimpleBarChart` for weekly activity visualization
+- `SimpleDonutChart` for workspace type distribution
+- Dashboard enhanced with both chart types
+
+### Workspace Settings Polish
+
+- Color picker with 20 preset colors
+- Icon picker with 20 emoji options
+- Toggle switch for public/private visibility
+
+### Code Quality Improvements (Day 4 Cleanup)
+
+- Removed stale `.gitkeep` files from populated directories
+- Removed duplicate member endpoints from workspace controller (now using dedicated member controller)
+- Removed redundant per-route `errorHandler` middleware (global handler in `app.ts`)
+- Fixed type mismatches: `any` casts replaced with proper types (`InviteStatus`, `MemberRole`, `MemberStatus`, `IInviteDocument`)
+- Added `'invite'` to `entityType` unions in notification controller and client types
+- Added missing `ActivityAction` type: `'added member to workspace'`
+- Fixed dynamic `crypto` import to use top-level static import
+- Fixed `TrashPage` to use `workspaceService.getTrash()` instead of raw `fetch()`
+- Fixed client `inviteService` URLs for pending/accept/decline endpoints
+- Updated README with complete API endpoint documentation and Day 4 progress
+
 ## Roadmap
 
 - [x] Project setup and authentication (Day 1)
 - [x] Dashboard UI and workspace management (Day 2)
 - [x] Collaborative whiteboard with real-time sync (Day 3)
+- [x] Member/invite management and enterprise architecture (Day 4)
 - [ ] Real-time code editor (Monaco)
 - [ ] Document collaboration
 - [ ] User avatars and profiles
@@ -239,6 +344,7 @@ This starts both client (http://localhost:5173) and server (http://localhost:500
 | Day 1 | Project setup, Authentication, Dashboard Foundation, Docker configuration        | ✅     |
 | Day 2 | Dashboard UI, Workspace Layout, Room Management, Backend CRUD APIs               | ✅     |
 | Day 3 | Collaborative Whiteboard, Dashboard Improvements, Auth Bug Fixes, Real-time Sync | ✅     |
+| Day 4 | Member/Invite System, Enterprise Architecture, 16+ UI Components, Charts         | ✅     |
 
 ## License
 

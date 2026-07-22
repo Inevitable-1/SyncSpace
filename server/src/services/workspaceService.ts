@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { Workspace, type IWorkspaceDocument } from '../models/Workspace.js';
 import { Room } from '../models/Room.js';
@@ -265,7 +266,6 @@ export class WorkspaceService {
       throw new AppError('Only the owner can regenerate invite codes', 403);
     }
 
-    const crypto = await import('crypto');
     workspace.inviteCode = crypto.randomBytes(8).toString('hex');
     await workspace.save();
 
