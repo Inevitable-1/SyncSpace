@@ -1,9 +1,36 @@
 import mongoose, { type Document, Schema } from 'mongoose';
 
+export type ActivityAction =
+  | 'created workspace'
+  | 'updated workspace'
+  | 'deleted workspace'
+  | 'restored workspace'
+  | 'created room'
+  | 'updated room'
+  | 'deleted room'
+  | 'restored room'
+  | 'joined room'
+  | 'left room'
+  | 'added member'
+  | 'removed member'
+  | 'updated member role'
+  | 'suspended member'
+  | 'reactivated member'
+  | 'sent invite'
+  | 'accepted invite'
+  | 'declined invite'
+  | 'revoked invite'
+  | 'regenerated invite code'
+  | 'joined workspace'
+  | 'joined workspace via invite'
+  | 'logged in'
+  | 'logged out'
+  | 'registered';
+
 export interface IActivityDocument extends Document {
   user: mongoose.Types.ObjectId;
-  action: string;
-  entityType: 'workspace' | 'room' | 'member' | 'auth';
+  action: ActivityAction;
+  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth';
   entityId?: mongoose.Types.ObjectId;
   entityName?: string;
   metadata?: Record<string, unknown>;
@@ -24,7 +51,7 @@ const activitySchema = new Schema<IActivityDocument>(
     },
     entityType: {
       type: String,
-      enum: ['workspace', 'room', 'member', 'auth'],
+      enum: ['workspace', 'room', 'member', 'invite', 'auth'],
       required: true,
     },
     entityId: {

@@ -4,14 +4,14 @@ A real-time collaborative platform built with the MERN stack. Think Excalidraw m
 
 ## Tech Stack
 
-| Layer    | Technology                                                                                  |
-| -------- | ------------------------------------------------------------------------------------------- |
-| Frontend | React 18, TypeScript, Vite 8, Tailwind CSS 3, Redux Toolkit, React Konva, React Router 6   |
-| Backend  | Node.js, Express 5, TypeScript, Socket.io 4                                                 |
-| Database | MongoDB (Mongoose 9)                                                                        |
-| Auth     | JWT (access + refresh tokens), bcryptjs, httpOnly cookies                                   |
-| Tooling  | npm workspaces, Prettier, Husky, lint-staged, concurrently                                  |
-| DevOps   | Docker, Docker Compose, MongoDB 7, Redis 7                                                  |
+| Layer    | Technology                                                                               |
+| -------- | ---------------------------------------------------------------------------------------- |
+| Frontend | React 18, TypeScript, Vite 8, Tailwind CSS 3, Redux Toolkit, React Konva, React Router 6 |
+| Backend  | Node.js, Express 5, TypeScript, Socket.io 4                                              |
+| Database | MongoDB (Mongoose 9)                                                                     |
+| Auth     | JWT (access + refresh tokens), bcryptjs, httpOnly cookies                                |
+| Tooling  | npm workspaces, Prettier, Husky, lint-staged, concurrently                               |
+| DevOps   | Docker, Docker Compose, MongoDB 7, Redis 7                                               |
 
 ## Project Structure
 
@@ -234,10 +234,10 @@ This starts both client (http://localhost:5173) and server (http://localhost:500
 
 ## Progress
 
-| Day | Work Completed                                                                  | Status |
-| --- | ------------------------------------------------------------------------------- | ------ |
-| Day 1 | Project setup, Authentication, Dashboard Foundation, Docker configuration       | ✅     |
-| Day 2 | Dashboard UI, Workspace Layout, Room Management, Backend CRUD APIs              | ✅     |
+| Day   | Work Completed                                                                   | Status |
+| ----- | -------------------------------------------------------------------------------- | ------ |
+| Day 1 | Project setup, Authentication, Dashboard Foundation, Docker configuration        | ✅     |
+| Day 2 | Dashboard UI, Workspace Layout, Room Management, Backend CRUD APIs               | ✅     |
 | Day 3 | Collaborative Whiteboard, Dashboard Improvements, Auth Bug Fixes, Real-time Sync | ✅     |
 
 ## License

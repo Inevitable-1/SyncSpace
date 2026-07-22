@@ -6,6 +6,7 @@ import { PlusIcon, LinkIcon } from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import CreateRoomModal from '../../components/common/CreateRoomModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import Toggle from '../../components/common/Toggle';
 import { useToast } from '../../components/common/Toast';
 import {
   fetchWorkspaces,
@@ -18,13 +19,50 @@ import type { RootState, AppDispatch } from '../../store';
 
 type Tab = 'rooms' | 'members' | 'settings';
 
-const GRADIENTS = [
-  'from-indigo-500 to-purple-600',
-  'from-emerald-500 to-teal-600',
-  'from-amber-500 to-orange-600',
-  'from-rose-500 to-pink-600',
-  'from-cyan-500 to-blue-600',
-  'from-violet-500 to-fuchsia-600',
+const WORKSPACE_COLORS = [
+  '#6366f1',
+  '#8b5cf6',
+  '#a855f7',
+  '#d946ef',
+  '#ec4899',
+  '#f43f5e',
+  '#ef4444',
+  '#f97316',
+  '#f59e0b',
+  '#eab308',
+  '#84cc16',
+  '#22c55e',
+  '#10b981',
+  '#14b8a6',
+  '#06b6d4',
+  '#0ea5e9',
+  '#3b82f6',
+  '#6366f1',
+  '#8b5cf6',
+  '#a855f7',
+];
+
+const WORKSPACE_ICONS = [
+  '📁',
+  '🎯',
+  '🚀',
+  '💡',
+  '🎨',
+  '📊',
+  '🔧',
+  '🎮',
+  '📚',
+  '🌟',
+  '💼',
+  '🏠',
+  '🎵',
+  '🔬',
+  '📱',
+  '🌐',
+  '⭐',
+  '🔥',
+  '💎',
+  '🌈',
 ];
 
 const ROOM_TYPE_COLORS: Record<string, string> = {
@@ -48,6 +86,9 @@ export default function WorkspaceDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
+  const [editColor, setEditColor] = useState('#6366f1');
+  const [editIcon, setEditIcon] = useState('');
+  const [editIsPublic, setEditIsPublic] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   const workspace = workspaces.find((w) => w._id === id);
@@ -64,6 +105,9 @@ export default function WorkspaceDetailPage() {
     if (workspace) {
       setEditName(workspace.name);
       setEditDesc(workspace.description);
+      setEditColor(workspace.color);
+      setEditIcon(workspace.icon);
+      setEditIsPublic(workspace.isPublic);
     }
   }, [workspace]);
 
@@ -91,7 +135,16 @@ export default function WorkspaceDetailPage() {
   const handleSaveSettings = () => {
     if (editName.trim()) {
       dispatch(
-        updateWorkspace({ id: id!, data: { name: editName.trim(), description: editDesc.trim() } }),
+        updateWorkspace({
+          id: id!,
+          data: {
+            name: editName.trim(),
+            description: editDesc.trim(),
+            color: editColor,
+            icon: editIcon,
+            isPublic: editIsPublic,
+          },
+        }),
       ).then((action) => {
         if (action.meta.requestStatus === 'fulfilled') {
           showToast('Workspace updated!', 'success');
@@ -127,7 +180,7 @@ export default function WorkspaceDetailPage() {
     );
   }
 
-  const gradient = GRADIENTS[0];
+  const gradient = workspace.color || '#6366f1';
   const tabs: { id: Tab; label: string; count: number }[] = [
     { id: 'rooms', label: 'Rooms', count: wsRooms.length },
     { id: 'members', label: 'Members', count: workspace.members.length + 1 },
@@ -139,7 +192,8 @@ export default function WorkspaceDetailPage() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-2xl bg-gradient-to-br ${gradient} p-6 sm:p-8 text-white relative overflow-hidden`}
+        className="rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${gradient}, ${gradient}dd)` }}
       >
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative flex items-start gap-4">
@@ -361,28 +415,31 @@ export default function WorkspaceDetailPage() {
               </div>
               <div className="w-2 h-2 rounded-full bg-green-500" />
             </div>
-            {workspace.members.map((memberId, i) => (
-              <div key={memberId} className="p-4 flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                  style={{
-                    background: GRADIENTS[(i + 1) % GRADIENTS.length].includes('indigo')
-                      ? '#818cf8'
-                      : '#a78bfa',
-                  }}
-                >
-                  M
+            {workspace.members.map((member, i) => {
+              const memberId = typeof member === 'string' ? member : member.id;
+              const memberName =
+                typeof member === 'string' ? `Member ${memberId.slice(0, 6)}` : member.name;
+              const memberEmail = typeof member === 'string' ? '' : member.email;
+              const colors = ['#818cf8', '#a78bfa', '#c084fc', '#e879f9', '#f472b6', '#fb7185'];
+              return (
+                <div key={memberId} className="p-4 flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                    style={{ background: colors[(i + 1) % colors.length] }}
+                  >
+                    {memberName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {memberName}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      {memberEmail || memberId.slice(0, 8) + '...'}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    Member
-                  </p>
-                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                    {memberId.slice(0, 8)}...
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -423,12 +480,58 @@ export default function WorkspaceDetailPage() {
                     rows={3}
                   />
                 </div>
+                <div>
+                  <label
+                    className="block text-xs font-medium mb-1.5"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Color
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {WORKSPACE_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setEditColor(color)}
+                        className={`w-8 h-8 rounded-lg transition-all ${
+                          editColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''
+                        }`}
+                        style={{ background: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label
+                    className="block text-xs font-medium mb-1.5"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    Icon
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {WORKSPACE_ICONS.map((icon) => (
+                      <button
+                        key={icon}
+                        onClick={() => setEditIcon(icon)}
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all ${
+                          editIcon === icon
+                            ? 'ring-2 ring-offset-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        {icon}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => {
                       setIsEditing(false);
                       setEditName(workspace.name);
                       setEditDesc(workspace.description);
+                      setEditColor(workspace.color);
+                      setEditIcon(workspace.icon);
+                      setEditIsPublic(workspace.isPublic);
                     }}
                     className="btn-secondary text-sm"
                   >
@@ -446,13 +549,21 @@ export default function WorkspaceDetailPage() {
             ) : (
               <>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      {workspace.name}
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                      {workspace.description || 'No description'}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                      style={{ background: workspace.color }}
+                    >
+                      {workspace.icon || workspace.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                        {workspace.name}
+                      </p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                        {workspace.description || 'No description'}
+                      </p>
+                    </div>
                   </div>
                   <button onClick={() => setIsEditing(true)} className="btn-secondary text-sm">
                     Edit
@@ -460,6 +571,25 @@ export default function WorkspaceDetailPage() {
                 </div>
               </>
             )}
+          </div>
+
+          <div className="card p-6 space-y-4">
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Visibility
+            </h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  {editIsPublic ? 'Public' : 'Private'}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                  {editIsPublic
+                    ? 'Anyone can find and join this workspace'
+                    : 'Only invited members can access this workspace'}
+                </p>
+              </div>
+              <Toggle checked={editIsPublic} onChange={setEditIsPublic} disabled={!isEditing} />
+            </div>
           </div>
 
           <div className="card p-6 space-y-4">
@@ -506,33 +636,6 @@ export default function WorkspaceDetailPage() {
             >
               Regenerate Code
             </button>
-          </div>
-
-          <div className="card p-6 space-y-3">
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Visibility
-            </h3>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  {workspace.isPublic ? 'Public' : 'Private'}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                  {workspace.isPublic
-                    ? 'Anyone can find and join this workspace'
-                    : 'Only invited members can access this workspace'}
-                </p>
-              </div>
-              <span
-                className={`text-[10px] px-2 py-1 rounded-full font-medium ${
-                  workspace.isPublic
-                    ? 'bg-green-500/10 text-green-600 dark:text-green-400'
-                    : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
-                }`}
-              >
-                {workspace.isPublic ? 'Public' : 'Private'}
-              </span>
-            </div>
           </div>
 
           <div className="card p-6 border-red-200 dark:border-red-900">

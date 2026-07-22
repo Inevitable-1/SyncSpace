@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { workspaceService } from '../../services/workspaceService';
+import { workspaceService, type WorkspaceQueryParams } from '../../services/workspaceService';
 import type { WorkspaceState, Workspace } from '../../types';
 
 const initialState: WorkspaceState = {
@@ -8,13 +8,14 @@ const initialState: WorkspaceState = {
   trashWorkspaces: [],
   isLoading: false,
   error: null,
+  pagination: null,
 };
 
 export const fetchWorkspaces = createAsyncThunk(
   'workspace/fetchAll',
-  async (_, { rejectWithValue }) => {
+  async (params: WorkspaceQueryParams | undefined, { rejectWithValue }) => {
     try {
-      return await workspaceService.getAll();
+      return await workspaceService.getAll(params);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch workspaces');
@@ -45,7 +46,13 @@ export const updateWorkspace = createAsyncThunk(
       data,
     }: {
       id: string;
-      data: { name?: string; description?: string; color?: string; isPublic?: boolean };
+      data: {
+        name?: string;
+        description?: string;
+        color?: string;
+        icon?: string;
+        isPublic?: boolean;
+      };
     },
     { rejectWithValue },
   ) => {
@@ -139,7 +146,8 @@ const workspaceSlice = createSlice({
       })
       .addCase(fetchWorkspaces.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.workspaces = action.payload;
+        state.workspaces = action.payload.data;
+        state.pagination = action.payload.pagination;
       })
       .addCase(fetchWorkspaces.rejected, (state, action) => {
         state.isLoading = false;

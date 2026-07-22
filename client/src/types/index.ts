@@ -40,6 +40,11 @@ export interface AuthResponse {
   accessToken: string;
 }
 
+export type MemberRole = 'owner' | 'admin' | 'member';
+export type MemberStatus = 'active' | 'invited' | 'suspended';
+export type InviteStatus = 'pending' | 'accepted' | 'declined' | 'expired';
+export type InviteRole = 'admin' | 'member';
+
 export interface Workspace {
   _id: string;
   name: string;
@@ -48,12 +53,49 @@ export interface Workspace {
   icon: string;
   isPublic: boolean;
   inviteCode: string;
-  owner: string;
-  members: string[];
+  owner: User | string;
+  members: (User | string)[];
+  memberCount?: number;
+  roomCount?: number;
   isDeleted: boolean;
   deletedAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Member {
+  _id: string;
+  userId: User;
+  workspaceId: string;
+  role: MemberRole;
+  status: MemberStatus;
+  invitedBy?: User;
+  joinedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Invite {
+  _id: string;
+  email: string;
+  workspaceId: string;
+  invitedBy: User;
+  role: InviteRole;
+  status: InviteStatus;
+  token: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface Room {
@@ -88,6 +130,37 @@ export interface WorkspaceState {
   trashWorkspaces: Workspace[];
   isLoading: boolean;
   error: string | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null;
+}
+
+export interface MemberState {
+  members: Member[];
+  isLoading: boolean;
+  error: string | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null;
+}
+
+export interface InviteState {
+  invites: Invite[];
+  pendingInvites: Invite[];
+  isLoading: boolean;
+  error: string | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null;
 }
 
 export interface RoomState {

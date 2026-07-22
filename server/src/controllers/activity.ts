@@ -1,19 +1,19 @@
 import type { Response } from 'express';
-import { Activity } from '../models/Activity.js';
+import { Activity, type ActivityAction } from '../models/Activity.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 export async function logActivity(data: {
   userId: string;
   action: string;
-  entityType: 'workspace' | 'room' | 'member' | 'auth';
+  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth';
   entityId?: string;
   entityName?: string;
   metadata?: Record<string, unknown>;
 }): Promise<void> {
   await Activity.create({
     user: data.userId,
-    action: data.action,
+    action: data.action as ActivityAction,
     entityType: data.entityType,
     entityId: data.entityId,
     entityName: data.entityName,

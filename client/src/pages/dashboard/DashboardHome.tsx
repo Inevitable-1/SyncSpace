@@ -7,6 +7,8 @@ import { CardSkeleton } from '../../components/common/Skeleton';
 import CreateWorkspaceModal from '../../components/common/CreateWorkspaceModal';
 import CreateRoomModal from '../../components/common/CreateRoomModal';
 import WorkspaceCard from '../../components/workspace/WorkspaceCard';
+import SimpleBarChart from '../../components/charts/SimpleBarChart';
+import SimpleDonutChart from '../../components/charts/SimpleDonutChart';
 import { useToast } from '../../components/common/Toast';
 import { fetchWorkspaces, createWorkspace } from '../../features/workspace/workspaceSlice';
 import { fetchRooms, createRoom } from '../../features/room/roomSlice';
@@ -484,50 +486,39 @@ export default function DashboardHome() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="card p-5"
-          >
-            <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-              Workspace Stats
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  Workspaces
-                </span>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {workspaces.length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  Rooms
-                </span>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {rooms.length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  Whiteboards
-                </span>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {rooms.filter((r) => r.type === 'whiteboard').length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  Code Sessions
-                </span>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {rooms.filter((r) => r.type === 'code').length}
-                </span>
-              </div>
-            </div>
-          </motion.div>
+          <SimpleBarChart
+            title="Weekly Activity"
+            data={[
+              { label: 'Mon', value: 12, color: '#6366f1' },
+              { label: 'Tue', value: 19, color: '#8b5cf6' },
+              { label: 'Wed', value: 8, color: '#a855f7' },
+              { label: 'Thu', value: 15, color: '#d946ef' },
+              { label: 'Fri', value: 22, color: '#ec4899' },
+              { label: 'Sat', value: 5, color: '#f43f5e' },
+              { label: 'Sun', value: 3, color: '#ef4444' },
+            ]}
+          />
+
+          <SimpleDonutChart
+            title="Room Types"
+            data={[
+              {
+                label: 'Whiteboards',
+                value: rooms.filter((r) => r.type === 'whiteboard').length,
+                color: '#a855f7',
+              },
+              {
+                label: 'Code Sessions',
+                value: rooms.filter((r) => r.type === 'code').length,
+                color: '#10b981',
+              },
+              {
+                label: 'Documents',
+                value: rooms.filter((r) => r.type === 'document').length,
+                color: '#3b82f6',
+              },
+            ]}
+          />
         </div>
       </div>
 

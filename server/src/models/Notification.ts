@@ -1,12 +1,16 @@
 import mongoose, { type Document, Schema } from 'mongoose';
 
+export type NotificationType = 'info' | 'success' | 'warning' | 'error';
+export type NotificationEntityType = 'workspace' | 'room' | 'member' | 'invite' | 'activity';
+
 export interface INotificationDocument extends Document {
   user: mongoose.Types.ObjectId;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  entityType?: 'workspace' | 'room' | 'member' | 'activity';
+  type: NotificationType;
+  entityType?: NotificationEntityType;
   entityId?: string;
+  workspaceId?: mongoose.Types.ObjectId;
   isRead: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -39,10 +43,14 @@ const notificationSchema = new Schema<INotificationDocument>(
     },
     entityType: {
       type: String,
-      enum: ['workspace', 'room', 'member', 'activity'],
+      enum: ['workspace', 'room', 'member', 'invite', 'activity'],
     },
     entityId: {
       type: String,
+    },
+    workspaceId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Workspace',
     },
     isRead: {
       type: Boolean,
@@ -56,6 +64,7 @@ const notificationSchema = new Schema<INotificationDocument>(
 
 notificationSchema.index({ user: 1, createdAt: -1 });
 notificationSchema.index({ user: 1, isRead: 1 });
+notificationSchema.index({ workspaceId: 1 });
 
 export const Notification = mongoose.model<INotificationDocument>(
   'Notification',

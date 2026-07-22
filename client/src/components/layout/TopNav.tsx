@@ -10,7 +10,6 @@ import {
   MoonIcon,
   BellIcon,
   ChevronDownIcon,
-  MagnifyingGlassIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   UserIcon,
@@ -22,6 +21,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from '../../features/notification/notificationSlice';
+import GlobalSearch from '../common/GlobalSearch';
 import type { RootState, AppDispatch } from '../../store';
 
 interface TopNavProps {
@@ -39,16 +39,9 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showWorkspaceSwitcher, setShowWorkspaceSwitcher] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<{
-    workspaces: typeof workspaces;
-    rooms: Array<{ _id: string; name: string }>;
-  } | null>(null);
-  const [showSearchResults, setShowSearchResults] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
@@ -63,35 +56,10 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
         setShowNotifications(false);
       if (wsRef.current && !wsRef.current.contains(e.target as Node))
         setShowWorkspaceSwitcher(false);
-      if (searchRef.current && !searchRef.current.contains(e.target as Node))
-        setShowSearchResults(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults(null);
-      return;
-    }
-    const timer = setTimeout(() => {
-      const q = searchQuery.toLowerCase();
-      const matchedWs = workspaces.filter((ws) => ws.name.toLowerCase().includes(q)).slice(0, 5);
-      setSearchResults({ workspaces: matchedWs, rooms: [] });
-      setShowSearchResults(true);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery, workspaces]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/dashboard/workspaces?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-      setShowSearchResults(false);
-    }
-  };
 
   const handleLogout = async () => {
     await dispatch(logout());
@@ -121,65 +89,8 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
           >
             <Bars3Icon className="w-5 h-5" />
           </button>
-          <div className="hidden sm:flex items-center relative" ref={searchRef}>
-            <form onSubmit={handleSearch} className="relative">
-              <MagnifyingGlassIcon
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-                style={{ color: 'var(--text-tertiary)' }}
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => searchQuery.trim() && setShowSearchResults(true)}
-                placeholder="Search workspaces..."
-                className="pl-9 pr-4 py-2 rounded-xl text-sm border-0 outline-none w-64 transition-all focus:w-80"
-                style={{
-                  background: 'var(--bg-tertiary)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-            </form>
-            <AnimatePresence>
-              {showSearchResults && searchResults && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  className="absolute top-full mt-2 w-80 rounded-xl border shadow-xl z-50 overflow-hidden"
-                  style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-                >
-                  {searchResults.workspaces.length === 0 ? (
-                    <div className="p-4 text-center" style={{ color: 'var(--text-tertiary)' }}>
-                      <p className="text-sm">No results found</p>
-                    </div>
-                  ) : (
-                    <div className="p-2">
-                      {searchResults.workspaces.map((ws) => (
-                        <button
-                          key={ws._id}
-                          onClick={() => {
-                            navigate('/dashboard/workspaces');
-                            setSearchQuery('');
-                            setShowSearchResults(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-[var(--bg-hover)]"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          <div
-                            className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                            style={{ background: ws.color || '#6366f1' }}
-                          >
-                            {ws.name.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="truncate font-medium">{ws.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div className="hidden sm:flex items-center">
+            <GlobalSearch />
           </div>
         </div>
 

@@ -65,16 +65,16 @@ Day 3 focused on building the core collaborative whiteboard feature, redesigning
 
 ## Bugs Fixed
 
-| Bug | Resolution |
-|-----|-----------|
-| Auto-logout on demo login | Axios interceptor now detects demo tokens and skips refresh attempts |
-| Dead ConfirmDialog in WorkspaceDetailPage | Replaced with functional confirmation dialog tied to state |
-| Redundant FAB action branching | Simplified to single else branch for non-workspace types |
-| Duplicate `typeColors` in render loops | Extracted to module-level `ROOM_TYPE_COLORS` constant |
-| Duplicate room count computation in WorkspacesPage | Extracted to `roomCount` variable before render |
-| Redundant errorHandler in whiteboard routes | Removed (handled at app level) |
-| Duplicate localStorage reads in api.ts | Extracted into `getStoredToken()` and `setStoredToken()` helpers |
-| Unused server TypeScript interfaces | Removed `IUser`, `IRefreshToken`, `ApiResponse`, `IWorkspace`, `IRoom`, `IActivity`, `INotification`, `IWhiteboardObject`, `IWhiteboard` |
+| Bug                                                | Resolution                                                                                                                               |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Auto-logout on demo login                          | Axios interceptor now detects demo tokens and skips refresh attempts                                                                     |
+| Dead ConfirmDialog in WorkspaceDetailPage          | Replaced with functional confirmation dialog tied to state                                                                               |
+| Redundant FAB action branching                     | Simplified to single else branch for non-workspace types                                                                                 |
+| Duplicate `typeColors` in render loops             | Extracted to module-level `ROOM_TYPE_COLORS` constant                                                                                    |
+| Duplicate room count computation in WorkspacesPage | Extracted to `roomCount` variable before render                                                                                          |
+| Redundant errorHandler in whiteboard routes        | Removed (handled at app level)                                                                                                           |
+| Duplicate localStorage reads in api.ts             | Extracted into `getStoredToken()` and `setStoredToken()` helpers                                                                         |
+| Unused server TypeScript interfaces                | Removed `IUser`, `IRefreshToken`, `ApiResponse`, `IWorkspace`, `IRoom`, `IActivity`, `INotification`, `IWhiteboardObject`, `IWhiteboard` |
 
 ---
 

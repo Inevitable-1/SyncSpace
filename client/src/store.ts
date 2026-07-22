@@ -3,6 +3,8 @@ import authReducer from './features/auth/authSlice';
 import workspaceReducer from './features/workspace/workspaceSlice';
 import roomReducer from './features/room/roomSlice';
 import notificationReducer from './features/notification/notificationSlice';
+import memberReducer from './features/collaboration/memberSlice';
+import inviteReducer from './features/collaboration/inviteSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +12,8 @@ export const store = configureStore({
     workspace: workspaceReducer,
     room: roomReducer,
     notification: notificationReducer,
+    members: memberReducer,
+    invites: inviteReducer,
   },
 });
 

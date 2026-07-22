@@ -1,10 +1,19 @@
 import api from './api';
-import type { Workspace } from '../types';
+import type { Workspace, PaginatedResponse } from '../types';
+
+export interface WorkspaceQueryParams {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+  search?: string;
+  isPublic?: boolean;
+}
 
 export const workspaceService = {
-  async getAll(): Promise<Workspace[]> {
-    const response = await api.get('/workspaces');
-    return response.data.data.workspaces;
+  async getAll(params?: WorkspaceQueryParams): Promise<PaginatedResponse<Workspace>> {
+    const response = await api.get('/workspaces', { params });
+    return response.data.data;
   },
 
   async getOne(id: string): Promise<{ workspace: Workspace; roomCount: number }> {
@@ -51,9 +60,9 @@ export const workspaceService = {
     return response.data.data;
   },
 
-  async search(q: string): Promise<Workspace[]> {
-    const response = await api.get('/workspaces/search', { params: { q } });
-    return response.data.data.workspaces;
+  async search(q: string, params?: WorkspaceQueryParams): Promise<PaginatedResponse<Workspace>> {
+    const response = await api.get('/workspaces/search', { params: { q, ...params } });
+    return response.data.data;
   },
 
   async regenerateInviteCode(id: string): Promise<string> {

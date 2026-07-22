@@ -11,6 +11,8 @@ import roomRoutes from './routes/room.js';
 import activityRoutes from './routes/activity.js';
 import notificationRoutes from './routes/notification.js';
 import whiteboardRoutes from './routes/whiteboard.js';
+import memberRoutes from './routes/member.js';
+import inviteRoutes from './routes/invite.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializeSocketHandlers } from './socket/whiteboardHandler.js';
 
@@ -41,6 +43,8 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/whiteboards', whiteboardRoutes);
+app.use('/api/workspaces/:id/members', memberRoutes);
+app.use('/api/workspaces/:id/invites', inviteRoutes);
 
 initializeSocketHandlers(io);
 
