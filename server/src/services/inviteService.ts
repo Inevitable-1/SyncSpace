@@ -4,7 +4,7 @@ import { workspaceRepository } from '../repositories/workspace.repository.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logActivity } from '../controllers/activity.js';
 import { logNotification } from '../controllers/notification.js';
-import type { InviteRole } from '../models/Invite.js';
+import type { InviteRole, InviteStatus, IInviteDocument } from '../models/Invite.js';
 
 export class InviteService {
   async createInvite(
@@ -69,11 +69,11 @@ export class InviteService {
       limit?: number;
       sort?: string;
       order?: 'asc' | 'desc';
-      status?: string;
+      status?: InviteStatus;
       search?: string;
     },
   ) {
-    return inviteRepository.findByWorkspaceWithPagination(workspaceId, query as any);
+    return inviteRepository.findByWorkspaceWithPagination(workspaceId, query);
   }
 
   async acceptInvite(token: string, userId: string, email: string) {
@@ -192,10 +192,10 @@ export class InviteService {
 
   async getInviteStats(workspaceId: string) {
     const invites = await inviteRepository.findByWorkspace(workspaceId);
-    const pending = invites.filter((i: any) => i.status === 'pending').length;
-    const accepted = invites.filter((i: any) => i.status === 'accepted').length;
-    const declined = invites.filter((i: any) => i.status === 'declined').length;
-    const expired = invites.filter((i: any) => i.status === 'expired').length;
+    const pending = invites.filter((i: IInviteDocument) => i.status === 'pending').length;
+    const accepted = invites.filter((i: IInviteDocument) => i.status === 'accepted').length;
+    const declined = invites.filter((i: IInviteDocument) => i.status === 'declined').length;
+    const expired = invites.filter((i: IInviteDocument) => i.status === 'expired').length;
 
     return {
       total: invites.length,

@@ -5,7 +5,7 @@ import { TrashIcon, ArrowRightIcon } from '../../components/Icons';
 import { useToast } from '../../components/common/Toast';
 import { fetchTrashWorkspaces, restoreWorkspace } from '../../features/workspace/workspaceSlice';
 import { restoreRoom } from '../../features/room/roomSlice';
-import { roomService } from '../../services/roomService';
+import { workspaceService } from '../../services/workspaceService';
 import type { RootState, AppDispatch } from '../../store';
 import type { Room } from '../../types';
 
@@ -18,17 +18,11 @@ export default function TrashPage() {
 
   useEffect(() => {
     dispatch(fetchTrashWorkspaces());
-    roomService
-      .getAll()
-      .then(() => {
-        // Fetch trashed rooms via workspace trash endpoint
-        fetch('/api/workspaces/trash', { credentials: 'include' })
-          .then((r) => r.json())
-          .then((data) => {
-            setTrashRooms(data.data?.rooms || []);
-            setLoadingRooms(false);
-          })
-          .catch(() => setLoadingRooms(false));
+    workspaceService
+      .getTrash()
+      .then((data) => {
+        setTrashRooms((data.rooms as Room[]) || []);
+        setLoadingRooms(false);
       })
       .catch(() => setLoadingRooms(false));
   }, [dispatch]);

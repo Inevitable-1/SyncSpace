@@ -11,7 +11,6 @@ import {
   getStats,
 } from '../controllers/room.js';
 import { authenticate } from '../middleware/auth.js';
-import { errorHandler } from '../middleware/errorHandler.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
@@ -37,7 +36,5 @@ router.put('/:id', updateValidation, asyncHandler(updateRoom));
 router.delete('/:id', asyncHandler(deleteRoom));
 router.post('/:id/restore', asyncHandler(restoreRoom));
 router.post('/join', asyncHandler(joinRoom));
-
-router.use(errorHandler);
 
 export default router;

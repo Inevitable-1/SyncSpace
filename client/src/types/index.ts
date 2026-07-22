@@ -117,7 +117,7 @@ export interface Activity {
   _id: string;
   user: User | string;
   action: string;
-  entityType: 'workspace' | 'room' | 'member' | 'auth';
+  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth';
   entityId?: string;
   entityName?: string;
   metadata?: Record<string, unknown>;
@@ -182,7 +182,7 @@ export interface Notification {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
-  entityType?: 'workspace' | 'room' | 'member' | 'activity';
+  entityType?: 'workspace' | 'room' | 'member' | 'invite' | 'activity';
   entityId?: string;
   isRead: boolean;
   createdAt: string;

@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import type { AuthRequest } from '../middleware/auth.js';
 import { inviteService } from '../services/inviteService.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import type { InviteStatus } from '../models/Invite.js';
 
 export const createInvite = asyncHandler(async (req: AuthRequest, res: Response) => {
   const id = String(req.params.id);
@@ -19,7 +20,7 @@ export const getInvites = asyncHandler(async (req: AuthRequest, res: Response) =
     limit: limit ? parseInt(limit as string) : undefined,
     sort: sort as string,
     order: order as 'asc' | 'desc',
-    status: status as string,
+    status: status as InviteStatus | undefined,
     search: search as string,
   });
 

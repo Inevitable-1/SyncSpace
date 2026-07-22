@@ -2,6 +2,8 @@ import type { Response } from 'express';
 import type { AuthRequest } from '../middleware/auth.js';
 import { memberService } from '../services/memberService.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import type { MemberRole } from '../models/Member.js';
+import type { MemberStatus } from '../models/Member.js';
 
 export const addMember = asyncHandler(async (req: AuthRequest, res: Response) => {
   const id = String(req.params.id);
@@ -26,8 +28,8 @@ export const getMembers = asyncHandler(async (req: AuthRequest, res: Response) =
     limit: limit ? parseInt(limit as string) : undefined,
     sort: sort as string,
     order: order as 'asc' | 'desc',
-    role: role as any,
-    status: status as any,
+    role: role as MemberRole | undefined,
+    status: status as MemberStatus | undefined,
   });
 
   res.json({ success: true, data: members });

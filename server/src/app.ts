@@ -45,6 +45,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/whiteboards', whiteboardRoutes);
 app.use('/api/workspaces/:id/members', memberRoutes);
 app.use('/api/workspaces/:id/invites', inviteRoutes);
+app.use('/api/invites', inviteRoutes);
 
 initializeSocketHandlers(io);
 
