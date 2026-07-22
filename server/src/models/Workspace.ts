@@ -1,4 +1,5 @@
 import mongoose, { type Document, Schema } from 'mongoose';
+import crypto from 'crypto';
 
 export interface IWorkspaceDocument extends Document {
   name: string;
@@ -6,12 +7,17 @@ export interface IWorkspaceDocument extends Document {
   color: string;
   icon: string;
   isPublic: boolean;
+  inviteCode: string;
   owner: mongoose.Types.ObjectId;
   members: mongoose.Types.ObjectId[];
   isDeleted: boolean;
   deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+}
+
+function generateInviteCode(): string {
+  return crypto.randomBytes(8).toString('hex');
 }
 
 const workspaceSchema = new Schema<IWorkspaceDocument>(
@@ -41,6 +47,11 @@ const workspaceSchema = new Schema<IWorkspaceDocument>(
       type: Boolean,
       default: false,
     },
+    inviteCode: {
+      type: String,
+      unique: true,
+      default: generateInviteCode,
+    },
     owner: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -67,5 +78,6 @@ const workspaceSchema = new Schema<IWorkspaceDocument>(
 
 workspaceSchema.index({ owner: 1 });
 workspaceSchema.index({ members: 1 });
+workspaceSchema.index({ inviteCode: 1 }, { unique: true });
 
 export const Workspace = mongoose.model<IWorkspaceDocument>('Workspace', workspaceSchema);

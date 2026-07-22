@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,11 +16,12 @@ import {
   ChevronLeftIcon,
 } from '../Icons';
 import { logout } from '../../features/auth/authSlice';
+import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import type { RootState, AppDispatch } from '../../store';
 
 const mainNavItems = [
   { to: '/dashboard', icon: HomeIcon, label: 'Dashboard' },
-  { to: '/dashboard/workspaces', icon: FolderIcon, label: 'My Workspaces' },
+  { to: '/dashboard/workspaces', icon: FolderIcon, label: 'My Workspaces', showCount: true },
   { to: '/dashboard/rooms', icon: ClockIcon, label: 'Recent Rooms' },
   { to: '/dashboard/shared', icon: UserGroupIcon, label: 'Shared With Me' },
   { to: '/dashboard/activity', icon: ChartBarIcon, label: 'Activity' },
@@ -42,6 +44,11 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { workspaces } = useSelector((state: RootState) => state.workspace);
+
+  useEffect(() => {
+    dispatch(fetchWorkspaces());
+  }, [dispatch]);
 
   const handleLogout = async () => {
     await dispatch(logout());
@@ -52,37 +59,57 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
     to,
     icon: Icon,
     label,
+    showCount,
   }: {
     to: string;
     icon: React.ElementType;
     label: string;
-  }) => (
-    <NavLink to={to} end={to === '/dashboard'} onClick={onClose} className="group relative">
-      {({ isActive }) => (
-        <div
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-            isActive
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
-              : 'hover:bg-[var(--bg-hover)]'
-          }`}
-          style={!isActive ? { color: 'var(--text-secondary)' } : undefined}
-          title={collapsed ? label : undefined}
-        >
-          {isActive && (
-            <motion.div
-              layoutId="sidebar-active"
-              className="absolute inset-0 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/25"
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            />
-          )}
-          <span className="relative z-10 flex items-center gap-3">
-            <Icon className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span>{label}</span>}
-          </span>
-        </div>
-      )}
-    </NavLink>
-  );
+    showCount?: boolean;
+  }) => {
+    const count = showCount ? workspaces.length : 0;
+    return (
+      <NavLink to={to} end={to === '/dashboard'} onClick={onClose} className="group relative">
+        {({ isActive }) => (
+          <div
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+              isActive
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
+                : 'hover:bg-[var(--bg-hover)]'
+            }`}
+            style={!isActive ? { color: 'var(--text-secondary)' } : undefined}
+            title={collapsed ? label : undefined}
+          >
+            {isActive && (
+              <motion.div
+                layoutId="sidebar-active"
+                className="absolute inset-0 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/25"
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              />
+            )}
+            <span className="relative z-10 flex items-center gap-3 w-full">
+              <Icon className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && (
+                <>
+                  <span className="flex-1">{label}</span>
+                  {showCount && count > 0 && (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </>
+              )}
+            </span>
+          </div>
+        )}
+      </NavLink>
+    );
+  };
 
   const sidebarContent = (
     <div className="flex flex-col h-full">

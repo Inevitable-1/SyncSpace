@@ -40,7 +40,13 @@ export const createWorkspace = createAsyncThunk(
 export const updateWorkspace = createAsyncThunk(
   'workspace/update',
   async (
-    { id, data }: { id: string; data: { name?: string; description?: string; color?: string } },
+    {
+      id,
+      data,
+    }: {
+      id: string;
+      data: { name?: string; description?: string; color?: string; isPublic?: boolean };
+    },
     { rejectWithValue },
   ) => {
     try {
@@ -85,6 +91,31 @@ export const restoreWorkspace = createAsyncThunk(
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       return rejectWithValue(error.response?.data?.message || 'Failed to restore workspace');
+    }
+  },
+);
+
+export const regenerateInviteCode = createAsyncThunk(
+  'workspace/regenerateInviteCode',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const inviteCode = await workspaceService.regenerateInviteCode(id);
+      return { id, inviteCode };
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(error.response?.data?.message || 'Failed to regenerate invite code');
+    }
+  },
+);
+
+export const joinByInviteCode = createAsyncThunk(
+  'workspace/joinByInviteCode',
+  async (inviteCode: string, { rejectWithValue }) => {
+    try {
+      return await workspaceService.joinByInviteCode(inviteCode);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(error.response?.data?.message || 'Failed to join workspace');
     }
   },
 );
@@ -134,6 +165,17 @@ const workspaceSlice = createSlice({
         const restored = action.payload as Workspace;
         state.trashWorkspaces = state.trashWorkspaces.filter((w) => w._id !== restored._id);
         state.workspaces.unshift(restored);
+      })
+      .addCase(regenerateInviteCode.fulfilled, (state, action) => {
+        const { id, inviteCode } = action.payload;
+        const idx = state.workspaces.findIndex((w) => w._id === id);
+        if (idx !== -1) state.workspaces[idx].inviteCode = inviteCode;
+        if (state.currentWorkspace?._id === id) state.currentWorkspace.inviteCode = inviteCode;
+      })
+      .addCase(joinByInviteCode.fulfilled, (state, action) => {
+        const workspace = action.payload as Workspace;
+        const exists = state.workspaces.some((w) => w._id === workspace._id);
+        if (!exists) state.workspaces.unshift(workspace);
       });
   },
 });

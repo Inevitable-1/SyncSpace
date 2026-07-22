@@ -1,20 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  PlusIcon,
-  MagnifyingGlassIcon,
-  PencilIcon,
-  TrashIcon,
-  ShareIcon,
-  FolderIcon,
-  UserIcon,
-} from '../../components/Icons';
+import { PlusIcon, MagnifyingGlassIcon, FolderIcon } from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
 import CreateWorkspaceModal from '../../components/common/CreateWorkspaceModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import WorkspaceCard from '../../components/workspace/WorkspaceCard';
 import { useToast } from '../../components/common/Toast';
 import {
   fetchWorkspaces,
@@ -28,10 +20,8 @@ import type { Workspace } from '../../types';
 
 export default function WorkspacesPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-  const { workspaces, isLoading } = useSelector((state: RootState) => state.workspace);
+  const { workspaces, isLoading, error } = useSelector((state: RootState) => state.workspace);
   const { rooms } = useSelector((state: RootState) => state.room);
-  const { user } = useSelector((state: RootState) => state.auth);
   const { showToast } = useToast();
   const [search, setSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -39,11 +29,18 @@ export default function WorkspacesPage() {
   const [deletingWs, setDeletingWs] = useState<Workspace | null>(null);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
+  const [editIsPublic, setEditIsPublic] = useState(false);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
     dispatch(fetchRooms(undefined));
   }, [dispatch]);
+
+  useEffect(() => {
+    if (error) {
+      showToast(error, 'error');
+    }
+  }, [error, showToast]);
 
   const filtered = workspaces.filter((ws) => ws.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -56,8 +53,15 @@ export default function WorkspacesPage() {
   }) => {
     dispatch(createWorkspace(data)).then((action) => {
       if (action.meta.requestStatus === 'fulfilled') {
-        showToast('Workspace created!', 'success');
+        showToast('Workspace created successfully!', 'success');
         setShowCreateModal(false);
+      } else if (action.meta.requestStatus === 'rejected') {
+        const msg = action.payload as string;
+        if (msg.includes('already') || msg.includes('duplicate')) {
+          showToast('A workspace with this name already exists', 'error');
+        } else {
+          showToast(msg || 'Failed to create workspace', 'error');
+        }
       }
     });
   };
@@ -66,6 +70,7 @@ export default function WorkspacesPage() {
     setEditingWs(ws);
     setEditName(ws.name);
     setEditDesc(ws.description);
+    setEditIsPublic(ws.isPublic);
   };
 
   const handleUpdate = (e: React.FormEvent) => {
@@ -74,12 +79,14 @@ export default function WorkspacesPage() {
       dispatch(
         updateWorkspace({
           id: editingWs._id,
-          data: { name: editName.trim(), description: editDesc.trim() },
+          data: { name: editName.trim(), description: editDesc.trim(), isPublic: editIsPublic },
         }),
       ).then((action) => {
         if (action.meta.requestStatus === 'fulfilled') {
-          showToast('Workspace updated!', 'success');
+          showToast('Workspace updated successfully!', 'success');
           setEditingWs(null);
+        } else {
+          showToast((action.payload as string) || 'Failed to update workspace', 'error');
         }
       });
     }
@@ -91,14 +98,16 @@ export default function WorkspacesPage() {
         if (action.meta.requestStatus === 'fulfilled') {
           showToast('Workspace deleted', 'info');
           setDeletingWs(null);
+        } else {
+          showToast((action.payload as string) || 'Failed to delete workspace', 'error');
         }
       });
     }
   };
 
   const handleShare = (ws: Workspace) => {
-    navigator.clipboard.writeText(ws._id);
-    showToast('Workspace ID copied to clipboard', 'success');
+    navigator.clipboard.writeText(ws.inviteCode || ws._id);
+    showToast('Invite code copied to clipboard!', 'success');
   };
 
   return (
@@ -143,9 +152,11 @@ export default function WorkspacesPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<FolderIcon className="w-8 h-8" style={{ color: 'var(--text-tertiary)' }} />}
-          title={search ? 'No matches' : 'No workspaces yet'}
+          title={search ? 'No matches found' : 'No workspaces yet'}
           description={
-            search ? 'Try a different search term.' : 'Create your first workspace to get started.'
+            search
+              ? 'Try a different search term.'
+              : 'Create your first workspace to start collaborating with your team.'
           }
           action={
             !search ? (
@@ -162,79 +173,15 @@ export default function WorkspacesPage() {
               typeof r.workspace === 'object' ? r.workspace._id === ws._id : r.workspace === ws._id,
             ).length;
             return (
-              <motion.div
+              <WorkspaceCard
                 key={ws._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-                className="card-hover p-5 cursor-pointer"
-                onClick={() => navigate(`/dashboard/workspaces/${ws._id}`)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center"
-                    style={{ background: ws.color || '#6366f1' }}
-                  >
-                    <span className="text-white font-bold">{ws.name.charAt(0).toUpperCase()}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleShare(ws)}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-                      style={{ color: 'var(--text-tertiary)' }}
-                      title="Share"
-                    >
-                      <ShareIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(ws)}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-                      style={{ color: 'var(--text-tertiary)' }}
-                      title="Edit"
-                    >
-                      <PencilIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setDeletingWs(ws)}
-                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      title="Delete"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                <p className="font-semibold mb-1 truncate" style={{ color: 'var(--text-primary)' }}>
-                  {ws.name}
-                </p>
-                {ws.description && (
-                  <p
-                    className="text-sm mb-3 line-clamp-2"
-                    style={{ color: 'var(--text-tertiary)' }}
-                  >
-                    {ws.description}
-                  </p>
-                )}
-                <div
-                  className="flex items-center justify-between pt-3 border-t"
-                  style={{ borderColor: 'var(--border-light)' }}
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="text-xs flex items-center gap-1"
-                      style={{ color: 'var(--text-tertiary)' }}
-                    >
-                      <UserIcon className="w-3 h-3" />
-                      {ws.owner === user?.id ? 'You' : 'Owner'}
-                    </span>
-                    <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      {roomCount} room{roomCount !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                    {new Date(ws.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-              </motion.div>
+                workspace={ws}
+                index={i}
+                roomCount={roomCount}
+                onEdit={handleEdit}
+                onDelete={setDeletingWs}
+                onShare={handleShare}
+              />
             );
           })}
         </div>
@@ -293,12 +240,54 @@ export default function WorkspacesPage() {
                   rows={3}
                 />
               </div>
+              <div>
+                <label
+                  className="block text-sm font-medium mb-1.5"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Visibility
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditIsPublic(false)}
+                    className={`flex-1 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                      !editIsPublic ? 'border-indigo-500 bg-indigo-600/10 text-indigo-500' : ''
+                    }`}
+                    style={
+                      editIsPublic
+                        ? { borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }
+                        : undefined
+                    }
+                  >
+                    🔒 Private
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditIsPublic(true)}
+                    className={`flex-1 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                      editIsPublic ? 'border-indigo-500 bg-indigo-600/10 text-indigo-500' : ''
+                    }`}
+                    style={
+                      !editIsPublic
+                        ? { borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }
+                        : undefined
+                    }
+                  >
+                    🌐 Public
+                  </button>
+                </div>
+              </div>
               <div className="flex gap-3 justify-end">
                 <button type="button" onClick={() => setEditingWs(null)} className="btn-secondary">
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary" disabled={!editName.trim()}>
-                  Save
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={!editName.trim() || isLoading}
+                >
+                  {isLoading ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>

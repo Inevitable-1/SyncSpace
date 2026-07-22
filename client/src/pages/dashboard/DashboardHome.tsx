@@ -6,21 +6,13 @@ import { PlusIcon, ArrowRightIcon } from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import CreateWorkspaceModal from '../../components/common/CreateWorkspaceModal';
 import CreateRoomModal from '../../components/common/CreateRoomModal';
+import WorkspaceCard from '../../components/workspace/WorkspaceCard';
 import { useToast } from '../../components/common/Toast';
 import { fetchWorkspaces, createWorkspace } from '../../features/workspace/workspaceSlice';
 import { fetchRooms, createRoom } from '../../features/room/roomSlice';
 import { activityService } from '../../services/activityService';
 import type { RootState, AppDispatch } from '../../store';
 import type { Activity } from '../../types';
-
-const GRADIENTS = [
-  'from-indigo-500 to-purple-600',
-  'from-emerald-500 to-teal-600',
-  'from-amber-500 to-orange-600',
-  'from-rose-500 to-pink-600',
-  'from-cyan-500 to-blue-600',
-  'from-violet-500 to-fuchsia-600',
-];
 
 const QUICK_CREATE_ITEMS = [
   { label: 'Workspace', icon: 'folder', color: 'bg-indigo-600', type: 'workspace' },
@@ -119,7 +111,11 @@ export default function DashboardHome() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { workspaces, isLoading: wsLoading } = useSelector((state: RootState) => state.workspace);
+  const {
+    workspaces,
+    isLoading: wsLoading,
+    error: wsError,
+  } = useSelector((state: RootState) => state.workspace);
   const { rooms, isLoading: roomLoading } = useSelector((state: RootState) => state.room);
 
   const [showCreateWsModal, setShowCreateWsModal] = useState(false);
@@ -136,6 +132,12 @@ export default function DashboardHome() {
       .catch(() => {});
   }, [dispatch]);
 
+  useEffect(() => {
+    if (wsError) {
+      showToast(wsError, 'error');
+    }
+  }, [wsError, showToast]);
+
   const handleCreateWorkspace = (data: {
     name: string;
     description: string;
@@ -145,8 +147,10 @@ export default function DashboardHome() {
   }) => {
     dispatch(createWorkspace(data)).then((action) => {
       if (action.meta.requestStatus === 'fulfilled') {
-        showToast('Workspace created!', 'success');
+        showToast('Workspace created successfully!', 'success');
         setShowCreateWsModal(false);
+      } else {
+        showToast((action.payload as string) || 'Failed to create workspace', 'error');
       }
     });
   };
@@ -155,7 +159,7 @@ export default function DashboardHome() {
     (data: { name: string; type: string; workspaceId: string }) => {
       dispatch(createRoom(data)).then((action) => {
         if (action.meta.requestStatus === 'fulfilled') {
-          showToast('Room created!', 'success');
+          showToast('Room created successfully!', 'success');
           setShowCreateRoomModal(false);
           const roomId = (action.payload as { _id: string })?._id;
           const roomType = data.type;
@@ -164,6 +168,8 @@ export default function DashboardHome() {
           } else if (roomId) {
             navigate(`/dashboard/rooms/${roomId}`);
           }
+        } else {
+          showToast((action.payload as string) || 'Failed to create room', 'error');
         }
       });
     },
@@ -258,84 +264,18 @@ export default function DashboardHome() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {workspaces.slice(0, 4).map((ws, i) => {
-                const gradient = GRADIENTS[i % GRADIENTS.length];
                 const wsRooms = rooms.filter(
                   (r) =>
                     (typeof r.workspace === 'object' ? r.workspace._id : r.workspace) === ws._id,
                 );
                 return (
-                  <motion.div
+                  <WorkspaceCard
                     key={ws._id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    className="card-hover overflow-hidden cursor-pointer group"
-                    onClick={() => navigate(`/dashboard/workspaces/${ws._id}`)}
-                  >
-                    <div className={`h-24 bg-gradient-to-br ${gradient} relative`}>
-                      <div className="absolute inset-0 bg-black/10" />
-                      <div className="absolute top-3 left-3 w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                        <span className="text-white font-bold text-lg">
-                          {ws.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      {ws.isPublic && (
-                        <span className="absolute top-3 right-3 px-2 py-0.5 rounded-md text-[10px] font-medium bg-white/20 text-white backdrop-blur-sm">
-                          Public
-                        </span>
-                      )}
-                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="px-3 py-1 rounded-lg bg-white/20 text-white text-xs font-medium backdrop-blur-sm">
-                          Open →
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <p
-                        className="font-semibold text-sm truncate"
-                        style={{ color: 'var(--text-primary)' }}
-                      >
-                        {ws.name}
-                      </p>
-                      {ws.description && (
-                        <p
-                          className="text-xs mt-1 line-clamp-2"
-                          style={{ color: 'var(--text-tertiary)' }}
-                        >
-                          {ws.description}
-                        </p>
-                      )}
-                      <div
-                        className="flex items-center justify-between mt-3 pt-3 border-t"
-                        style={{ borderColor: 'var(--border-light)' }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="flex -space-x-1.5">
-                            {[0, 1, 2].slice(0, Math.min(3, ws.members.length + 1)).map((j) => (
-                              <div
-                                key={j}
-                                className="w-5 h-5 rounded-full border-2 border-[var(--bg-card)] flex items-center justify-center text-[8px] font-bold text-white"
-                                style={{
-                                  background:
-                                    j === 0
-                                      ? ws.color || '#6366f1'
-                                      : ['#818cf8', '#a78bfa', '#c084fc'][j - 1],
-                                }}
-                              >
-                                {j === 0 ? user?.name?.charAt(0) || 'Y' : ''}
-                              </div>
-                            ))}
-                          </div>
-                          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                            {ws.members.length + 1} member{ws.members.length + 1 !== 1 ? 's' : ''}
-                          </span>
-                        </div>
-                        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                          {wsRooms.length} room{wsRooms.length !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
+                    workspace={ws}
+                    index={i}
+                    roomCount={wsRooms.length}
+                    variant="dashboard"
+                  />
                 );
               })}
             </div>

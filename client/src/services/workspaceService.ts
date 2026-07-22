@@ -55,4 +55,14 @@ export const workspaceService = {
     const response = await api.get('/workspaces/search', { params: { q } });
     return response.data.data.workspaces;
   },
+
+  async regenerateInviteCode(id: string): Promise<string> {
+    const response = await api.post(`/workspaces/${id}/invite-code`);
+    return response.data.data.inviteCode;
+  },
+
+  async joinByInviteCode(inviteCode: string): Promise<Workspace> {
+    const response = await api.post('/workspaces/join', { inviteCode });
+    return response.data.data.workspace;
+  },
 };

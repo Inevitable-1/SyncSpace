@@ -47,6 +47,7 @@ export interface Workspace {
   color: string;
   icon: string;
   isPublic: boolean;
+  inviteCode: string;
   owner: string;
   members: string[];
   isDeleted: boolean;

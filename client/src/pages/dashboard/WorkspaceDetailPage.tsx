@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
-import { PlusIcon } from '../../components/Icons';
+import { PlusIcon, LinkIcon } from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import CreateRoomModal from '../../components/common/CreateRoomModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
@@ -11,6 +11,7 @@ import {
   fetchWorkspaces,
   updateWorkspace,
   deleteWorkspace,
+  regenerateInviteCode,
 } from '../../features/workspace/workspaceSlice';
 import { fetchRooms, createRoom, deleteRoom } from '../../features/room/roomSlice';
 import type { RootState, AppDispatch } from '../../store';
@@ -436,9 +437,9 @@ export default function WorkspaceDetailPage() {
                   <button
                     onClick={handleSaveSettings}
                     className="btn-primary text-sm"
-                    disabled={!editName.trim()}
+                    disabled={!editName.trim() || wsLoading}
                   >
-                    Save
+                    {wsLoading ? 'Saving...' : 'Save'}
                   </button>
                 </div>
               </>
@@ -459,6 +460,79 @@ export default function WorkspaceDetailPage() {
                 </div>
               </>
             )}
+          </div>
+
+          <div className="card p-6 space-y-4">
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Invite Code
+            </h3>
+            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              Share this code with others to let them join your workspace.
+            </p>
+            <div className="flex items-center gap-2">
+              <div
+                className="flex-1 px-3 py-2 rounded-lg border font-mono text-sm tracking-wider"
+                style={{
+                  borderColor: 'var(--border-color)',
+                  background: 'var(--bg-tertiary)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                {workspace.inviteCode || 'No code'}
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(workspace.inviteCode);
+                  showToast('Invite code copied!', 'success');
+                }}
+                className="btn-secondary text-sm flex items-center gap-1"
+                disabled={!workspace.inviteCode}
+              >
+                <LinkIcon className="w-3.5 h-3.5" /> Copy
+              </button>
+            </div>
+            <button
+              onClick={() => {
+                dispatch(regenerateInviteCode(workspace._id)).then((action) => {
+                  if (action.meta.requestStatus === 'fulfilled') {
+                    showToast('Invite code regenerated!', 'success');
+                  } else {
+                    showToast('Failed to regenerate invite code', 'error');
+                  }
+                });
+              }}
+              className="text-xs text-indigo-500 hover:text-indigo-400 font-medium"
+              disabled={wsLoading}
+            >
+              Regenerate Code
+            </button>
+          </div>
+
+          <div className="card p-6 space-y-3">
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Visibility
+            </h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  {workspace.isPublic ? 'Public' : 'Private'}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                  {workspace.isPublic
+                    ? 'Anyone can find and join this workspace'
+                    : 'Only invited members can access this workspace'}
+                </p>
+              </div>
+              <span
+                className={`text-[10px] px-2 py-1 rounded-full font-medium ${
+                  workspace.isPublic
+                    ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                    : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
+                }`}
+              >
+                {workspace.isPublic ? 'Public' : 'Private'}
+              </span>
+            </div>
           </div>
 
           <div className="card p-6 border-red-200 dark:border-red-900">

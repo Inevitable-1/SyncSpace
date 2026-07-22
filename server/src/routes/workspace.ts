@@ -12,6 +12,8 @@ import {
   addMember,
   removeMember,
   getMembers,
+  regenerateInviteCode,
+  joinByInviteCode,
 } from '../controllers/workspace.js';
 import { authenticate } from '../middleware/auth.js';
 import { errorHandler } from '../middleware/errorHandler.js';
@@ -48,6 +50,8 @@ router.post('/:id/restore', asyncHandler(restoreWorkspace));
 router.get('/:id/members', asyncHandler(getMembers));
 router.post('/:id/members', asyncHandler(addMember));
 router.delete('/:id/members/:memberId', asyncHandler(removeMember));
+router.post('/:id/invite-code', asyncHandler(regenerateInviteCode));
+router.post('/join', asyncHandler(joinByInviteCode));
 
 router.use(errorHandler);
 
