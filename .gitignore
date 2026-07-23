@@ -54,6 +54,9 @@ Thumbs.db
 mongo-data/
 redis-data/
 
+# User uploads
+uploads/
+
 # Misc
 *.tgz
 .cache/
