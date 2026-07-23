@@ -5,6 +5,8 @@ import roomReducer from './features/room/roomSlice';
 import notificationReducer from './features/notification/notificationSlice';
 import memberReducer from './features/collaboration/memberSlice';
 import inviteReducer from './features/collaboration/inviteSlice';
+import chatReducer from './features/chat/chatSlice';
+import presenceReducer from './features/presence/presenceSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +16,8 @@ export const store = configureStore({
     notification: notificationReducer,
     members: memberReducer,
     invites: inviteReducer,
+    chat: chatReducer,
+    presence: presenceReducer,
   },
 });
 

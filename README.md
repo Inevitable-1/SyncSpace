@@ -117,58 +117,58 @@ This starts both client (http://localhost:5173) and server (http://localhost:500
 
 ## API Endpoints
 
-| Method | Endpoint                              | Description                          |
-| ------ | ------------------------------------- | ------------------------------------ |
-| GET    | `/api/health`                         | Health check                         |
-| POST   | `/api/auth/register`                  | Register new user                    |
-| POST   | `/api/auth/login`                     | Login                                |
-| POST   | `/api/auth/logout`                    | Logout (clears refresh token)        |
-| POST   | `/api/auth/refresh-token`             | Refresh access token                 |
-| POST   | `/api/auth/forgot-password`           | Request password reset               |
-| POST   | `/api/auth/reset-password`            | Reset password with token            |
-| GET    | `/api/auth/me`                        | Get current user (requires auth)     |
-| GET    | `/api/workspaces`                     | List workspaces                      |
-| POST   | `/api/workspaces`                     | Create workspace                     |
-| GET    | `/api/workspaces/:id`                 | Get workspace by ID                  |
-| PUT    | `/api/workspaces/:id`                 | Update workspace                     |
-| DELETE | `/api/workspaces/:id`                 | Soft-delete workspace                |
-| POST   | `/api/workspaces/:id/restore`         | Restore workspace from trash         |
-| GET    | `/api/workspaces/trash`               | Get trashed items                    |
-| GET    | `/api/workspaces/search`              | Search workspaces                    |
-| POST   | `/api/workspaces/:id/invite-code`     | Regenerate invite code               |
-| POST   | `/api/workspaces/join`                | Join workspace by invite code        |
-| GET    | `/api/workspaces/:id/members`         | List workspace members (paginated)   |
-| POST   | `/api/workspaces/:id/members`         | Add member to workspace              |
-| DELETE | `/api/workspaces/:id/members/:mid`    | Remove member from workspace         |
-| PUT    | `/api/workspaces/:id/members/:mid/role`    | Update member role              |
-| POST   | `/api/workspaces/:id/members/:mid/suspend`  | Suspend member                 |
-| POST   | `/api/workspaces/:id/members/:mid/reactivate` | Reactivate member            |
-| GET    | `/api/workspaces/:id/members/stats`   | Member statistics                    |
-| GET    | `/api/workspaces/:id/invites`         | List workspace invites (paginated)   |
-| POST   | `/api/workspaces/:id/invites`         | Send invite to email                 |
-| DELETE | `/api/workspaces/:id/invites/:iid`    | Revoke an invite                     |
-| GET    | `/api/workspaces/:id/invites/stats`   | Invite statistics                    |
-| GET    | `/api/invites/pending`                | Get pending invites for current user |
-| POST   | `/api/invites/:token/accept`          | Accept invite by token               |
-| POST   | `/api/invites/:token/decline`         | Decline invite by token              |
-| GET    | `/api/rooms`                          | List rooms                           |
-| POST   | `/api/rooms`                          | Create room                          |
-| GET    | `/api/rooms/:id`                      | Get room by ID                       |
-| PUT    | `/api/rooms/:id`                      | Update room                          |
-| DELETE | `/api/rooms/:id`                      | Soft-delete room                     |
-| POST   | `/api/rooms/:id/restore`              | Restore room from trash              |
-| POST   | `/api/rooms/join`                     | Join room by invite code             |
-| GET    | `/api/rooms/stats`                    | Room statistics                      |
-| GET    | `/api/whiteboards/:roomId`            | Get whiteboard data                  |
-| PUT    | `/api/whiteboards/:roomId`            | Save whiteboard data                 |
-| GET    | `/api/activities`                     | Activity feed                        |
-| DELETE | `/api/activities/clear`               | Clear all activities                 |
-| DELETE | `/api/activities/:id`                 | Delete single activity               |
-| GET    | `/api/notifications`                  | List notifications                   |
-| PUT    | `/api/notifications/read-all`         | Mark all as read                     |
-| PUT    | `/api/notifications/:id/read`         | Mark notification as read            |
-| DELETE | `/api/notifications/:id`              | Delete notification                  |
-| DELETE | `/api/notifications/clear`            | Clear all notifications              |
+| Method | Endpoint                                      | Description                          |
+| ------ | --------------------------------------------- | ------------------------------------ |
+| GET    | `/api/health`                                 | Health check                         |
+| POST   | `/api/auth/register`                          | Register new user                    |
+| POST   | `/api/auth/login`                             | Login                                |
+| POST   | `/api/auth/logout`                            | Logout (clears refresh token)        |
+| POST   | `/api/auth/refresh-token`                     | Refresh access token                 |
+| POST   | `/api/auth/forgot-password`                   | Request password reset               |
+| POST   | `/api/auth/reset-password`                    | Reset password with token            |
+| GET    | `/api/auth/me`                                | Get current user (requires auth)     |
+| GET    | `/api/workspaces`                             | List workspaces                      |
+| POST   | `/api/workspaces`                             | Create workspace                     |
+| GET    | `/api/workspaces/:id`                         | Get workspace by ID                  |
+| PUT    | `/api/workspaces/:id`                         | Update workspace                     |
+| DELETE | `/api/workspaces/:id`                         | Soft-delete workspace                |
+| POST   | `/api/workspaces/:id/restore`                 | Restore workspace from trash         |
+| GET    | `/api/workspaces/trash`                       | Get trashed items                    |
+| GET    | `/api/workspaces/search`                      | Search workspaces                    |
+| POST   | `/api/workspaces/:id/invite-code`             | Regenerate invite code               |
+| POST   | `/api/workspaces/join`                        | Join workspace by invite code        |
+| GET    | `/api/workspaces/:id/members`                 | List workspace members (paginated)   |
+| POST   | `/api/workspaces/:id/members`                 | Add member to workspace              |
+| DELETE | `/api/workspaces/:id/members/:mid`            | Remove member from workspace         |
+| PUT    | `/api/workspaces/:id/members/:mid/role`       | Update member role                   |
+| POST   | `/api/workspaces/:id/members/:mid/suspend`    | Suspend member                       |
+| POST   | `/api/workspaces/:id/members/:mid/reactivate` | Reactivate member                    |
+| GET    | `/api/workspaces/:id/members/stats`           | Member statistics                    |
+| GET    | `/api/workspaces/:id/invites`                 | List workspace invites (paginated)   |
+| POST   | `/api/workspaces/:id/invites`                 | Send invite to email                 |
+| DELETE | `/api/workspaces/:id/invites/:iid`            | Revoke an invite                     |
+| GET    | `/api/workspaces/:id/invites/stats`           | Invite statistics                    |
+| GET    | `/api/invites/pending`                        | Get pending invites for current user |
+| POST   | `/api/invites/:token/accept`                  | Accept invite by token               |
+| POST   | `/api/invites/:token/decline`                 | Decline invite by token              |
+| GET    | `/api/rooms`                                  | List rooms                           |
+| POST   | `/api/rooms`                                  | Create room                          |
+| GET    | `/api/rooms/:id`                              | Get room by ID                       |
+| PUT    | `/api/rooms/:id`                              | Update room                          |
+| DELETE | `/api/rooms/:id`                              | Soft-delete room                     |
+| POST   | `/api/rooms/:id/restore`                      | Restore room from trash              |
+| POST   | `/api/rooms/join`                             | Join room by invite code             |
+| GET    | `/api/rooms/stats`                            | Room statistics                      |
+| GET    | `/api/whiteboards/:roomId`                    | Get whiteboard data                  |
+| PUT    | `/api/whiteboards/:roomId`                    | Save whiteboard data                 |
+| GET    | `/api/activities`                             | Activity feed                        |
+| DELETE | `/api/activities/clear`                       | Clear all activities                 |
+| DELETE | `/api/activities/:id`                         | Delete single activity               |
+| GET    | `/api/notifications`                          | List notifications                   |
+| PUT    | `/api/notifications/read-all`                 | Mark all as read                     |
+| PUT    | `/api/notifications/:id/read`                 | Mark notification as read            |
+| DELETE | `/api/notifications/:id`                      | Delete notification                  |
+| DELETE | `/api/notifications/clear`                    | Clear all notifications              |
 
 ## Day 3 Progress
 

@@ -268,3 +268,56 @@ export interface WhiteboardState {
   fontSize: number;
   fontFamily: string;
 }
+
+export interface ChatMessage {
+  _id: string;
+  room: string;
+  sender: User | string;
+  content: string;
+  type: 'text' | 'emoji' | 'system';
+  replyTo?: ChatMessage | string;
+  edited: boolean;
+  editedAt?: string;
+  isDeleted: boolean;
+  deletedAt?: string;
+  seenBy: (User | string)[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatState {
+  messages: ChatMessage[];
+  isLoading: boolean;
+  error: string | null;
+  typingUsers: TypingUser[];
+}
+
+export interface TypingUser {
+  userId: string;
+  userName: string;
+  roomId: string;
+}
+
+export interface PresenceUser {
+  socketId: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  status: 'online' | 'idle' | 'typing';
+  currentActivity: string;
+  joinedAt: string;
+}
+
+export interface PresenceState {
+  onlineUsers: PresenceUser[];
+  memberCount: number;
+}
+
+export interface ActivityLog {
+  user: User | string;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  entityName?: string;
+  createdAt: string;
+}
