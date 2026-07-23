@@ -14,6 +14,8 @@ import whiteboardRoutes from './routes/whiteboard.js';
 import memberRoutes from './routes/member.js';
 import inviteRoutes from './routes/invite.js';
 import chatRoutes from './routes/chat.js';
+import taskRoutes from './routes/task.js';
+import fileRoutes from './routes/file.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializeSocketHandlers } from './socket/whiteboardHandler.js';
 
@@ -45,6 +47,8 @@ app.use('/api/activities', activityRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/whiteboards', whiteboardRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/files', fileRoutes);
 app.use('/api/workspaces/:id/members', memberRoutes);
 app.use('/api/workspaces/:id/invites', inviteRoutes);
 app.use('/api/invites', inviteRoutes);

@@ -31,12 +31,20 @@ export type ActivityAction =
   | 'joined workspace via invite'
   | 'logged in'
   | 'logged out'
+  | 'created task'
+  | 'updated task'
+  | 'deleted task'
+  | 'completed task'
+  | 'uploaded file'
+  | 'deleted file'
+  | 'renamed file'
+  | 'added task comment'
   | 'registered';
 
 export interface IActivityDocument extends Document {
   user: mongoose.Types.ObjectId;
   action: ActivityAction;
-  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth';
+  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth' | 'task' | 'file';
   entityId?: mongoose.Types.ObjectId;
   entityName?: string;
   metadata?: Record<string, unknown>;
@@ -57,7 +65,7 @@ const activitySchema = new Schema<IActivityDocument>(
     },
     entityType: {
       type: String,
-      enum: ['workspace', 'room', 'member', 'invite', 'auth'],
+      enum: ['workspace', 'room', 'member', 'invite', 'auth', 'task', 'file'],
       required: true,
     },
     entityId: {

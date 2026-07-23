@@ -6,7 +6,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 export async function logActivity(data: {
   userId: string;
   action: string;
-  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth';
+  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth' | 'task' | 'file';
   entityId?: string;
   entityName?: string;
   metadata?: Record<string, unknown>;

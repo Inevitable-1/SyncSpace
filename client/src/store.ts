@@ -7,6 +7,8 @@ import memberReducer from './features/collaboration/memberSlice';
 import inviteReducer from './features/collaboration/inviteSlice';
 import chatReducer from './features/chat/chatSlice';
 import presenceReducer from './features/presence/presenceSlice';
+import taskReducer from './features/task/taskSlice';
+import fileReducer from './features/files/fileSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +20,8 @@ export const store = configureStore({
     invites: inviteReducer,
     chat: chatReducer,
     presence: presenceReducer,
+    tasks: taskReducer,
+    files: fileReducer,
   },
 });
 

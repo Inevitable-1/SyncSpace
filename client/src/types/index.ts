@@ -117,7 +117,7 @@ export interface Activity {
   _id: string;
   user: User | string;
   action: string;
-  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth';
+  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth' | 'task' | 'file';
   entityId?: string;
   entityName?: string;
   metadata?: Record<string, unknown>;
@@ -320,4 +320,75 @@ export interface ActivityLog {
   entityId?: string;
   entityName?: string;
   createdAt: string;
+}
+
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TaskStatus = 'todo' | 'in-progress' | 'review' | 'completed';
+
+export interface Task {
+  _id: string;
+  title: string;
+  description: string;
+  workspace: string;
+  room?: string;
+  creator: User | string;
+  assignee?: User | string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  labels: string[];
+  dueDate?: string;
+  checklist: { text: string; done: boolean }[];
+  order: number;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskComment {
+  _id: string;
+  task: string;
+  author: User | string;
+  content: string;
+  edited: boolean;
+  editedAt?: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskState {
+  tasks: Task[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface UploadedFile {
+  _id: string;
+  name: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  path: string;
+  workspace: string;
+  room?: string;
+  folder: string;
+  uploader: User | string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FileState {
+  files: UploadedFile[];
+  folders: string[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface SearchResult {
+  type: 'task' | 'file' | 'message' | 'member' | 'workspace';
+  id: string;
+  title: string;
+  subtitle: string;
+  url: string;
 }
