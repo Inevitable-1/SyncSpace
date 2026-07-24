@@ -9,6 +9,7 @@ import chatReducer from './features/chat/chatSlice';
 import presenceReducer from './features/presence/presenceSlice';
 import taskReducer from './features/task/taskSlice';
 import fileReducer from './features/files/fileSlice';
+import editorReducer from './features/editor/editorSlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     presence: presenceReducer,
     tasks: taskReducer,
     files: fileReducer,
+    editor: editorReducer,
   },
 });
 

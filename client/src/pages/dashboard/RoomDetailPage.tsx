@@ -15,6 +15,7 @@ import WorkspaceMembers from '../../components/collaboration/WorkspaceMembers';
 import KanbanBoard from '../../components/tasks/KanbanBoard';
 import FileExplorer from '../../components/files/FileExplorer';
 import GlobalSearch from '../../components/collaboration/GlobalSearch';
+import CodeIDE from '../../components/editor/CodeIDE';
 import type { RootState, AppDispatch } from '../../store';
 import { motion } from 'framer-motion';
 
@@ -178,23 +179,14 @@ export default function RoomDetailPage() {
         );
 
       case 'code':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card p-12 text-center"
-          >
-            <div className="text-6xl mb-4">{'</>'}</div>
-            <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-              Code Editor
-            </h3>
-            <p className="text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}>
-              Write and collaborate on code in real-time. Coming soon.
+        return workspaceId ? (
+          <CodeIDE roomId={room._id} workspaceId={workspaceId} workspaceName={wsName} />
+        ) : (
+          <div className="card p-12 text-center">
+            <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+              Loading workspace...
             </p>
-            <div className="px-6 py-3 rounded-xl bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-semibold cursor-not-allowed">
-              Coming Soon
-            </div>
-          </motion.div>
+          </div>
         );
 
       case 'files':

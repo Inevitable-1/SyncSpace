@@ -18,6 +18,8 @@ import taskRoutes from './routes/task.js';
 import fileRoutes from './routes/file.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializeSocketHandlers } from './socket/whiteboardHandler.js';
+import { initializeEditorHandlers } from './socket/editorHandler.js';
+import codeDocumentRoutes from './routes/codeDocument.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -52,8 +54,10 @@ app.use('/api/files', fileRoutes);
 app.use('/api/workspaces/:id/members', memberRoutes);
 app.use('/api/workspaces/:id/invites', inviteRoutes);
 app.use('/api/invites', inviteRoutes);
+app.use('/api/documents', codeDocumentRoutes);
 
 initializeSocketHandlers(io);
+initializeEditorHandlers(io);
 
 app.use(errorHandler);
 

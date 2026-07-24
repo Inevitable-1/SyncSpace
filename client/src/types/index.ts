@@ -392,3 +392,99 @@ export interface SearchResult {
   subtitle: string;
   url: string;
 }
+
+export interface CodeDocument {
+  _id: string;
+  name: string;
+  path: string;
+  content: string;
+  language: string;
+  room: string;
+  workspace: string;
+  createdBy: User | string;
+  lastEditedBy?: User | string;
+  parentPath?: string;
+  isFolder: boolean;
+  isDeleted: boolean;
+  deletedAt?: string;
+  versionTimestamps: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CodeEditorUser {
+  socketId: string;
+  userId: string;
+  userName: string;
+  color: string;
+  cursor: { line: number; column: number } | null;
+  selection: {
+    startLine: number;
+    startColumn: number;
+    endLine: number;
+    endColumn: number;
+  } | null;
+  fileName: string;
+}
+
+export interface EditorCursor {
+  socketId: string;
+  userId: string;
+  userName: string;
+  color: string;
+  cursor: { line: number; column: number };
+  fileName: string;
+  selection?: {
+    startLine: number;
+    startColumn: number;
+    endLine: number;
+    endColumn: number;
+  };
+}
+
+export interface EditorSelection {
+  socketId: string;
+  userId: string;
+  userName: string;
+  color: string;
+  selection: {
+    startLine: number;
+    startColumn: number;
+    endLine: number;
+    endColumn: number;
+  };
+  fileName: string;
+}
+
+export interface EditorSettings {
+  fontSize: number;
+  tabSize: number;
+  theme: 'vs-dark' | 'vs' | 'hc-black';
+  wordWrap: 'on' | 'off';
+  autoSave: boolean;
+  minimap: boolean;
+  lineNumbers: boolean;
+}
+
+export interface EditorState {
+  documents: CodeDocument[];
+  currentFile: CodeDocument | null;
+  openFiles: string[];
+  recentlyOpened: string[];
+  settings: EditorSettings;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface TerminalEntry {
+  id: string;
+  type: 'command' | 'output' | 'error' | 'info';
+  content: string;
+  timestamp: string;
+}
+
+export interface OutputTab {
+  id: string;
+  label: string;
+  count?: number;
+}
