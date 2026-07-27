@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/common/Toast';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -78,46 +79,48 @@ function NotFound() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <ToastProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<DashboardHome />} />
-              <Route path="workspaces" element={<WorkspacesPage />} />
-              <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
-              <Route path="rooms" element={<RoomsPage />} />
-              <Route path="rooms/:id" element={<RoomDetailPage />} />
-              <Route path="shared" element={<SharedWithMePage />} />
-              <Route path="activity" element={<ActivityPage />} />
-              <Route path="trash" element={<TrashPage />} />
-              <Route path="notifications" element={<NotificationsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-            </Route>
-            <Route
-              path="/whiteboard/:roomId"
-              element={
-                <ProtectedRoute>
-                  <WhiteboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </ToastProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<DashboardHome />} />
+                <Route path="workspaces" element={<WorkspacesPage />} />
+                <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
+                <Route path="rooms" element={<RoomsPage />} />
+                <Route path="rooms/:id" element={<RoomDetailPage />} />
+                <Route path="shared" element={<SharedWithMePage />} />
+                <Route path="activity" element={<ActivityPage />} />
+                <Route path="trash" element={<TrashPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+              </Route>
+              <Route
+                path="/whiteboard/:roomId"
+                element={
+                  <ProtectedRoute>
+                    <WhiteboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </ToastProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

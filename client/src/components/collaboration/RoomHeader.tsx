@@ -15,6 +15,12 @@ interface RoomHeaderProps {
   onOpenInvite: () => void;
 }
 
+const typeConfig: Record<string, { color: string; icon: string; label: string }> = {
+  whiteboard: { color: 'bg-purple-600', icon: '🎨', label: 'Whiteboard' },
+  code: { color: 'bg-emerald-600', icon: '</>', label: 'Code' },
+  document: { color: 'bg-blue-600', icon: '📝', label: 'Document' },
+};
+
 export default function RoomHeader({
   roomName,
   workspaceName,
@@ -27,12 +33,6 @@ export default function RoomHeader({
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const [copied, setCopied] = useState(false);
-
-  const typeConfig: Record<string, { color: string; icon: string; label: string }> = {
-    whiteboard: { color: 'bg-purple-600', icon: '🎨', label: 'Whiteboard' },
-    code: { color: 'bg-emerald-600', icon: '</>', label: 'Code' },
-    document: { color: 'bg-blue-600', icon: '📝', label: 'Document' },
-  };
 
   const cfg = typeConfig[roomType] || typeConfig.whiteboard;
 

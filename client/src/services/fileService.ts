@@ -11,16 +11,23 @@ export const fileService = {
     return response.data.data.files;
   },
 
-  async upload(data: {
-    name: string;
-    originalName: string;
-    mimeType: string;
-    size: number;
-    workspaceId: string;
-    roomId?: string;
-    folder?: string;
-  }): Promise<UploadedFile> {
-    const response = await api.post('/files', data);
+  async upload(
+    file: File,
+    data: {
+      workspaceId: string;
+      roomId?: string;
+      folder?: string;
+    },
+  ): Promise<UploadedFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('workspace', data.workspaceId);
+    if (data.roomId) formData.append('roomId', data.roomId);
+    if (data.folder) formData.append('folder', data.folder);
+
+    const response = await api.post('/files', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data.data.file;
   },
 
@@ -31,6 +38,18 @@ export const fileService = {
   async rename(id: string, name: string): Promise<UploadedFile> {
     const response = await api.put(`/files/${id}/rename`, { name });
     return response.data.data.file;
+  },
+
+  async download(id: string, fileName: string): Promise<void> {
+    const response = await api.get(`/files/${id}/download`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   },
 
   async getFolders(workspaceId: string): Promise<string[]> {

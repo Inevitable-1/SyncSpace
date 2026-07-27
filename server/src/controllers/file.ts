@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import type { Response } from 'express';
 import { UploadedFile } from '../models/UploadedFile.js';
 import { AppError } from '../middleware/errorHandler.js';
@@ -45,13 +47,22 @@ export async function uploadFile(req: AuthRequest, res: Response): Promise<void>
     throw new AppError('Not authenticated', 401);
   }
 
-  const { name, originalName, mimeType, size, workspace, roomId, folder } = req.body;
+  const file = req.file;
+  if (!file) {
+    throw new AppError('No file provided', 400);
+  }
 
-  const file = await UploadedFile.create({
-    name,
-    originalName: originalName || name,
-    mimeType,
-    size,
+  const { workspace, roomId, folder } = req.body;
+  if (!workspace) {
+    throw new AppError('Workspace ID is required', 400);
+  }
+
+  const uploaded = await UploadedFile.create({
+    name: file.originalname,
+    originalName: file.originalname,
+    mimeType: file.mimetype,
+    size: file.size,
+    path: file.path,
     workspace,
     room: roomId || undefined,
     folder: folder || '/',
@@ -62,16 +73,39 @@ export async function uploadFile(req: AuthRequest, res: Response): Promise<void>
     userId: req.user.userId,
     action: 'uploaded file',
     entityType: 'file',
-    entityId: file._id.toString(),
-    entityName: name,
+    entityId: uploaded._id.toString(),
+    entityName: file.originalname,
   });
 
-  const populated = await file.populate('uploader', 'name email avatar');
+  const populated = await uploaded.populate('uploader', 'name email avatar');
 
   res.status(201).json({
     success: true,
     data: { file: populated },
   });
+}
+
+export async function downloadFile(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
+
+  const file = await UploadedFile.findById(req.params.id);
+
+  if (!file || file.isDeleted) {
+    throw new AppError('File not found', 404);
+  }
+
+  const filePath = path.resolve(file.path);
+  if (!fs.existsSync(filePath)) {
+    throw new AppError('File not found on disk', 404);
+  }
+
+  res.setHeader('Content-Disposition', `attachment; filename="${file.originalName}"`);
+  res.setHeader('Content-Type', file.mimeType);
+
+  const stream = fs.createReadStream(filePath);
+  stream.pipe(res);
 }
 
 export async function deleteFile(req: AuthRequest, res: Response): Promise<void> {

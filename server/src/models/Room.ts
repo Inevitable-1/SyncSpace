@@ -2,6 +2,7 @@ import mongoose, { type Document, Schema } from 'mongoose';
 
 export interface IRoomDocument extends Document {
   name: string;
+  description: string;
   type: 'whiteboard' | 'code' | 'document';
   workspace: mongoose.Types.ObjectId;
   owner: mongoose.Types.ObjectId;
@@ -22,6 +23,12 @@ const roomSchema = new Schema<IRoomDocument>(
       trim: true,
       minlength: [2, 'Name must be at least 2 characters'],
       maxlength: [100, 'Name must be at most 100 characters'],
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, 'Description must be at most 500 characters'],
+      default: '',
     },
     type: {
       type: String,

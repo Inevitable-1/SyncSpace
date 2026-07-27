@@ -1,54 +1,51 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import Avatar from '../common/Avatar';
 import type { ChatMessage } from '../../types';
 
 interface ChatMessageItemProps {
   message: ChatMessage;
-  isOwn: boolean;
-  showSender: boolean;
-  onReply: () => void;
-  onEdit: (content: string) => void;
-  onDelete: () => void;
-  replyToMessage: ChatMessage | null;
+  currentUserId: string;
+  onReply: (message: ChatMessage) => void;
+  onEdit: (messageId: string, content: string) => void;
+  onDelete: (messageId: string) => void;
 }
 
 export default function ChatMessageItem({
   message,
-  isOwn,
-  showSender,
+  currentUserId,
   onReply,
   onEdit,
   onDelete,
-  replyToMessage,
 }: ChatMessageItemProps) {
   const [showActions, setShowActions] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const isOwn = (() => {
+    if (typeof message.sender === 'string') return message.sender === currentUserId;
+    const sender = message.sender as { id?: string; _id?: string };
+    return (sender.id || sender._id) === currentUserId;
+  })();
 
   const senderName = typeof message.sender === 'object' ? message.sender.name : 'Unknown';
-  const senderAvatar = typeof message.sender === 'object' ? message.sender.avatar : '';
+  const senderInitial = senderName.charAt(0).toUpperCase();
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-
     if (diffMins < 1) return 'now';
     if (diffMins < 60) return `${diffMins}m`;
-
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h`;
-
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   };
 
   const handleSaveEdit = () => {
     if (editContent.trim() && editContent !== message.content) {
-      onEdit(editContent.trim());
+      onEdit(message._id, editContent.trim());
     }
     setIsEditing(false);
   };
@@ -58,13 +55,36 @@ export default function ChatMessageItem({
     setIsEditing(false);
   };
 
+  const handleDelete = () => {
+    onDelete(message._id);
+    setShowDeleteConfirm(false);
+  };
+
+  const getReplySender = (): string => {
+    if (!message.replyTo) return '';
+    if (typeof message.replyTo === 'object' && message.replyTo !== null) {
+      const s = message.replyTo.sender;
+      if (typeof s === 'object' && s !== null) return s.name;
+      return '';
+    }
+    return '';
+  };
+
+  const getReplyContent = (): string => {
+    if (!message.replyTo) return '';
+    if (typeof message.replyTo === 'object' && message.replyTo !== null) {
+      return message.replyTo.content;
+    }
+    return '';
+  };
+
+  const replySenderName = getReplySender();
+  const replyContent = getReplyContent();
+
   if (message.isDeleted) {
     return (
-      <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} py-1`}>
-        <p
-          className="text-xs italic px-3 py-1 rounded-lg"
-          style={{ color: 'var(--text-tertiary)' }}
-        >
+      <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} py-1 px-4`}>
+        <p className="text-xs italic px-3 py-1 rounded-lg" style={{ color: 'var(--text-tertiary)' }}>
           This message was deleted
         </p>
       </div>
@@ -73,7 +93,7 @@ export default function ChatMessageItem({
 
   if (message.type === 'system') {
     return (
-      <div className="flex justify-center py-2">
+      <div className="flex justify-center py-2 px-4">
         <p
           className="text-xs px-3 py-1 rounded-full"
           style={{ color: 'var(--text-tertiary)', background: 'var(--bg-tertiary)' }}
@@ -86,43 +106,44 @@ export default function ChatMessageItem({
 
   return (
     <div
-      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${showSender ? 'mt-3' : 'mt-0.5'} group relative`}
+      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} py-1 px-4 group relative`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => {
         setShowActions(false);
-        setShowMenu(false);
+        setShowDeleteConfirm(false);
       }}
     >
-      <div className={`flex gap-2 max-w-[80%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-        {showSender && !isOwn ? (
-          <Avatar name={senderName} src={senderAvatar} size="sm" className="flex-shrink-0 mt-1" />
-        ) : (
-          !showSender && <div className="w-8" />
+      <div className={`flex gap-2 max-w-[75%] ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+        {!isOwn && (
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-1"
+            style={{
+              background: 'var(--color-indigo-500, #6366f1)',
+              color: '#fff',
+            }}
+          >
+            {senderInitial}
+          </div>
         )}
 
         <div className="flex flex-col">
-          {showSender && !isOwn && (
-            <span
-              className="text-xs font-medium mb-0.5 ml-1"
-              style={{ color: 'var(--text-tertiary)' }}
-            >
+          {!isOwn && (
+            <span className="text-xs font-medium mb-0.5 ml-1" style={{ color: 'var(--text-tertiary)' }}>
               {senderName}
             </span>
           )}
 
-          {replyToMessage && (
+          {replyContent && (
             <div
-              className={`text-xs px-2 py-1 mb-0.5 rounded-t-lg border-l-2 ${
-                isOwn
-                  ? 'bg-indigo-600/20 border-indigo-400'
-                  : 'bg-gray-200 dark:bg-gray-700 border-gray-400'
-              }`}
-              style={{ color: 'var(--text-tertiary)' }}
+              className="text-xs px-2 py-1 mb-0.5 rounded-t-lg border-l-2"
+              style={{
+                background: isOwn ? 'rgba(99,102,241,0.15)' : 'var(--bg-tertiary)',
+                borderColor: isOwn ? '#818cf8' : 'var(--border-color)',
+                color: 'var(--text-tertiary)',
+              }}
             >
-              <span className="font-medium">
-                {typeof replyToMessage.sender === 'object' ? replyToMessage.sender.name : ''}
-              </span>
-              <p className="truncate">{replyToMessage.content}</p>
+              {replySenderName && <span className="font-medium">{replySenderName}</span>}
+              <p className="truncate max-w-[200px]">{replyContent.slice(0, 100)}</p>
             </div>
           )}
 
@@ -149,7 +170,7 @@ export default function ChatMessageItem({
               <div className="flex gap-1 justify-end">
                 <button
                   onClick={handleCancelEdit}
-                  className="text-xs px-2 py-1 rounded-lg hover:bg-[var(--bg-hover)]"
+                  className="text-xs px-2 py-1 rounded-lg hover:opacity-80 transition-opacity"
                   style={{ color: 'var(--text-tertiary)' }}
                 >
                   Cancel
@@ -167,15 +188,19 @@ export default function ChatMessageItem({
               className={`relative px-3 py-2 rounded-2xl text-sm leading-relaxed ${
                 isOwn
                   ? 'bg-indigo-600 text-white rounded-br-md'
-                  : 'border border-[var(--border-color)] rounded-bl-md'
+                  : 'rounded-bl-md'
               }`}
               style={
-                isOwn ? {} : { background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }
+                isOwn
+                  ? {}
+                  : { background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }
               }
             >
               <p className="whitespace-pre-wrap break-words">{message.content}</p>
               <div
-                className={`flex items-center gap-1.5 mt-0.5 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                className={`flex items-center gap-1.5 mt-0.5 ${
+                  isOwn ? 'justify-end' : 'justify-start'
+                }`}
               >
                 <span
                   className={`text-[10px] ${isOwn ? 'text-white/60' : ''}`}
@@ -192,7 +217,20 @@ export default function ChatMessageItem({
                   </span>
                 )}
                 {isOwn && message.seenBy && message.seenBy.length > 1 && (
-                  <span className="text-[10px] text-white/60">Seen</span>
+                  <span className="w-3.5 h-3.5 text-white/60" title="Seen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </span>
+                )}
+                {!isOwn && message.seenBy && message.seenBy.length > 0 && (
+                  <span className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} title="Seen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </span>
                 )}
               </div>
             </div>
@@ -202,15 +240,18 @@ export default function ChatMessageItem({
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className={`absolute ${isOwn ? 'left-0 -translate-x-full -ml-1' : 'right-0 translate-x-full mr-1'} top-0 flex items-center gap-0.5 px-1 py-0.5 rounded-lg border shadow-sm z-10`}
+              transition={{ duration: 0.1 }}
+              className={`absolute ${
+                isOwn ? 'left-0 -translate-x-full -ml-1' : 'right-0 translate-x-full mr-1'
+              } top-0 flex items-center gap-0.5 px-1 py-0.5 rounded-lg border shadow-sm z-10`}
               style={{
                 background: 'var(--bg-card)',
                 borderColor: 'var(--border-color)',
               }}
             >
               <button
-                onClick={onReply}
-                className="p-1 rounded hover:bg-[var(--bg-hover)]"
+                onClick={() => onReply(message)}
+                className="p-1 rounded hover:opacity-70 transition-opacity"
                 title="Reply"
               >
                 <svg
@@ -225,70 +266,99 @@ export default function ChatMessageItem({
                   <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
                 </svg>
               </button>
+
+              <button
+                className="p-1 rounded hover:opacity-70 transition-opacity"
+                title="React"
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  style={{ color: 'var(--text-tertiary)' }}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                  <line x1="9" y1="9" x2="9.01" y2="9" />
+                  <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
+              </button>
+
               {isOwn && (
-                <>
+                <button
+                  onClick={() => {
+                    setIsEditing(true);
+                    setEditContent(message.content);
+                  }}
+                  className="p-1 rounded hover:opacity-70 transition-opacity"
+                  title="Edit"
+                >
+                  <svg
+                    className="w-3.5 h-3.5"
+                    style={{ color: 'var(--text-tertiary)' }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
+              )}
+
+              {isOwn && (
+                <div className="relative">
                   <button
-                    onClick={() => {
-                      setIsEditing(true);
-                      setEditContent(message.content);
-                    }}
-                    className="p-1 rounded hover:bg-[var(--bg-hover)]"
-                    title="Edit"
+                    onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
+                    className="p-1 rounded hover:opacity-70 transition-opacity"
+                    title="Delete"
                   >
                     <svg
                       className="w-3.5 h-3.5"
-                      style={{ color: 'var(--text-tertiary)' }}
+                      style={{ color: '#ef4444' }}
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
                     >
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
                   </button>
-                  <div className="relative" ref={menuRef}>
-                    <button
-                      onClick={() => setShowMenu(!showMenu)}
-                      className="p-1 rounded hover:bg-[var(--bg-hover)]"
-                      title="More"
+                  {showDeleteConfirm && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute right-0 top-full mt-1 py-2 px-3 rounded-lg border shadow-lg z-20 min-w-[140px]"
+                      style={{
+                        background: 'var(--bg-card)',
+                        borderColor: 'var(--border-color)',
+                      }}
                     >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        style={{ color: 'var(--text-tertiary)' }}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <circle cx="12" cy="12" r="1" />
-                        <circle cx="12" cy="5" r="1" />
-                        <circle cx="12" cy="19" r="1" />
-                      </svg>
-                    </button>
-                    {showMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="absolute right-0 top-full mt-1 py-1 rounded-lg border shadow-lg z-20 min-w-[100px]"
-                        style={{
-                          background: 'var(--bg-card)',
-                          borderColor: 'var(--border-color)',
-                        }}
-                      >
+                      <p className="text-xs mb-2" style={{ color: 'var(--text-primary)' }}>
+                        Delete message?
+                      </p>
+                      <div className="flex gap-1">
                         <button
-                          onClick={() => {
-                            onDelete();
-                            setShowMenu(false);
-                          }}
-                          className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          onClick={handleDelete}
+                          className="text-xs px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600"
                         >
                           Delete
                         </button>
-                      </motion.div>
-                    )}
-                  </div>
-                </>
+                        <button
+                          onClick={() => setShowDeleteConfirm(false)}
+                          className="text-xs px-2 py-1 rounded hover:opacity-80"
+                          style={{ color: 'var(--text-tertiary)' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
               )}
             </motion.div>
           )}

@@ -5,28 +5,16 @@ import ChatMessageItem from './ChatMessageItem';
 import ChatInput from './ChatInput';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { fetchMessages, clearMessages } from '../../features/chat/chatSlice';
+import { chatService } from '../../services/chatService';
 import type { RootState } from '../../store';
 import type { ChatMessage } from '../../types';
 
 interface ChatPanelProps {
   roomId: string;
-  onSendMessage: (content: string, type?: string, replyTo?: string) => void;
-  onEditMessage: (messageId: string, content: string) => void;
-  onDeleteMessage: (messageId: string) => void;
-  onTypingStart: () => void;
-  onTypingStop: () => void;
-  onMarkSeen: () => void;
+  workspaceId?: string;
 }
 
-export default function ChatPanel({
-  roomId,
-  onSendMessage,
-  onEditMessage,
-  onDeleteMessage,
-  onTypingStart,
-  onTypingStop,
-  onMarkSeen,
-}: ChatPanelProps) {
+export default function ChatPanel({ roomId }: ChatPanelProps) {
   const dispatch = useAppDispatch();
   const { messages, isLoading, typingUsers } = useSelector((state: RootState) => state.chat);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -34,9 +22,12 @@ export default function ChatPanel({
   const containerRef = useRef<HTMLDivElement>(null);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     dispatch(clearMessages());
+    setHasMore(true);
     void dispatch(fetchMessages({ roomId, limit: 50 }));
   }, [dispatch, roomId]);
 
@@ -46,34 +37,75 @@ export default function ChatPanel({
     }
   }, [messages, isAtBottom]);
 
-  useEffect(() => {
-    onMarkSeen();
-  }, [messages, onMarkSeen]);
-
   const handleScroll = useCallback(() => {
     if (!containerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
     setIsAtBottom(scrollHeight - scrollTop - clientHeight < 50);
   }, []);
 
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore || messages.length === 0) return;
+    setIsLoadingMore(true);
+    const oldest = messages[0];
+    try {
+      const result = await dispatch(fetchMessages({ roomId, limit: 50, before: oldest.createdAt }));
+      const fetched = result.payload as ChatMessage[] | undefined;
+      if (!fetched || fetched.length < 50) {
+        setHasMore(false);
+      }
+    } catch {
+      setHasMore(false);
+    }
+    setIsLoadingMore(false);
+  }, [dispatch, roomId, messages, isLoadingMore, hasMore]);
+
   const handleSend = useCallback(
-    (content: string, type?: string) => {
-      onSendMessage(content, type, replyTo?._id);
-      setReplyTo(null);
+    async (content: string, type?: string) => {
+      try {
+        await chatService.sendMessage(roomId, content, type, replyTo?._id);
+        setReplyTo(null);
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      } catch {
+        // silent
+      }
     },
-    [onSendMessage, replyTo],
+    [roomId, replyTo],
+  );
+
+  const handleEdit = useCallback(
+    async (messageId: string, content: string) => {
+      try {
+        await chatService.editMessage(messageId, content);
+      } catch {
+        // silent
+      }
+    },
+    [],
+  );
+
+  const handleDelete = useCallback(
+    async (messageId: string) => {
+      try {
+        await chatService.deleteMessage(messageId);
+      } catch {
+        // silent
+      }
+    },
+    [],
   );
 
   const otherTypingUsers = typingUsers.filter((t) => t.userId !== user?.id);
 
   return (
     <div
-      className="flex flex-col h-full border border-[var(--border-color)] rounded-xl overflow-hidden"
-      style={{ background: 'var(--bg-card)' }}
+      className="flex flex-col h-full border rounded-xl overflow-hidden"
+      style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}
     >
-      <div className="px-4 py-3 border-b border-[var(--border-color)] flex items-center gap-2">
+      {/* Header */}
+      <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: 'var(--border-color)' }}>
         <svg
-          className="w-5 h-5 text-[var(--text-tertiary)]"
+          className="w-5 h-5"
+          style={{ color: 'var(--text-tertiary)' }}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -89,10 +121,11 @@ export default function ChatPanel({
         </span>
       </div>
 
+      {/* Messages */}
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-3 space-y-1"
+        className="flex-1 overflow-y-auto py-2 space-y-0.5"
         style={{ background: 'var(--bg-secondary)' }}
       >
         {isLoading && messages.length === 0 && (
@@ -103,9 +136,10 @@ export default function ChatPanel({
 
         {!isLoading && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[var(--bg-tertiary)] flex items-center justify-center mb-3">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ background: 'var(--bg-tertiary)' }}>
               <svg
-                className="w-7 h-7 text-[var(--text-tertiary)]"
+                className="w-7 h-7"
+                style={{ color: 'var(--text-tertiary)' }}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -123,61 +157,55 @@ export default function ChatPanel({
           </div>
         )}
 
-        <AnimatePresence initial={false}>
-          {messages.map((msg, i) => {
-            const prevMsg = i > 0 ? messages[i - 1] : null;
-            const showSender =
-              !prevMsg ||
-              (typeof prevMsg.sender === 'string'
-                ? prevMsg.sender
-                : (prevMsg.sender as unknown as { _id: string })._id) !==
-                (typeof msg.sender === 'string'
-                  ? msg.sender
-                  : (msg.sender as unknown as { _id: string })._id);
+        {hasMore && messages.length > 0 && (
+          <div className="flex justify-center py-2">
+            <button
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              className="text-xs px-3 py-1 rounded-full border hover:opacity-80 transition-opacity disabled:opacity-40"
+              style={{
+                color: 'var(--text-tertiary)',
+                borderColor: 'var(--border-color)',
+                background: 'var(--bg-card)',
+              }}
+            >
+              {isLoadingMore ? 'Loading...' : 'Load older messages'}
+            </button>
+          </div>
+        )}
 
-            return (
-              <motion.div
-                key={msg._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.15 }}
-              >
-                <ChatMessageItem
-                  message={msg}
-                  isOwn={
-                    (typeof msg.sender === 'string'
-                      ? msg.sender
-                      : (msg.sender as unknown as { _id: string })._id) === user?.id
-                  }
-                  showSender={showSender}
-                  onReply={() => setReplyTo(msg)}
-                  onEdit={(content) => onEditMessage(msg._id, content)}
-                  onDelete={() => onDeleteMessage(msg._id)}
-                  replyToMessage={
-                    msg.replyTo
-                      ? typeof msg.replyTo === 'object'
-                        ? msg.replyTo
-                        : messages.find((m) => m._id === msg.replyTo) || null
-                      : null
-                  }
-                />
-              </motion.div>
-            );
-          })}
+        <AnimatePresence initial={false}>
+          {messages.map((msg) => (
+            <motion.div
+              key={msg._id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+            >
+              <ChatMessageItem
+                message={msg}
+                currentUserId={user?.id ?? ''}
+                onReply={(m) => setReplyTo(m)}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            </motion.div>
+          ))}
         </AnimatePresence>
 
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Typing indicator */}
       <AnimatePresence>
         {otherTypingUsers.length > 0 && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="px-4 py-2 border-t border-[var(--border-color)]"
-            style={{ background: 'var(--bg-secondary)' }}
+            className="px-4 py-2 border-t"
+            style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}
           >
             <div className="flex items-center gap-2">
               <div className="flex gap-0.5">
@@ -204,10 +232,11 @@ export default function ChatPanel({
         )}
       </AnimatePresence>
 
+      {/* Reply preview bar */}
       {replyTo && (
         <div
-          className="px-4 py-2 border-t border-[var(--border-color)] flex items-center gap-2"
-          style={{ background: 'var(--bg-tertiary)' }}
+          className="px-4 py-2 border-t flex items-center gap-2"
+          style={{ borderColor: 'var(--border-color)', background: 'var(--bg-tertiary)' }}
         >
           <svg
             className="w-4 h-4 text-indigo-500 flex-shrink-0"
@@ -229,7 +258,7 @@ export default function ChatPanel({
           </div>
           <button
             onClick={() => setReplyTo(null)}
-            className="p-0.5 rounded hover:bg-[var(--bg-hover)]"
+            className="p-0.5 rounded hover:opacity-70 transition-opacity"
             style={{ color: 'var(--text-tertiary)' }}
           >
             <svg
@@ -246,7 +275,8 @@ export default function ChatPanel({
         </div>
       )}
 
-      <ChatInput onSend={handleSend} onTypingStart={onTypingStart} onTypingStop={onTypingStop} />
+      {/* Input */}
+      <ChatInput onSend={handleSend} onTypingStart={() => {}} onTypingStop={() => {}} />
     </div>
   );
 }

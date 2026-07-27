@@ -60,3 +60,4 @@ uploads/
 # Misc
 *.tgz
 .cache/
+server/uploads/

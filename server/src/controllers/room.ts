@@ -13,7 +13,7 @@ export async function createRoom(req: AuthRequest, res: Response): Promise<void>
     throw new AppError('Not authenticated', 401);
   }
 
-  const { name, type, workspaceId } = req.body;
+  const { name, type, description, workspaceId } = req.body;
 
   if (!workspaceId) {
     throw new AppError('Workspace ID is required', 400);
@@ -35,6 +35,7 @@ export async function createRoom(req: AuthRequest, res: Response): Promise<void>
 
   const room = await Room.create({
     name,
+    description: description || '',
     type: type || 'whiteboard',
     workspace: workspaceId,
     owner: req.user.userId,
@@ -134,9 +135,10 @@ export async function updateRoom(req: AuthRequest, res: Response): Promise<void>
     throw new AppError('Only the room owner can update this room', 403);
   }
 
-  const { name, type } = req.body;
+  const { name, type, description } = req.body;
   if (name !== undefined) room.name = name;
   if (type !== undefined) room.type = type;
+  if (description !== undefined) room.description = description;
 
   await room.save();
 
@@ -349,5 +351,22 @@ export async function getStats(req: AuthRequest, res: Response): Promise<void> {
       projectsCreated,
       growth,
     },
+  });
+}
+
+export async function getInviteLink(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
+
+  const room = await Room.findById(req.params.id);
+
+  if (!room) {
+    throw new AppError('Room not found', 404);
+  }
+
+  res.json({
+    success: true,
+    data: { inviteCode: room.inviteCode },
   });
 }
