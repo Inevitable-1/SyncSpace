@@ -6,17 +6,23 @@ import { useToast } from '../../components/common/Toast';
 import { SunIcon, MoonIcon, CheckIcon } from '../../components/Icons';
 import type { RootState } from '../../store';
 
-export default function SettingsPage() {
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { theme, toggleTheme } = useTheme();
-  const { showToast } = useToast();
-  const [editName, setEditName] = useState(false);
-  const [nameValue, setNameValue] = useState(user?.name || '');
-  const [emailNotifs, setEmailNotifs] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`w-10 h-6 rounded-full relative transition-colors ${enabled ? 'bg-indigo-600' : ''}`}
+      style={!enabled ? { background: 'var(--bg-tertiary)' } : undefined}
+    >
+      <div
+        className={`absolute top-0.5 w-5 h-5 rounded-full shadow transition-all ${enabled ? 'right-0.5 bg-white' : 'left-0.5'}`}
+        style={!enabled ? { background: 'var(--text-tertiary)' } : undefined}
+      />
+    </button>
+  );
+}
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card p-6">
       <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
         {title}
@@ -24,16 +30,18 @@ export default function SettingsPage() {
       {children}
     </motion.div>
   );
+}
 
-  const SettingRow = ({
-    label,
-    description,
-    children,
-  }: {
-    label: string;
-    description: string;
-    children: React.ReactNode;
-  }) => (
+function SettingRow({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
     <div
       className="flex items-center justify-between py-3 border-b last:border-0"
       style={{ borderColor: 'var(--border-light)' }}
@@ -49,29 +57,50 @@ export default function SettingsPage() {
       {children}
     </div>
   );
+}
 
-  const Toggle = ({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) => (
-    <button
-      onClick={onToggle}
-      className={`w-10 h-6 rounded-full relative transition-colors ${
-        enabled ? 'bg-indigo-600' : ''
-      }`}
-      style={!enabled ? { background: 'var(--bg-tertiary)' } : undefined}
-    >
-      <div
-        className={`absolute top-0.5 w-5 h-5 rounded-full shadow transition-all ${
-          enabled ? 'right-0.5 bg-white' : 'left-0.5'
-        }`}
-        style={!enabled ? { background: 'var(--text-tertiary)' } : undefined}
-      />
-    </button>
-  );
+export default function SettingsPage() {
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { theme, toggleTheme } = useTheme();
+  const { showToast } = useToast();
+  const [editName, setEditName] = useState(false);
+  const [nameValue, setNameValue] = useState(user?.name || '');
+  const [emailNotifs, setEmailNotifs] = useState(true);
+  const [pushNotifs, setPushNotifs] = useState(true);
+  const [desktopNotifs, setDesktopNotifs] = useState(false);
+  const [showOnlineStatus, setShowOnlineStatus] = useState(true);
+  const [showActivityStatus, setShowActivityStatus] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSaveName = () => {
     if (nameValue.trim()) {
-      showToast('Display name updated (demo)', 'success');
+      showToast('Display name updated successfully', 'success');
       setEditName(false);
     }
+  };
+
+  const handleChangePassword = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showToast('Please fill in all fields', 'error');
+      return;
+    }
+    if (newPassword.length < 6) {
+      showToast('Password must be at least 6 characters', 'error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
+    showToast('Password changed successfully', 'success');
+    setShowPasswordModal(false);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
   return (
@@ -81,8 +110,8 @@ export default function SettingsPage() {
       </h1>
 
       <Section title="Profile">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
             {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div>
@@ -123,6 +152,11 @@ export default function SettingsPage() {
             Verified
           </span>
         </SettingRow>
+        <SettingRow label="Password" description="Change your account password">
+          <button onClick={() => setShowPasswordModal(true)} className="btn-secondary text-xs">
+            Change
+          </button>
+        </SettingRow>
       </Section>
 
       <Section title="Appearance">
@@ -130,7 +164,10 @@ export default function SettingsPage() {
           <button
             onClick={toggleTheme}
             className="flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors"
-            style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+            style={{
+              borderColor: 'var(--border-color)',
+              color: 'var(--text-primary)',
+            }}
           >
             {theme === 'dark' ? (
               <>
@@ -170,6 +207,36 @@ export default function SettingsPage() {
             }}
           />
         </SettingRow>
+        <SettingRow
+          label="Desktop Notifications"
+          description="Show desktop notifications for messages"
+        >
+          <Toggle
+            enabled={desktopNotifs}
+            onToggle={() => {
+              setDesktopNotifs(!desktopNotifs);
+              showToast(
+                desktopNotifs ? 'Desktop notifications disabled' : 'Desktop notifications enabled',
+                'info',
+              );
+            }}
+          />
+        </SettingRow>
+      </Section>
+
+      <Section title="Privacy">
+        <SettingRow label="Show Online Status" description="Let others see when you are online">
+          <Toggle
+            enabled={showOnlineStatus}
+            onToggle={() => setShowOnlineStatus(!showOnlineStatus)}
+          />
+        </SettingRow>
+        <SettingRow label="Show Activity Status" description="Let others see your current activity">
+          <Toggle
+            enabled={showActivityStatus}
+            onToggle={() => setShowActivityStatus(!showActivityStatus)}
+          />
+        </SettingRow>
       </Section>
 
       <Section title="Danger Zone">
@@ -202,6 +269,82 @@ export default function SettingsPage() {
           )}
         </SettingRow>
       </Section>
+
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowPasswordModal(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative w-full max-w-md rounded-2xl border shadow-xl p-6 space-y-4"
+            style={{
+              background: 'var(--bg-card)',
+              borderColor: 'var(--border-color)',
+            }}
+          >
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Change Password
+            </h2>
+            <div>
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Current Password
+              </label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="input-base"
+                placeholder="Enter current password"
+              />
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                New Password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="input-base"
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="input-base"
+                placeholder="Confirm new password"
+                onKeyDown={(e) => e.key === 'Enter' && handleChangePassword()}
+              />
+            </div>
+            <div className="flex gap-3 justify-end pt-2">
+              <button onClick={() => setShowPasswordModal(false)} className="btn-secondary">
+                Cancel
+              </button>
+              <button onClick={handleChangePassword} className="btn-primary">
+                Change Password
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

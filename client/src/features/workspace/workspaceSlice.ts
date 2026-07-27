@@ -127,6 +127,18 @@ export const joinByInviteCode = createAsyncThunk(
   },
 );
 
+export const toggleFavorite = createAsyncThunk(
+  'workspace/toggleFavorite',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      return await workspaceService.toggleFavorite(id);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      return rejectWithValue(error.response?.data?.message || 'Failed to toggle favorite');
+    }
+  },
+);
+
 const workspaceSlice = createSlice({
   name: 'workspace',
   initialState,
@@ -184,6 +196,14 @@ const workspaceSlice = createSlice({
         const workspace = action.payload as Workspace;
         const exists = state.workspaces.some((w) => w._id === workspace._id);
         if (!exists) state.workspaces.unshift(workspace);
+      })
+      .addCase(toggleFavorite.fulfilled, (state, action) => {
+        const updated = action.payload as Workspace;
+        const idx = state.workspaces.findIndex((w) => w._id === updated._id);
+        if (idx !== -1) state.workspaces[idx].isFavorite = updated.isFavorite;
+        if (state.currentWorkspace?._id === updated._id) {
+          state.currentWorkspace.isFavorite = updated.isFavorite;
+        }
       });
   },
 });

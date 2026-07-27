@@ -2,6 +2,7 @@ import type { Response } from 'express';
 import { AppError } from '../middleware/errorHandler.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { workspaceService } from '../services/workspaceService.js';
+import { Workspace } from '../models/Workspace.js';
 
 export async function createWorkspace(req: AuthRequest, res: Response): Promise<void> {
   if (!req.user) {
@@ -161,4 +162,34 @@ export async function joinByInviteCode(req: AuthRequest, res: Response): Promise
     message: 'Joined workspace',
     data: { workspace },
   });
+}
+
+export async function toggleFavorite(req: AuthRequest, res: Response): Promise<void> {
+  const workspace = await Workspace.findById(req.params.id);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+  workspace.isFavorite = !workspace.isFavorite;
+  await workspace.save();
+  res.json({ success: true, data: workspace });
+}
+
+export async function archiveWorkspace(req: AuthRequest, res: Response): Promise<void> {
+  const workspace = await Workspace.findById(req.params.id);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+  workspace.isArchived = true;
+  await workspace.save();
+  res.json({ success: true, data: workspace });
+}
+
+export async function unarchiveWorkspace(req: AuthRequest, res: Response): Promise<void> {
+  const workspace = await Workspace.findById(req.params.id);
+  if (!workspace) {
+    throw new AppError('Workspace not found', 404);
+  }
+  workspace.isArchived = false;
+  await workspace.save();
+  res.json({ success: true, data: workspace });
 }

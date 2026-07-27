@@ -10,6 +10,8 @@ export interface IWorkspaceDocument extends Document {
   inviteCode: string;
   owner: mongoose.Types.ObjectId;
   members: mongoose.Types.ObjectId[];
+  isFavorite: boolean;
+  isArchived: boolean;
   isDeleted: boolean;
   deletedAt?: Date;
   createdAt: Date;
@@ -63,6 +65,14 @@ const workspaceSchema = new Schema<IWorkspaceDocument>(
         ref: 'User',
       },
     ],
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

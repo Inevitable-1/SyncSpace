@@ -10,6 +10,7 @@ import presenceReducer from './features/presence/presenceSlice';
 import taskReducer from './features/task/taskSlice';
 import fileReducer from './features/files/fileSlice';
 import editorReducer from './features/editor/editorSlice';
+import activityReducer from './features/activity/activitySlice';
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     tasks: taskReducer,
     files: fileReducer,
     editor: editorReducer,
+    activity: activityReducer,
   },
 });
 

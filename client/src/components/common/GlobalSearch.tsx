@@ -86,7 +86,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
       );
       setResults(mockResults);
     } catch (error) {
-      console.error('Search failed:', error);
+      void error;
     } finally {
       setIsLoading(false);
     }

@@ -1,123 +1,219 @@
-import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
-import { ChartBarIcon, FolderIcon, ClockIcon, UserGroupIcon } from '../../components/Icons';
-import { activityService } from '../../services/activityService';
+import { TrashIcon, MagnifyingGlassIcon } from '../../components/Icons';
+import { fetchActivities, clearAllActivities } from '../../features/activity/activitySlice';
+import { useToast } from '../../components/common/Toast';
+import type { RootState, AppDispatch } from '../../store';
 import type { Activity } from '../../types';
-import type { AppDispatch } from '../../store';
-import { useState } from 'react';
 
-const entityIcons: Record<string, typeof FolderIcon> = {
-  workspace: FolderIcon,
-  room: ClockIcon,
-  member: UserGroupIcon,
-  auth: ChartBarIcon,
-};
+type EntityFilter = 'all' | 'workspace' | 'room' | 'member' | 'invite' | 'task' | 'file' | 'auth';
+
+function timeAgo(date: string): string {
+  const now = Date.now();
+  const diff = now - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(date).toLocaleDateString();
+}
+
+function getActionColor(action: string): string {
+  if (action.includes('created')) return 'bg-emerald-500';
+  if (action.includes('deleted')) return 'bg-red-500';
+  if (action.includes('updated') || action.includes('edited')) return 'bg-amber-500';
+  if (action.includes('joined')) return 'bg-blue-500';
+  if (action.includes('completed')) return 'bg-green-500';
+  if (action.includes('suspended')) return 'bg-orange-500';
+  if (action.includes('reactivated')) return 'bg-cyan-500';
+  return 'bg-gray-400';
+}
+
+function getEntityIcon(type: string): string {
+  switch (type) {
+    case 'workspace':
+      return '📁';
+    case 'room':
+      return '🏠';
+    case 'member':
+      return '👤';
+    case 'invite':
+      return '✉️';
+    case 'task':
+      return '✅';
+    case 'file':
+      return '📄';
+    case 'auth':
+      return '🔐';
+    default:
+      return '📋';
+  }
+}
 
 export default function ActivityPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>('');
+  const { showToast } = useToast();
+  const { activities, isLoading } = useSelector((state: RootState) => state.activity);
+  const [filter, setFilter] = useState<EntityFilter>('all');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    setLoading(true);
-    activityService
-      .getAll(filter || undefined)
-      .then((data) => {
-        setActivities(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [dispatch, filter]);
+    dispatch(fetchActivities());
+  }, [dispatch]);
 
-  const handleClear = async () => {
-    await activityService.clearAll();
-    setActivities([]);
+  const filtered = activities.filter((act: Activity) => {
+    const matchesFilter = filter === 'all' || act.entityType === filter;
+    const matchesSearch =
+      !search ||
+      act.action.toLowerCase().includes(search.toLowerCase()) ||
+      (act.entityName && act.entityName.toLowerCase().includes(search.toLowerCase()));
+    return matchesFilter && matchesSearch;
+  });
+
+  const handleClearAll = () => {
+    dispatch(clearAllActivities());
+    showToast('Activity cleared', 'info');
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-3xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            Activity
+            Activity Timeline
           </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
-            Track all your recent actions
+            {activities.length} activities
           </p>
         </div>
         {activities.length > 0 && (
-          <button onClick={handleClear} className="btn-secondary text-red-500">
-            Clear All
+          <button
+            onClick={handleClearAll}
+            className="btn-secondary text-xs flex items-center gap-1.5"
+          >
+            <TrashIcon className="w-3.5 h-3.5" /> Clear all
           </button>
         )}
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {['', 'workspace', 'room', 'member'].map((f) => (
+      <div className="relative">
+        <MagnifyingGlassIcon
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
+          style={{ color: 'var(--text-tertiary)' }}
+        />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="input-base pl-10"
+          placeholder="Search activities..."
+        />
+      </div>
+
+      <div className="flex gap-1 flex-wrap">
+        {(['all', 'workspace', 'room', 'member', 'task', 'file'] as EntityFilter[]).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === f ? 'bg-indigo-600 text-white' : ''}`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              filter === f ? 'bg-indigo-600 text-white' : ''
+            }`}
             style={
               filter !== f
-                ? { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
+                ? {
+                    background: 'var(--bg-tertiary)',
+                    color: 'var(--text-secondary)',
+                  }
                 : undefined
             }
           >
-            {f || 'All'}
+            {getEntityIcon(f)} {f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
       </div>
 
-      {loading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-16 rounded-xl animate-pulse"
-              style={{ background: 'var(--bg-tertiary)' }}
-            />
+      {isLoading ? (
+        <div className="space-y-4 pl-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-4">
+              <div
+                className="w-3 h-3 rounded-full mt-1.5 animate-pulse shrink-0"
+                style={{ background: 'var(--bg-tertiary)' }}
+              />
+              <div className="flex-1 space-y-2">
+                <div
+                  className="h-4 rounded animate-pulse w-3/4"
+                  style={{ background: 'var(--bg-tertiary)' }}
+                />
+                <div
+                  className="h-3 rounded animate-pulse w-1/4"
+                  style={{ background: 'var(--bg-tertiary)' }}
+                />
+              </div>
+            </div>
           ))}
         </div>
-      ) : activities.length === 0 ? (
-        <p className="text-center py-16" style={{ color: 'var(--text-tertiary)' }}>
-          No activity yet.
-        </p>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-4xl mb-4">📋</div>
+          <p className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
+            No activities found
+          </p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+            {search
+              ? 'Try a different search term.'
+              : 'Activities will appear here as you use SyncSpace.'}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-2">
-          {activities.map((a, i) => {
-            const Icon = entityIcons[a.entityType] || ChartBarIcon;
+        <div className="relative pl-6">
+          <div
+            className="absolute left-[7px] top-0 bottom-0 w-0.5"
+            style={{ background: 'var(--border-color)' }}
+          />
+          {filtered.map((act: Activity, i: number) => {
+            const userName =
+              typeof act.user === 'object' && act.user !== null
+                ? (act.user as { name: string }).name
+                : 'Someone';
+            const color = getActionColor(act.action);
             return (
               <motion.div
-                key={a._id}
+                key={act._id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className="flex items-center gap-4 p-4 rounded-xl"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+                className="relative flex items-start gap-4 pb-6"
               >
                 <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center"
-                  style={{ background: 'var(--bg-tertiary)' }}
-                >
-                  <Icon className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
-                </div>
+                  className={`absolute -left-6 w-3.5 h-3.5 rounded-full ${color} ring-2 ring-[var(--bg-secondary)] z-10 mt-1.5`}
+                />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm" style={{ color: 'var(--text-primary)' }}>
-                    <span className="font-medium">{a.action}</span>
-                    {a.entityName && (
-                      <span style={{ color: 'var(--text-tertiary)' }}>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                    <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {userName}
+                    </span>{' '}
+                    {act.action}
+                    {act.entityName && (
+                      <>
                         {' '}
-                        &middot; {a.entityName}
-                      </span>
+                        <span className="font-medium text-indigo-500">{act.entityName}</span>
+                      </>
                     )}
                   </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-tertiary)] font-medium">
+                      {getEntityIcon(act.entityType)} {act.entityType}
+                    </span>
+                    <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                      {timeAgo(act.createdAt)}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-xs flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
-                  {new Date(a.createdAt).toLocaleString()}
-                </span>
               </motion.div>
             );
           })}

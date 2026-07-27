@@ -74,4 +74,9 @@ export const workspaceService = {
     const response = await api.post('/workspaces/join', { inviteCode });
     return response.data.data.workspace;
   },
+
+  async toggleFavorite(id: string): Promise<Workspace> {
+    const response = await api.post(`/workspaces/${id}/favorite`);
+    return response.data.data.workspace;
+  },
 };

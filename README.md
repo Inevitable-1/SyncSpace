@@ -1,55 +1,86 @@
 # SyncSpace
 
-A real-time collaborative platform built with the MERN stack. Think Excalidraw meets VS Code Live Share — an enterprise-grade workspace where teams can collaborate on whiteboards, code, and documents simultaneously.
+A real-time collaborative platform for teams. Think Excalidraw meets VS Code Live Share — an enterprise-grade workspace where teams collaborate on whiteboards, code editors, chat, and task boards simultaneously.
+
+## Features
+
+### Core Collaboration
+
+- **Real-time Whiteboard** — Drawing tools, shapes, text, undo/redo, multi-user cursors via React Konva
+- **Collaborative Code Editor** — Monaco Editor with live cursors, multi-file tabs, file explorer, themes
+- **Real-time Chat** — Messages, replies, emoji, typing indicators, seen status
+- **Kanban Task Board** — 4-column drag-and-drop with priorities, labels, due dates, checklists
+
+### Workspace Management
+
+- **Workspaces** — Create, edit, delete, archive, favorite, search, invite codes
+- **Rooms** — Whiteboard, code, and document room types per workspace
+- **Member Management** — Roles (owner/admin/member), suspend, promote, demote
+- **Invite System** — Email-based invitations with token expiry
+
+### Dashboard
+
+- **Analytics** — Stat cards, bar charts, donut charts
+- **Activity Timeline** — Filterable audit log of all actions
+- **Notifications** — Real-time notification center with read/unread tracking
+- **Global Search** — Cmd+K search across workspaces, rooms, members, tasks
+
+### UI/UX
+
+- **Dark & Light Mode** — Full theme support with CSS variables
+- **Responsive Design** — Collapsible sidebar, mobile-friendly layouts
+- **Animations** — Framer Motion transitions and micro-interactions
+- **Loading States** — Skeleton loaders for all data views
+- **Professional UI** — 16+ reusable components (Button, Card, Badge, Avatar, Modal, etc.)
 
 ## Tech Stack
 
-| Layer    | Technology                                                                               |
-| -------- | ---------------------------------------------------------------------------------------- |
-| Frontend | React 18, TypeScript, Vite 8, Tailwind CSS 3, Redux Toolkit, React Konva, React Router 6 |
-| Backend  | Node.js, Express 5, TypeScript, Socket.io 4                                              |
-| Database | MongoDB (Mongoose 9)                                                                     |
-| Auth     | JWT (access + refresh tokens), bcryptjs, httpOnly cookies                                |
-| Tooling  | npm workspaces, Prettier, Husky, lint-staged, concurrently                               |
-| DevOps   | Docker, Docker Compose, MongoDB 7, Redis 7                                               |
+| Layer     | Technology                                                                   |
+| --------- | ---------------------------------------------------------------------------- |
+| Frontend  | React 18, TypeScript 7, Vite 8, Tailwind CSS 3, Redux Toolkit, Framer Motion |
+| Real-time | Socket.IO 4, React Konva, Monaco Editor                                      |
+| Backend   | Node.js, Express 5, TypeScript 7, Mongoose 9                                 |
+| Database  | MongoDB 7 (Docker)                                                           |
+| Auth      | JWT (access + refresh tokens), bcryptjs, httpOnly cookies                    |
+| Tooling   | npm workspaces, Prettier, Husky, lint-staged                                 |
+| DevOps    | Docker Compose, Redis 7                                                      |
 
-## Project Structure
+## Architecture
 
 ```
 SyncSpace/
-├── client/                  # React frontend
+├── client/                          # React frontend
 │   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   │   ├── common/      # Shared components (Modals, Skeleton, Toast, etc.)
-│   │   │   ├── layout/      # Layout components (Sidebar, TopNav, DashboardLayout)
-│   │   │   └── whiteboard/  # Whiteboard canvas components
-│   │   ├── features/        # Redux slices (auth, workspace, room, notification)
-│   │   ├── hooks/           # Custom hooks (useSocket)
-│   │   ├── pages/           # Route-level page components
-│   │   │   └── dashboard/   # Dashboard pages (Home, Workspaces, Rooms, Settings)
-│   │   ├── services/        # API client and service layer
-│   │   ├── store.ts         # Redux store configuration
-│   │   └── types/           # Shared TypeScript types
-│   ├── index.html
-│   ├── vite.config.ts
-│   └── tailwind.config.js
-├── server/                  # Express backend
+│   │   ├── components/
+│   │   │   ├── common/              # 16+ reusable UI components
+│   │   │   ├── layout/              # Sidebar, TopNav, DashboardLayout
+│   │   │   ├── whiteboard/          # Canvas, Toolbar, PropertiesPanel, Cursors
+│   │   │   ├── editor/              # CodeIDE, MonacoEditor, FileExplorer, Terminal
+│   │   │   ├── collaboration/       # RoomLayout, Chat, Presence, Members
+│   │   │   ├── tasks/               # KanbanBoard
+│   │   │   ├── files/               # FileExplorer
+│   │   │   └── charts/              # BarChart, DonutChart
+│   │   ├── features/                # 12 Redux slices
+│   │   ├── hooks/                   # useSocket, useCollaborationSocket, useEditorSocket
+│   │   ├── pages/                   # 14 dashboard pages + auth pages
+│   │   ├── services/                # 14 API service files
+│   │   └── types/                   # Shared TypeScript interfaces
+│   └── vite.config.ts
+├── server/                          # Express backend
 │   ├── src/
-│   │   ├── configs/         # Database and service configuration
-│   │   ├── controllers/     # Route handlers
-│   │   ├── middleware/       # Auth, error handling
-│   │   ├── models/          # Mongoose schemas
-│   │   ├── routes/          # API route definitions
-│   │   ├── services/        # Business logic layer
-│   │   ├── socket/          # Socket.io event handlers
-│   │   ├── types/           # Shared TypeScript types
-│   │   └── utils/           # Helpers (tokens, logger, async handler)
+│   │   ├── models/                  # 16 Mongoose models
+│   │   ├── controllers/             # 12 controllers
+│   │   ├── routes/                  # 12 route files
+│   │   ├── services/                # 3 business logic services
+│   │   ├── repositories/            # 3 repository pattern files
+│   │   ├── dto/                     # 4 DTO files
+│   │   ├── socket/                  # Socket.IO handlers (whiteboard + editor)
+│   │   ├── middleware/              # auth, errorHandler
+│   │   └── utils/                   # tokens, logger, asyncHandler
 │   └── tsconfig.json
-├── docker/                  # Dockerfiles for client and server
-├── docs/                    # Documentation
-├── scripts/                 # Build and utility scripts
-├── docker-compose.yml       # Multi-service dev environment
-└── package.json             # Root workspace config
+├── docker/                          # Dockerfiles
+├── docker-compose.yml               # MongoDB + Redis + Server + Client
+└── docs/                            # Development reports
 ```
 
 ## Getting Started
@@ -69,8 +100,6 @@ npm install
 ```
 
 ### Environment Setup
-
-Create environment files:
 
 **server/.env**
 
@@ -98,13 +127,17 @@ docker compose up -d
 
 ### Run Locally
 
-Start MongoDB first (via Docker or local install), then:
-
 ```bash
 npm run dev
 ```
 
-This starts both client (http://localhost:5173) and server (http://localhost:5000) concurrently.
+Starts both client (http://localhost:5173) and server (http://localhost:5000).
+
+### Build for Production
+
+```bash
+npm run build
+```
 
 ## Available Scripts
 
@@ -117,235 +150,182 @@ This starts both client (http://localhost:5173) and server (http://localhost:500
 
 ## API Endpoints
 
-| Method | Endpoint                                      | Description                          |
-| ------ | --------------------------------------------- | ------------------------------------ |
-| GET    | `/api/health`                                 | Health check                         |
-| POST   | `/api/auth/register`                          | Register new user                    |
-| POST   | `/api/auth/login`                             | Login                                |
-| POST   | `/api/auth/logout`                            | Logout (clears refresh token)        |
-| POST   | `/api/auth/refresh-token`                     | Refresh access token                 |
-| POST   | `/api/auth/forgot-password`                   | Request password reset               |
-| POST   | `/api/auth/reset-password`                    | Reset password with token            |
-| GET    | `/api/auth/me`                                | Get current user (requires auth)     |
-| GET    | `/api/workspaces`                             | List workspaces                      |
-| POST   | `/api/workspaces`                             | Create workspace                     |
-| GET    | `/api/workspaces/:id`                         | Get workspace by ID                  |
-| PUT    | `/api/workspaces/:id`                         | Update workspace                     |
-| DELETE | `/api/workspaces/:id`                         | Soft-delete workspace                |
-| POST   | `/api/workspaces/:id/restore`                 | Restore workspace from trash         |
-| GET    | `/api/workspaces/trash`                       | Get trashed items                    |
-| GET    | `/api/workspaces/search`                      | Search workspaces                    |
-| POST   | `/api/workspaces/:id/invite-code`             | Regenerate invite code               |
-| POST   | `/api/workspaces/join`                        | Join workspace by invite code        |
-| GET    | `/api/workspaces/:id/members`                 | List workspace members (paginated)   |
-| POST   | `/api/workspaces/:id/members`                 | Add member to workspace              |
-| DELETE | `/api/workspaces/:id/members/:mid`            | Remove member from workspace         |
-| PUT    | `/api/workspaces/:id/members/:mid/role`       | Update member role                   |
-| POST   | `/api/workspaces/:id/members/:mid/suspend`    | Suspend member                       |
-| POST   | `/api/workspaces/:id/members/:mid/reactivate` | Reactivate member                    |
-| GET    | `/api/workspaces/:id/members/stats`           | Member statistics                    |
-| GET    | `/api/workspaces/:id/invites`                 | List workspace invites (paginated)   |
-| POST   | `/api/workspaces/:id/invites`                 | Send invite to email                 |
-| DELETE | `/api/workspaces/:id/invites/:iid`            | Revoke an invite                     |
-| GET    | `/api/workspaces/:id/invites/stats`           | Invite statistics                    |
-| GET    | `/api/invites/pending`                        | Get pending invites for current user |
-| POST   | `/api/invites/:token/accept`                  | Accept invite by token               |
-| POST   | `/api/invites/:token/decline`                 | Decline invite by token              |
-| GET    | `/api/rooms`                                  | List rooms                           |
-| POST   | `/api/rooms`                                  | Create room                          |
-| GET    | `/api/rooms/:id`                              | Get room by ID                       |
-| PUT    | `/api/rooms/:id`                              | Update room                          |
-| DELETE | `/api/rooms/:id`                              | Soft-delete room                     |
-| POST   | `/api/rooms/:id/restore`                      | Restore room from trash              |
-| POST   | `/api/rooms/join`                             | Join room by invite code             |
-| GET    | `/api/rooms/stats`                            | Room statistics                      |
-| GET    | `/api/whiteboards/:roomId`                    | Get whiteboard data                  |
-| PUT    | `/api/whiteboards/:roomId`                    | Save whiteboard data                 |
-| GET    | `/api/activities`                             | Activity feed                        |
-| DELETE | `/api/activities/clear`                       | Clear all activities                 |
-| DELETE | `/api/activities/:id`                         | Delete single activity               |
-| GET    | `/api/notifications`                          | List notifications                   |
-| PUT    | `/api/notifications/read-all`                 | Mark all as read                     |
-| PUT    | `/api/notifications/:id/read`                 | Mark notification as read            |
-| DELETE | `/api/notifications/:id`                      | Delete notification                  |
-| DELETE | `/api/notifications/clear`                    | Clear all notifications              |
+### Authentication (7)
 
-## Day 3 Progress
+| Method | Endpoint                    | Description            |
+| ------ | --------------------------- | ---------------------- |
+| POST   | `/api/auth/register`        | Register new user      |
+| POST   | `/api/auth/login`           | Login                  |
+| POST   | `/api/auth/logout`          | Logout                 |
+| POST   | `/api/auth/refresh-token`   | Refresh access token   |
+| POST   | `/api/auth/forgot-password` | Request password reset |
+| POST   | `/api/auth/reset-password`  | Reset password         |
+| GET    | `/api/auth/me`              | Get current user       |
 
-### Collaborative Whiteboard
+### Workspaces (16)
 
-- Full HTML5 Canvas drawing surface using React Konva
-- Drawing tools: pen, line, rectangle, circle, arrow, text
-- Color picker, stroke width, fill, opacity controls
-- Undo/redo support with action history stack
-- Pan, zoom, and canvas reset controls
-- Object selection and deletion
-- Real-time cursor overlay showing other users' positions
-- Auto-save whiteboard state to MongoDB
-- Socket.io broadcasting for real-time collaboration
+| Method | Endpoint                           | Description            |
+| ------ | ---------------------------------- | ---------------------- |
+| POST   | `/api/workspaces`                  | Create workspace       |
+| GET    | `/api/workspaces`                  | List workspaces        |
+| GET    | `/api/workspaces/search`           | Search workspaces      |
+| GET    | `/api/workspaces/trash`            | Get trashed items      |
+| GET    | `/api/workspaces/:id`              | Get workspace          |
+| PUT    | `/api/workspaces/:id`              | Update workspace       |
+| DELETE | `/api/workspaces/:id`              | Delete workspace       |
+| POST   | `/api/workspaces/:id/restore`      | Restore workspace      |
+| POST   | `/api/workspaces/:id/invite-code`  | Regenerate invite code |
+| POST   | `/api/workspaces/join`             | Join by invite code    |
+| POST   | `/api/workspaces/:id/favorite`     | Toggle favorite        |
+| POST   | `/api/workspaces/:id/archive`      | Archive workspace      |
+| POST   | `/api/workspaces/:id/unarchive`    | Unarchive workspace    |
+| GET    | `/api/workspaces/:id/members`      | List members           |
+| POST   | `/api/workspaces/:id/members`      | Add member             |
+| DELETE | `/api/workspaces/:id/members/:mid` | Remove member          |
 
-### Improved Dashboard UI
+### Rooms (8)
 
-- Redesigned DashboardHome with gradient welcome banner
-- Workspace cards with color themes and member counts
-- Recent rooms list with type badges and live status
-- Quick action grid for fast workspace and room creation
-- Workspace statistics sidebar panel
-- Activity feed showing recent actions across all workspaces
-- Floating action button (FAB) for quick creation from any dashboard view
+| Method | Endpoint                 | Description     |
+| ------ | ------------------------ | --------------- |
+| POST   | `/api/rooms`             | Create room     |
+| GET    | `/api/rooms`             | List rooms      |
+| GET    | `/api/rooms/stats`       | Room statistics |
+| GET    | `/api/rooms/:id`         | Get room        |
+| PUT    | `/api/rooms/:id`         | Update room     |
+| DELETE | `/api/rooms/:id`         | Delete room     |
+| POST   | `/api/rooms/:id/restore` | Restore room    |
+| POST   | `/api/rooms/join`        | Join room       |
 
-### Workspace Management
+### Members (7)
 
-- Dedicated WorkspacesPage with grid/list view toggle
-- Workspace creation modal with name, description, color, and visibility options
-- Workspace editing modal with inline name and description fields
-- Workspace detail page with tabs for rooms, members, and settings
-- Room creation within workspace context
-- Room deletion with confirmation dialog
-- Workspace deletion with danger zone and confirmation
-- Search and filter workspaces by name
+| Method | Endpoint                                      | Description       |
+| ------ | --------------------------------------------- | ----------------- |
+| GET    | `/api/workspaces/:id/members`                 | List members      |
+| GET    | `/api/workspaces/:id/members/stats`           | Member stats      |
+| POST   | `/api/workspaces/:id/members`                 | Add member        |
+| PUT    | `/api/workspaces/:id/members/:mid/role`       | Update role       |
+| PUT    | `/api/workspaces/:id/members/:mid/suspend`    | Suspend member    |
+| PUT    | `/api/workspaces/:id/members/:mid/reactivate` | Reactivate member |
+| DELETE | `/api/workspaces/:id/members/:mid`            | Remove member     |
 
-### Room Management
+### Invites (7)
 
-- Dedicated RoomsPage with search functionality
-- Room type indicators (whiteboard, code, document) with color badges
-- Room detail page with overview, whiteboard, code, and participants tabs
-- Room statistics endpoint for dashboard metrics
+| Method | Endpoint                            | Description         |
+| ------ | ----------------------------------- | ------------------- |
+| GET    | `/api/workspaces/:id/invites`       | List invites        |
+| GET    | `/api/workspaces/:id/invites/stats` | Invite stats        |
+| POST   | `/api/workspaces/:id/invites`       | Create invite       |
+| DELETE | `/api/workspaces/:id/invites/:iid`  | Revoke invite       |
+| GET    | `/api/invites/pending`              | Get pending invites |
+| POST   | `/api/invites/:token/accept`        | Accept invite       |
+| POST   | `/api/invites/:token/decline`       | Decline invite      |
 
-### Real-time Collaboration Infrastructure
+### Chat (5)
 
-- Socket.io client hook (`useSocket`) with automatic connection management
-- Room joining/leaving with user presence tracking
-- Whiteboard event broadcasting (draw, update, delete, cursor move)
-- Auto-reconnection on connection loss
-- Connection status indicator in whiteboard status bar
+| Method | Endpoint                 | Description    |
+| ------ | ------------------------ | -------------- |
+| GET    | `/api/chat/:roomId`      | Get messages   |
+| POST   | `/api/chat/:roomId`      | Send message   |
+| PUT    | `/api/chat/:messageId`   | Edit message   |
+| DELETE | `/api/chat/:messageId`   | Delete message |
+| POST   | `/api/chat/:roomId/seen` | Mark seen      |
 
-### Authentication Improvements
+### Tasks (7)
 
-- Demo login mode that works without database connection
-- `isDemo` flag in auth state to prevent unnecessary API refresh attempts
-- Proper Redux dispatch for demo login instead of raw localStorage manipulation
-- Axios interceptor improvement: skips token refresh for demo tokens
+| Method | Endpoint                            | Description        |
+| ------ | ----------------------------------- | ------------------ |
+| GET    | `/api/tasks`                        | List tasks         |
+| GET    | `/api/tasks/workspace/:workspaceId` | Tasks by workspace |
+| POST   | `/api/tasks`                        | Create task        |
+| PUT    | `/api/tasks/:id`                    | Update task        |
+| DELETE | `/api/tasks/:id`                    | Delete task        |
+| POST   | `/api/tasks/:id/comments`           | Add comment        |
+| GET    | `/api/tasks/:id/comments`           | Get comments       |
 
-### Bug Fixes
+### Files (5)
 
-- Fixed auto-logout bug where demo login caused immediate redirect to login page
-- Fixed axios interceptor attempting refresh with invalid demo tokens
-- Removed dead ConfirmDialog with hardcoded `isOpen={false}` in WorkspaceDetailPage
-- Fixed redundant FAB action branching in DashboardHome
-- Removed duplicate `typeColors` objects from render loops
-- Removed duplicate room count computation in WorkspacesPage
-- Removed redundant errorHandler middleware from whiteboard routes
-- Cleaned up unused server-side TypeScript interfaces
-- Extracted duplicated localStorage token reading into helper functions in api.ts
+| Method | Endpoint                | Description  |
+| ------ | ----------------------- | ------------ |
+| GET    | `/api/files`            | List files   |
+| GET    | `/api/files/folders`    | List folders |
+| POST   | `/api/files`            | Upload file  |
+| DELETE | `/api/files/:id`        | Delete file  |
+| PUT    | `/api/files/:id/rename` | Rename file  |
 
-### Responsive UI
+### Documents (6)
 
-- Collapsible sidebar with mobile hamburger menu
-- Responsive grid layouts for workspace and room cards
-- Mobile-friendly navigation with slide-out sidebar overlay
-- Adaptive typography and spacing across breakpoints
+| Method | Endpoint                      | Description       |
+| ------ | ----------------------------- | ----------------- |
+| GET    | `/api/documents/room/:roomId` | Documents by room |
+| GET    | `/api/documents/:id`          | Get document      |
+| POST   | `/api/documents`              | Create document   |
+| PUT    | `/api/documents/:id`          | Update document   |
+| PUT    | `/api/documents/:id/rename`   | Rename document   |
+| DELETE | `/api/documents/:id`          | Delete document   |
 
-## Day 4 Progress
+### Whiteboard, Activities, Notifications
 
-### Member Management System
+| Method | Endpoint                      | Description         |
+| ------ | ----------------------------- | ------------------- |
+| GET    | `/api/whiteboards/:roomId`    | Get whiteboard      |
+| PUT    | `/api/whiteboards/:roomId`    | Save whiteboard     |
+| GET    | `/api/activities`             | List activities     |
+| DELETE | `/api/activities/:id`         | Delete activity     |
+| DELETE | `/api/activities/clear`       | Clear all           |
+| GET    | `/api/notifications`          | List notifications  |
+| PUT    | `/api/notifications/read-all` | Mark all read       |
+| PUT    | `/api/notifications/:id/read` | Mark as read        |
+| DELETE | `/api/notifications/:id`      | Delete notification |
+| DELETE | `/api/notifications/clear`    | Clear all           |
 
-- `Member` model with roles (owner/admin/member) and statuses (active/invited/suspended)
-- `MemberService` with full CRUD: add, remove, update role, suspend, reactivate
-- `MemberRepository` with pagination, search, and filtering
-- Member routes mounted at `/api/workspaces/:id/members` (7 endpoints)
-- Member Redux slice with async thunks for all operations
-- Member service layer on the client for API calls
+## Socket Events
 
-### Invite System
+### Whiteboard
 
-- `Invite` model with email, token, 7-day expiry, and status tracking
-- `InviteService` with create, accept, decline, revoke, and user-pending lookup
-- `InviteRepository` with paginated queries and email-based lookup
-- Invite routes mounted at `/api/workspaces/:id/invites` (6 workspace-scoped endpoints)
-- Global invite routes at `/api/invites` for pending, accept, and decline (3 endpoints)
-- Invite Redux slice with async thunks
-- Invite service layer on the client
+`join-room`, `leave-room`, `draw`, `update-object`, `delete-object`, `cursor-move`, `undo`, `redo`, `clear-canvas`, `save-whiteboard`
 
-### Enterprise Backend Architecture
+### Code Editor
 
-- Controller → Service → Repository → Model layered architecture
-- DTOs for data transfer and query parameter typing (`MemberQueryDto`, `InviteQueryDto`)
-- Repository pattern with reusable query builders
-- Pagination support with consistent `PaginatedResponse<T>` type
-- Input validation via `express-validator` on all routes
-- Consistent error handling with `AppError` class
-- Activity logging for all member and invite operations
-- Notification system integration for workspace events
+`editor-join`, `editor-leave`, `code-change`, `cursor-update`, `selection-update`, `save-document`, `sync-document`
 
-### Reusable UI Components (16+)
+### Chat & Presence
 
-- `Button` with variants (primary, secondary, danger, ghost), sizes, loading state
-- `Input` with label, error state, helper text, icon support
-- `Card` with hover effects and click handlers
-- `Badge` with color variants for status and role indicators
-- `Avatar` with initials fallback and size options
-- `Dropdown` with keyboard navigation and search
-- `Tooltip` with positioning options
-- `Tabs` with animated indicator and content panels
-- `Toggle` for boolean settings
-- `Alert` for status messages
-- `ProgressBar` with labels and color variants
-- `Breadcrumbs` for navigation hierarchy
-- `StatCard` for dashboard metrics
-- `SearchInput` with debounce and clear button
-- `Pagination` with page navigation and item count
-- `GlobalSearch` with Cmd+K shortcut and workspace/room search
-- Skeleton components: `CardSkeleton`, `StatCardSkeleton`, `TableSkeleton`
+`send-message`, `edit-message`, `delete-message`, `typing-start`, `typing-stop`, `mark-seen`, `update-activity`
 
-### Dashboard Charts
+## MongoDB Collections
 
-- `SimpleBarChart` for weekly activity visualization
-- `SimpleDonutChart` for workspace type distribution
-- Dashboard enhanced with both chart types
+| Collection      | Description                             |
+| --------------- | --------------------------------------- |
+| `users`         | User accounts with hashed passwords     |
+| `workspaces`    | Workspace configuration and membership  |
+| `rooms`         | Collaboration rooms within workspaces   |
+| `members`       | Role-based workspace membership         |
+| `invites`       | Email-based invitation tracking         |
+| `tasks`         | Kanban tasks with priorities and labels |
+| `taskcomments`  | Comments on tasks                       |
+| `chatmessages`  | In-room chat messages                   |
+| `whiteboards`   | Konva.js whiteboard object storage      |
+| `codedocuments` | Code files with version tracking        |
+| `activities`    | Audit log of all actions                |
+| `notifications` | User notifications                      |
+| `roompresences` | Real-time presence tracking             |
+| `refreshtokens` | JWT refresh token rotation              |
+| `uploadedfiles` | File upload metadata                    |
 
-### Workspace Settings Polish
+## Future Scope
 
-- Color picker with 20 preset colors
-- Icon picker with 20 emoji options
-- Toggle switch for public/private visibility
-
-### Code Quality Improvements (Day 4 Cleanup)
-
-- Removed stale `.gitkeep` files from populated directories
-- Removed duplicate member endpoints from workspace controller (now using dedicated member controller)
-- Removed redundant per-route `errorHandler` middleware (global handler in `app.ts`)
-- Fixed type mismatches: `any` casts replaced with proper types (`InviteStatus`, `MemberRole`, `MemberStatus`, `IInviteDocument`)
-- Added `'invite'` to `entityType` unions in notification controller and client types
-- Added missing `ActivityAction` type: `'added member to workspace'`
-- Fixed dynamic `crypto` import to use top-level static import
-- Fixed `TrashPage` to use `workspaceService.getTrash()` instead of raw `fetch()`
-- Fixed client `inviteService` URLs for pending/accept/decline endpoints
-- Updated README with complete API endpoint documentation and Day 4 progress
-
-## Roadmap
-
-- [x] Project setup and authentication (Day 1)
-- [x] Dashboard UI and workspace management (Day 2)
-- [x] Collaborative whiteboard with real-time sync (Day 3)
-- [x] Member/invite management and enterprise architecture (Day 4)
-- [ ] Real-time code editor (Monaco)
-- [ ] Document collaboration
+- [ ] Operational Transform / CRDT for conflict-free editing
+- [ ] Real terminal execution (Docker-in-Docker)
+- [ ] Document collaboration with rich text
 - [ ] User avatars and profiles
-- [ ] Email verification
+- [ ] Email verification flow
 - [ ] Rate limiting and brute-force protection
-- [ ] CI/CD pipeline
-- [ ] End-to-end testing
-
-## Progress
-
-| Day   | Work Completed                                                                   | Status |
-| ----- | -------------------------------------------------------------------------------- | ------ |
-| Day 1 | Project setup, Authentication, Dashboard Foundation, Docker configuration        | ✅     |
-| Day 2 | Dashboard UI, Workspace Layout, Room Management, Backend CRUD APIs               | ✅     |
-| Day 3 | Collaborative Whiteboard, Dashboard Improvements, Auth Bug Fixes, Real-time Sync | ✅     |
-| Day 4 | Member/Invite System, Enterprise Architecture, 16+ UI Components, Charts         | ✅     |
+- [ ] CI/CD pipeline with GitHub Actions
+- [ ] End-to-end testing with Vitest
+- [ ] WebSocket reconnection resilience
+- [ ] File upload to cloud storage (S3)
+- [ ] Elasticsearch for full-text search
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+MIT License. See [LICENSE](LICENSE) for details.

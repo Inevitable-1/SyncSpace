@@ -218,9 +218,43 @@ export default function DashboardHome() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
+          {workspaces.some((ws) => ws.isFavorite) && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2
+                  className="text-lg font-semibold flex items-center gap-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  <span className="text-yellow-500">★</span> Starred
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {workspaces
+                  .filter((ws) => ws.isFavorite)
+                  .slice(0, 4)
+                  .map((ws, i) => {
+                    const wsRooms = rooms.filter(
+                      (r) =>
+                        (typeof r.workspace === 'object' ? r.workspace._id : r.workspace) ===
+                        ws._id,
+                    );
+                    return (
+                      <WorkspaceCard
+                        key={ws._id}
+                        workspace={ws}
+                        index={i}
+                        roomCount={wsRooms.length}
+                        variant="dashboard"
+                      />
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-              My Workspaces
+              Recent Workspaces
             </h2>
             <button
               onClick={() => navigate('/dashboard/workspaces')}
@@ -265,21 +299,24 @@ export default function DashboardHome() {
             </motion.div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {workspaces.slice(0, 4).map((ws, i) => {
-                const wsRooms = rooms.filter(
-                  (r) =>
-                    (typeof r.workspace === 'object' ? r.workspace._id : r.workspace) === ws._id,
-                );
-                return (
-                  <WorkspaceCard
-                    key={ws._id}
-                    workspace={ws}
-                    index={i}
-                    roomCount={wsRooms.length}
-                    variant="dashboard"
-                  />
-                );
-              })}
+              {[...workspaces]
+                .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                .slice(0, 4)
+                .map((ws, i) => {
+                  const wsRooms = rooms.filter(
+                    (r) =>
+                      (typeof r.workspace === 'object' ? r.workspace._id : r.workspace) === ws._id,
+                  );
+                  return (
+                    <WorkspaceCard
+                      key={ws._id}
+                      workspace={ws}
+                      index={i}
+                      roomCount={wsRooms.length}
+                      variant="dashboard"
+                    />
+                  );
+                })}
             </div>
           )}
 
