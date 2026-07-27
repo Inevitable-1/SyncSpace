@@ -32,64 +32,66 @@ const bottomNavItems = [
   { to: '/dashboard/settings', icon: Cog6ToothIcon, label: 'Settings' },
 ];
 
-const NavItem = memo(({
-  to,
-  icon: Icon,
-  label,
-  showCount,
-  count,
-  collapsed,
-  onClose,
-}: {
-  to: string;
-  icon: React.ElementType;
-  label: string;
-  showCount?: boolean;
-  count: number;
-  collapsed: boolean;
-  onClose: () => void;
-}) => (
-  <NavLink to={to} end={to === '/dashboard'} onClick={onClose} className="group relative">
-    {({ isActive }) => (
-      <div
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-          isActive
-            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
-            : 'hover:bg-[var(--bg-hover)]'
-        }`}
-        style={!isActive ? { color: 'var(--text-secondary)' } : undefined}
-        title={collapsed ? label : undefined}
-      >
-        {isActive && (
-          <motion.div
-            layoutId="sidebar-active"
-            className="absolute inset-0 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/25"
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          />
-        )}
-        <span className="relative z-10 flex items-center gap-3 w-full">
-          <Icon className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && (
-            <>
-              <span className="flex-1">{label}</span>
-              {showCount && count > 0 && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
-                  }`}
-                >
-                  {count}
-                </span>
-              )}
-            </>
+const NavItem = memo(
+  ({
+    to,
+    icon: Icon,
+    label,
+    showCount,
+    count,
+    collapsed,
+    onClose,
+  }: {
+    to: string;
+    icon: React.ElementType;
+    label: string;
+    showCount?: boolean;
+    count: number;
+    collapsed: boolean;
+    onClose: () => void;
+  }) => (
+    <NavLink to={to} end={to === '/dashboard'} onClick={onClose} className="group relative">
+      {({ isActive }) => (
+        <div
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+            isActive
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
+              : 'hover:bg-[var(--bg-hover)]'
+          }`}
+          style={!isActive ? { color: 'var(--text-secondary)' } : undefined}
+          title={collapsed ? label : undefined}
+        >
+          {isActive && (
+            <motion.div
+              layoutId="sidebar-active"
+              className="absolute inset-0 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/25"
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            />
           )}
-        </span>
-      </div>
-    )}
-  </NavLink>
-));
+          <span className="relative z-10 flex items-center gap-3 w-full">
+            <Icon className="w-5 h-5 flex-shrink-0" />
+            {!collapsed && (
+              <>
+                <span className="flex-1">{label}</span>
+                {showCount && count > 0 && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                      isActive
+                        ? 'bg-white/20 text-white'
+                        : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </>
+            )}
+          </span>
+        </div>
+      )}
+    </NavLink>
+  ),
+);
 
 interface SidebarProps {
   isOpen: boolean;
@@ -158,7 +160,13 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin">
         <div className="space-y-1">
           {mainNavItems.map((item) => (
-            <NavItem key={item.to} {...item} count={item.showCount ? workspaceCount : 0} collapsed={collapsed} onClose={onClose} />
+            <NavItem
+              key={item.to}
+              {...item}
+              count={item.showCount ? workspaceCount : 0}
+              collapsed={collapsed}
+              onClose={onClose}
+            />
           ))}
         </div>
       </nav>

@@ -55,7 +55,11 @@ function getFileIcon(mimeType: string, isFolder: boolean): string {
   if (isFolder) return '📁';
   if (mimeType.startsWith('image/')) return '🖼️';
   if (mimeType === 'application/pdf') return '📄';
-  if (mimeType.includes('javascript') || mimeType.includes('typescript') || mimeType.includes('json'))
+  if (
+    mimeType.includes('javascript') ||
+    mimeType.includes('typescript') ||
+    mimeType.includes('json')
+  )
     return '💻';
   if (mimeType.includes('text/') || mimeType.includes('document')) return '📝';
   return '📦';
@@ -82,7 +86,9 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
 
   useEffect(() => {
     if (workspaceId) {
-      dispatch(fetchFiles({ workspaceId, folder: currentFolder === '/' ? undefined : currentFolder }));
+      dispatch(
+        fetchFiles({ workspaceId, folder: currentFolder === '/' ? undefined : currentFolder }),
+      );
       dispatch(fetchFolders(workspaceId));
     }
   }, [dispatch, workspaceId, currentFolder]);
@@ -182,11 +188,14 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
   };
 
   const handleDownload = (file: UploadedFile) => {
-    fileService.download(file._id, file.name).then(() => {
-      showToast(`Downloading ${file.name}`, 'success');
-    }).catch(() => {
-      showToast(`Failed to download ${file.name}`, 'error');
-    });
+    fileService
+      .download(file._id, file.name)
+      .then(() => {
+        showToast(`Downloading ${file.name}`, 'success');
+      })
+      .catch(() => {
+        showToast(`Failed to download ${file.name}`, 'error');
+      });
   };
 
   const handleFolderClick = (folder: string) => {
@@ -233,7 +242,10 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
 
   if (!workspaceId) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-16" style={{ color: 'var(--text-tertiary)' }}>
+      <div
+        className="flex flex-col items-center justify-center h-full py-16"
+        style={{ color: 'var(--text-tertiary)' }}
+      >
         <FolderIcon className="w-12 h-12 mb-4 opacity-50" />
         <p className="text-sm">Select a workspace to view files</p>
       </div>
@@ -255,7 +267,10 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
             {breadcrumbs.map((crumb, index) => (
               <div key={crumb.path} className="flex items-center min-w-0">
                 {index > 0 && (
-                  <span className="mx-1 text-xs flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+                  <span
+                    className="mx-1 text-xs flex-shrink-0"
+                    style={{ color: 'var(--text-tertiary)' }}
+                  >
                     /
                   </span>
                 )}
@@ -326,15 +341,30 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
                 }}
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg" style={{ background: 'var(--border-color)' }} />
+                  <div
+                    className="w-10 h-10 rounded-lg"
+                    style={{ background: 'var(--border-color)' }}
+                  />
                   <div className="flex-1 space-y-2">
-                    <div className="h-3 rounded w-3/4" style={{ background: 'var(--border-color)' }} />
-                    <div className="h-2 rounded w-1/2" style={{ background: 'var(--border-color)' }} />
+                    <div
+                      className="h-3 rounded w-3/4"
+                      style={{ background: 'var(--border-color)' }}
+                    />
+                    <div
+                      className="h-2 rounded w-1/2"
+                      style={{ background: 'var(--border-color)' }}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <div className="h-2 rounded w-full" style={{ background: 'var(--border-color)' }} />
-                  <div className="h-2 rounded w-2/3" style={{ background: 'var(--border-color)' }} />
+                  <div
+                    className="h-2 rounded w-full"
+                    style={{ background: 'var(--border-color)' }}
+                  />
+                  <div
+                    className="h-2 rounded w-2/3"
+                    style={{ background: 'var(--border-color)' }}
+                  />
                 </div>
               </div>
             ))}
@@ -465,7 +495,10 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
                             </button>
                           </div>
                         ) : (
-                          <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                          <p
+                            className="text-sm font-medium truncate"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
                             {file.name}
                           </p>
                         )}
@@ -488,7 +521,10 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
                         align="right"
                       />
                     </div>
-                    <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                    <div
+                      className="flex items-center justify-between text-xs"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
                       <span>{formatFileSize(file.size)}</span>
                       <span>{timeAgo(file.createdAt)}</span>
                     </div>

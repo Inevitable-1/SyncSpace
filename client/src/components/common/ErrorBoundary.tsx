@@ -1,7 +1,12 @@
 import React from 'react';
 
-interface Props { children: React.ReactNode; }
-interface State { hasError: boolean; error: Error | null; }
+interface Props {
+  children: React.ReactNode;
+}
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
 
 export default class ErrorBoundary extends React.Component<Props, State> {
   state: State = { hasError: false, error: null };

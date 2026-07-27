@@ -72,27 +72,21 @@ export default function ChatPanel({ roomId }: ChatPanelProps) {
     [roomId, replyTo],
   );
 
-  const handleEdit = useCallback(
-    async (messageId: string, content: string) => {
-      try {
-        await chatService.editMessage(messageId, content);
-      } catch {
-        // silent
-      }
-    },
-    [],
-  );
+  const handleEdit = useCallback(async (messageId: string, content: string) => {
+    try {
+      await chatService.editMessage(messageId, content);
+    } catch {
+      // silent
+    }
+  }, []);
 
-  const handleDelete = useCallback(
-    async (messageId: string) => {
-      try {
-        await chatService.deleteMessage(messageId);
-      } catch {
-        // silent
-      }
-    },
-    [],
-  );
+  const handleDelete = useCallback(async (messageId: string) => {
+    try {
+      await chatService.deleteMessage(messageId);
+    } catch {
+      // silent
+    }
+  }, []);
 
   const otherTypingUsers = typingUsers.filter((t) => t.userId !== user?.id);
 
@@ -102,7 +96,10 @@ export default function ChatPanel({ roomId }: ChatPanelProps) {
       style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: 'var(--border-color)' }}>
+      <div
+        className="px-4 py-3 border-b flex items-center gap-2"
+        style={{ borderColor: 'var(--border-color)' }}
+      >
         <svg
           className="w-5 h-5"
           style={{ color: 'var(--text-tertiary)' }}
@@ -136,7 +133,10 @@ export default function ChatPanel({ roomId }: ChatPanelProps) {
 
         {!isLoading && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ background: 'var(--bg-tertiary)' }}>
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
+              style={{ background: 'var(--bg-tertiary)' }}
+            >
               <svg
                 className="w-7 h-7"
                 style={{ color: 'var(--text-tertiary)' }}

@@ -84,7 +84,10 @@ export default function ChatMessageItem({
   if (message.isDeleted) {
     return (
       <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} py-1 px-4`}>
-        <p className="text-xs italic px-3 py-1 rounded-lg" style={{ color: 'var(--text-tertiary)' }}>
+        <p
+          className="text-xs italic px-3 py-1 rounded-lg"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
           This message was deleted
         </p>
       </div>
@@ -128,7 +131,10 @@ export default function ChatMessageItem({
 
         <div className="flex flex-col">
           {!isOwn && (
-            <span className="text-xs font-medium mb-0.5 ml-1" style={{ color: 'var(--text-tertiary)' }}>
+            <span
+              className="text-xs font-medium mb-0.5 ml-1"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
               {senderName}
             </span>
           )}
@@ -186,14 +192,16 @@ export default function ChatMessageItem({
           ) : (
             <div
               className={`relative px-3 py-2 rounded-2xl text-sm leading-relaxed ${
-                isOwn
-                  ? 'bg-indigo-600 text-white rounded-br-md'
-                  : 'rounded-bl-md'
+                isOwn ? 'bg-indigo-600 text-white rounded-br-md' : 'rounded-bl-md'
               }`}
               style={
                 isOwn
                   ? {}
-                  : { background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }
+                  : {
+                      background: 'var(--bg-tertiary)',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                    }
               }
             >
               <p className="whitespace-pre-wrap break-words">{message.content}</p>
@@ -218,15 +226,31 @@ export default function ChatMessageItem({
                 )}
                 {isOwn && message.seenBy && message.seenBy.length > 1 && (
                   <span className="w-3.5 h-3.5 text-white/60" title="Seen">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="w-3.5 h-3.5"
+                    >
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                   </span>
                 )}
                 {!isOwn && message.seenBy && message.seenBy.length > 0 && (
-                  <span className="w-3.5 h-3.5" style={{ color: 'var(--text-tertiary)' }} title="Seen">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                  <span
+                    className="w-3.5 h-3.5"
+                    style={{ color: 'var(--text-tertiary)' }}
+                    title="Seen"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="w-3.5 h-3.5"
+                    >
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
@@ -267,10 +291,7 @@ export default function ChatMessageItem({
                 </svg>
               </button>
 
-              <button
-                className="p-1 rounded hover:opacity-70 transition-opacity"
-                title="React"
-              >
+              <button className="p-1 rounded hover:opacity-70 transition-opacity" title="React">
                 <svg
                   className="w-3.5 h-3.5"
                   style={{ color: 'var(--text-tertiary)' }}
