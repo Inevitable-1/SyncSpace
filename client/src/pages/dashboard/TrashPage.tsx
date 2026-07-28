@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { TrashIcon, ArrowRightIcon } from '../../components/Icons';
+import EmptyState from '../../components/common/EmptyState';
 import { useToast } from '../../components/common/Toast';
 import { fetchTrashWorkspaces, restoreWorkspace } from '../../features/workspace/workspaceSlice';
 import { restoreRoom } from '../../features/room/roomSlice';
@@ -51,52 +52,49 @@ export default function TrashPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-        Trash
-      </h1>
-      <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-        Deleted items can be restored within 30 days.
-      </p>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          Trash
+        </h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+          Deleted items can be restored within 30 days.
+        </p>
+      </motion.div>
 
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="h-16 rounded-xl animate-pulse"
+              className="h-20 rounded-xl animate-shimmer"
               style={{ background: 'var(--bg-tertiary)' }}
             />
           ))}
         </div>
       ) : isEmpty ? (
-        <div className="text-center py-16">
-          <TrashIcon
-            className="w-10 h-10 mx-auto mb-3 opacity-30"
-            style={{ color: 'var(--text-tertiary)' }}
-          />
-          <p style={{ color: 'var(--text-tertiary)' }}>Trash is empty</p>
-        </div>
+        <EmptyState
+          icon={<TrashIcon className="w-8 h-8" style={{ color: 'var(--text-tertiary)' }} />}
+          title="Trash is empty"
+          description="Deleted workspaces and rooms will appear here."
+        />
       ) : (
         <div className="space-y-6">
           {trashWorkspaces.length > 0 && (
-            <div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <h2
-                className="text-sm font-semibold uppercase tracking-wider mb-3"
+                className="text-xs font-semibold uppercase tracking-wider mb-3"
                 style={{ color: 'var(--text-tertiary)' }}
               >
                 Workspaces ({trashWorkspaces.length})
               </h2>
               <div className="space-y-2">
-                {trashWorkspaces.map((ws) => (
+                {trashWorkspaces.map((ws, i) => (
                   <motion.div
                     key={ws._id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center justify-between p-4 rounded-xl"
-                    style={{
-                      background: 'var(--bg-card)',
-                      border: '1px solid var(--border-color)',
-                    }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="flex items-center justify-between p-4 rounded-xl card"
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -112,7 +110,7 @@ export default function TrashPage() {
                           {ws.name}
                         </p>
                         <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                          Workspace &middot; Deleted{' '}
+                          Workspace · Deleted{' '}
                           {ws.deletedAt ? new Date(ws.deletedAt).toLocaleDateString() : ''}
                         </p>
                       </div>
@@ -126,31 +124,32 @@ export default function TrashPage() {
                   </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
           {trashRooms.length > 0 && (
-            <div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
               <h2
-                className="text-sm font-semibold uppercase tracking-wider mb-3"
+                className="text-xs font-semibold uppercase tracking-wider mb-3"
                 style={{ color: 'var(--text-tertiary)' }}
               >
                 Rooms ({trashRooms.length})
               </h2>
               <div className="space-y-2">
-                {trashRooms.map((room) => (
+                {trashRooms.map((room, i) => (
                   <motion.div
                     key={room._id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center justify-between p-4 rounded-xl"
-                    style={{
-                      background: 'var(--bg-card)',
-                      border: '1px solid var(--border-color)',
-                    }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="flex items-center justify-between p-4 rounded-xl card"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-purple-600/20 flex items-center justify-center">
                         <ArrowRightIcon
                           className="w-5 h-5"
                           style={{ color: 'var(--text-tertiary)' }}
@@ -161,7 +160,7 @@ export default function TrashPage() {
                           {room.name}
                         </p>
                         <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                          Room &middot; {room.type} &middot; Deleted{' '}
+                          Room · {room.type} · Deleted{' '}
                           {room.deletedAt ? new Date(room.deletedAt).toLocaleDateString() : ''}
                         </p>
                       </div>
@@ -175,7 +174,7 @@ export default function TrashPage() {
                   </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       )}

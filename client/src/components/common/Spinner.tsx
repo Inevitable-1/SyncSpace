@@ -1,14 +1,20 @@
-export default function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+export default function Spinner({
+  size = 'md',
+  className = '',
+}: {
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}) {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
+    sm: 'h-4 w-4 border-[2px]',
+    md: 'h-6 w-6 border-[2.5px]',
+    lg: 'h-10 w-10 border-[3px]',
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className={`flex items-center justify-center ${className}`}>
       <div
-        className={`${sizeClasses[size]} animate-spin rounded-full border-2 border-gray-300 border-t-blue-500`}
+        className={`${sizeClasses[size]} animate-spin rounded-full border-[var(--border-color)] border-t-[var(--accent)]`}
       />
     </div>
   );

@@ -21,7 +21,6 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from '../../features/notification/notificationSlice';
-import GlobalSearch from '../common/GlobalSearch';
 import type { RootState, AppDispatch } from '../../store';
 
 interface TopNavProps {
@@ -34,14 +33,12 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { workspaces } = useSelector((state: RootState) => state.workspace);
+  const { workspaces: _workspaces } = useSelector((state: RootState) => state.workspace);
   const { notifications, unreadCount } = useSelector((state: RootState) => state.notification);
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showWorkspaceSwitcher, setShowWorkspaceSwitcher] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
-  const wsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
@@ -54,8 +51,6 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
         setShowProfile(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node))
         setShowNotifications(false);
-      if (wsRef.current && !wsRef.current.contains(e.target as Node))
-        setShowWorkspaceSwitcher(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -66,128 +61,58 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
     navigate('/login');
   };
 
-  const handleMarkAllRead = () => {
-    dispatch(markAllNotificationsRead());
-    showToast('All notifications marked as read', 'success');
-  };
-
-  const handleNotifClick = (notifId: string) => {
-    dispatch(markNotificationRead(notifId));
-  };
-
   return (
-    <header
-      className="sticky top-0 z-20 border-b bg-glass border-glass"
-      style={{ borderColor: 'var(--border-color)' }}
-    >
+    <header className="sticky top-0 z-20 border-b border-white/5 bg-[#030712]/80 backdrop-blur-2xl">
       <div className="flex items-center justify-between h-16 px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-lg transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
+            className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
           >
             <Bars3Icon className="w-5 h-5" />
           </button>
-          <div className="hidden sm:flex items-center">
-            <GlobalSearch />
-          </div>
+          <button
+            onClick={() => {
+              document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
+            }}
+            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-400 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+              />
+            </svg>
+            <span>Search...</span>
+            <kbd className="text-[10px] font-mono text-gray-500 border border-white/10 rounded px-1.5 py-0.5 ml-4">
+              ⌘K
+            </kbd>
+          </button>
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Workspace Switcher */}
-          <div className="relative" ref={wsRef}>
-            <button
-              onClick={() => setShowWorkspaceSwitcher(!showWorkspaceSwitcher)}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors"
-              style={{ color: 'var(--text-secondary)', background: 'var(--bg-tertiary)' }}
-            >
-              <div className="w-5 h-5 rounded bg-indigo-600 flex items-center justify-center">
-                <span className="text-white text-[10px] font-bold">W</span>
-              </div>
-              <span className="max-w-[100px] truncate">{workspaces[0]?.name || 'Workspaces'}</span>
-              <ChevronDownIcon className="w-3.5 h-3.5" />
-            </button>
-            <AnimatePresence>
-              {showWorkspaceSwitcher && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowWorkspaceSwitcher(false)}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-64 rounded-xl border shadow-xl z-50 overflow-hidden"
-                    style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-                  >
-                    <div className="p-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                      <p
-                        className="text-xs font-semibold uppercase tracking-wider"
-                        style={{ color: 'var(--text-tertiary)' }}
-                      >
-                        Workspaces
-                      </p>
-                    </div>
-                    <div className="p-2 max-h-60 overflow-y-auto">
-                      {workspaces.slice(0, 10).map((ws) => (
-                        <button
-                          key={ws._id}
-                          onClick={() => {
-                            navigate('/dashboard/workspaces');
-                            setShowWorkspaceSwitcher(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-[var(--bg-hover)]"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          <div
-                            className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                            style={{ background: ws.color || '#6366f1' }}
-                          >
-                            {ws.name.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="truncate font-medium">{ws.name}</span>
-                        </button>
-                      ))}
-                      <button
-                        onClick={() => {
-                          navigate('/dashboard/workspaces');
-                          setShowWorkspaceSwitcher(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-indigo-500 font-medium hover:bg-[var(--bg-hover)]"
-                      >
-                        View all workspaces
-                      </button>
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl transition-colors duration-200 hover:bg-[var(--bg-hover)]"
-            style={{ color: 'var(--text-secondary)' }}
+            className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
           >
             {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
           </button>
 
-          {/* Notifications */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2.5 rounded-xl transition-colors hover:bg-[var(--bg-hover)]"
-              style={{ color: 'var(--text-secondary)' }}
+              className="relative p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
             >
               <BellIcon className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span
-                  className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2"
-                  style={{ borderColor: 'var(--bg-card)' }}
-                />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#030712]" />
               )}
             </button>
             <AnimatePresence>
@@ -198,28 +123,25 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                     initial={{ opacity: 0, y: -8, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-80 rounded-xl border shadow-xl z-50 overflow-hidden"
-                    style={{ background: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden"
                   >
-                    <div
-                      className="flex items-center justify-between p-4 border-b"
-                      style={{ borderColor: 'var(--border-color)' }}
-                    >
-                      <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        Notifications
-                      </p>
+                    <div className="flex items-center justify-between p-4 border-b border-white/5">
+                      <p className="font-bold text-sm">Notifications</p>
                       {unreadCount > 0 && (
                         <button
-                          onClick={handleMarkAllRead}
-                          className="text-xs text-indigo-500 font-medium"
+                          onClick={() => {
+                            dispatch(markAllNotificationsRead());
+                            showToast('All marked as read', 'success');
+                          }}
+                          className="text-xs text-brand-400 font-semibold"
                         >
                           Mark all read
                         </button>
                       )}
                     </div>
-                    <div className="max-h-80 overflow-y-auto">
+                    <div className="max-h-80 overflow-y-auto scrollbar-thin">
                       {notifications.length === 0 ? (
-                        <div className="p-4 text-center" style={{ color: 'var(--text-tertiary)' }}>
+                        <div className="p-4 text-center text-gray-500">
                           <BellIcon className="w-8 h-8 mx-auto mb-2 opacity-30" />
                           <p className="text-sm">No notifications</p>
                         </div>
@@ -227,34 +149,18 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                         notifications.slice(0, 10).map((notif) => (
                           <button
                             key={notif._id}
-                            onClick={() => handleNotifClick(notif._id)}
-                            className="w-full text-left px-4 py-3 border-b transition-colors hover:bg-[var(--bg-hover)]"
-                            style={{
-                              borderColor: 'var(--border-light)',
-                              opacity: notif.isRead ? 0.6 : 1,
-                            }}
+                            onClick={() => dispatch(markNotificationRead(notif._id))}
+                            className="w-full text-left px-4 py-3 border-b border-white/5 transition-colors hover:bg-white/5"
+                            style={{ opacity: notif.isRead ? 0.5 : 1 }}
                           >
                             <div className="flex items-start gap-3">
                               {!notif.isRead && (
-                                <div className="w-2 h-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
+                                <div className="w-2 h-2 rounded-full bg-brand-500 mt-1.5 shrink-0" />
                               )}
                               <div className={!notif.isRead ? '' : 'ml-5'}>
-                                <p
-                                  className="text-sm font-medium"
-                                  style={{ color: 'var(--text-primary)' }}
-                                >
-                                  {notif.title}
-                                </p>
-                                <p
-                                  className="text-xs mt-0.5"
-                                  style={{ color: 'var(--text-tertiary)' }}
-                                >
-                                  {notif.message}
-                                </p>
-                                <p
-                                  className="text-[10px] mt-1"
-                                  style={{ color: 'var(--text-tertiary)' }}
-                                >
+                                <p className="text-sm font-semibold">{notif.title}</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{notif.message}</p>
+                                <p className="text-[10px] text-gray-500 mt-1">
                                   {new Date(notif.createdAt).toLocaleDateString()}
                                 </p>
                               </div>
@@ -264,15 +170,15 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                       )}
                     </div>
                     {notifications.length > 0 && (
-                      <div className="p-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                      <div className="p-3 border-t border-white/5">
                         <button
                           onClick={() => {
                             navigate('/dashboard/notifications');
                             setShowNotifications(false);
                           }}
-                          className="w-full text-center text-xs text-indigo-500 font-medium"
+                          className="w-full text-center text-xs text-brand-400 font-semibold"
                         >
-                          View all notifications
+                          View all
                         </button>
                       </div>
                     )}
@@ -282,19 +188,15 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
             </AnimatePresence>
           </div>
 
-          {/* Profile Dropdown */}
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setShowProfile(!showProfile)}
-              className="flex items-center gap-2 p-1.5 rounded-xl transition-colors duration-200 hover:bg-[var(--bg-hover)]"
+              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-all"
             >
-              <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium text-sm">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <ChevronDownIcon
-                className="w-4 h-4 hidden sm:block"
-                style={{ color: 'var(--text-secondary)' }}
-              />
+              <ChevronDownIcon className="w-4 h-4 text-gray-400 hidden sm:block" />
             </button>
             <AnimatePresence>
               {showProfile && (
@@ -304,57 +206,48 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                     initial={{ opacity: 0, y: -8, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-60 rounded-xl border shadow-xl z-50 overflow-hidden"
-                    style={{
-                      background: 'var(--bg-card)',
-                      borderColor: 'var(--border-color)',
-                      boxShadow: 'var(--shadow-lg)',
-                    }}
+                    className="absolute right-0 mt-2 w-60 rounded-2xl border border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden"
                   >
-                    <div className="p-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {user?.name}
-                      </p>
-                      <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        {user?.email}
-                      </p>
+                    <div className="p-4 border-b border-white/5">
+                      <p className="text-sm font-bold">{user?.name}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                     <div className="p-2">
+                      {[
+                        {
+                          icon: UserIcon,
+                          label: 'Profile',
+                          action: () => navigate('/dashboard/profile'),
+                        },
+                        {
+                          icon: Cog6ToothIcon,
+                          label: 'Settings',
+                          action: () => navigate('/dashboard/settings'),
+                        },
+                        {
+                          icon: BellIcon,
+                          label: 'Notifications',
+                          action: () => navigate('/dashboard/notifications'),
+                        },
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={() => {
+                            item.action();
+                            setShowProfile(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                        >
+                          <item.icon className="w-4 h-4" /> {item.label}
+                        </button>
+                      ))}
+                      <div className="my-1 border-t border-white/5" />
                       <button
                         onClick={() => {
-                          navigate('/dashboard/settings');
+                          toggleTheme();
                           setShowProfile(false);
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-[var(--bg-hover)]"
-                        style={{ color: 'var(--text-secondary)' }}
-                      >
-                        <UserIcon className="w-4 h-4" /> My Profile
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate('/dashboard/settings');
-                          setShowProfile(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-[var(--bg-hover)]"
-                        style={{ color: 'var(--text-secondary)' }}
-                      >
-                        <Cog6ToothIcon className="w-4 h-4" /> Settings
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate('/dashboard/notifications');
-                          setShowProfile(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-[var(--bg-hover)]"
-                        style={{ color: 'var(--text-secondary)' }}
-                      >
-                        <BellIcon className="w-4 h-4" /> Notifications
-                      </button>
-                      <button
-                        onClick={toggleTheme}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors hover:bg-[var(--bg-hover)]"
-                        style={{ color: 'var(--text-secondary)' }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
                       >
                         {theme === 'dark' ? (
                           <SunIcon className="w-4 h-4" />
@@ -363,13 +256,9 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                         )}
                         {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                       </button>
-                      <div
-                        className="my-1 border-t"
-                        style={{ borderColor: 'var(--border-color)' }}
-                      />
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all"
                       >
                         <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
                       </button>

@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/common/Toast';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -10,68 +10,36 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import WorkspacesPage from './pages/dashboard/WorkspacesPage';
+import WorkspaceDetailPage from './pages/dashboard/WorkspaceDetailPage';
 import RoomsPage from './pages/dashboard/RoomsPage';
+import RoomDetailPage from './pages/dashboard/RoomDetailPage';
 import SharedWithMePage from './pages/dashboard/SharedWithMePage';
 import ActivityPage from './pages/dashboard/ActivityPage';
 import TrashPage from './pages/dashboard/TrashPage';
 import NotificationsPage from './pages/dashboard/NotificationsPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
-import WorkspaceDetailPage from './pages/dashboard/WorkspaceDetailPage';
-import RoomDetailPage from './pages/dashboard/RoomDetailPage';
 import WhiteboardPage from './pages/WhiteboardPage';
+import ProfilePage from './pages/dashboard/ProfilePage';
+import InsightsPage from './pages/dashboard/InsightsPage';
+import FileManagerPage from './pages/dashboard/FileManagerPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import type { RootState } from './store';
-
-function Landing() {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-
-  return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-5xl font-bold mb-4">SyncSpace</h1>
-        <p className="text-gray-400 text-lg mb-8">Real-time collaborative platform</p>
-        <div className="flex gap-4 justify-center">
-          {isAuthenticated ? (
-            <Link
-              to="/dashboard"
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition"
-            >
-              Go to Dashboard
-            </Link>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/register"
-                className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg font-medium transition"
-              >
-                Create account
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+import CommandPalette from './components/CommandPalette';
+import AISidebar from './components/AISidebar';
 
 function NotFound() {
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+    <div className="min-h-screen bg-[#030712] text-white flex items-center justify-center">
       <div className="text-center">
-        <h1 className="text-6xl font-bold mb-4 text-indigo-500">404</h1>
+        <h1 className="text-8xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-purple-400">
+          404
+        </h1>
         <p className="text-gray-400 text-lg mb-8">Page not found</p>
-        <Link
-          to="/"
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition"
+        <a
+          href="/"
+          className="px-6 py-3 bg-gradient-to-r from-brand-600 to-purple-600 rounded-xl font-semibold text-sm text-white shadow-lg shadow-brand-600/25 hover:shadow-brand-500/40 transition-all inline-block"
         >
           Go Home
-        </Link>
+        </a>
       </div>
     </div>
   );
@@ -84,7 +52,7 @@ export default function App() {
         <ToastProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Landing />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -107,6 +75,9 @@ export default function App() {
                 <Route path="trash" element={<TrashPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="insights" element={<InsightsPage />} />
+                <Route path="files" element={<FileManagerPage />} />
               </Route>
               <Route
                 path="/whiteboard/:roomId"
@@ -118,6 +89,8 @@ export default function App() {
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <CommandPalette />
+            <AISidebar />
           </BrowserRouter>
         </ToastProvider>
       </ThemeProvider>

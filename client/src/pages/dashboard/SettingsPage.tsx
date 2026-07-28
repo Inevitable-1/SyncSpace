@@ -105,9 +105,14 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-        Settings
-      </h1>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          Settings
+        </h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+          Manage your account and preferences
+        </p>
+      </motion.div>
 
       <Section title="Profile">
         <div className="flex items-center gap-4 mb-6">

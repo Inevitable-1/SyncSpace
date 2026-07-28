@@ -81,7 +81,11 @@ export default function ActivityPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
             Activity Timeline
@@ -98,7 +102,7 @@ export default function ActivityPage() {
             <TrashIcon className="w-3.5 h-3.5" /> Clear all
           </button>
         )}
-      </div>
+      </motion.div>
 
       <div className="relative">
         <MagnifyingGlassIcon

@@ -69,7 +69,11 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
             Notifications
@@ -104,7 +108,7 @@ export default function NotificationsPage() {
             </button>
           </div>
         )}
-      </div>
+      </motion.div>
 
       <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-tertiary)' }}>
         {(['all', 'unread', 'read'] as FilterTab[]).map((tab) => (

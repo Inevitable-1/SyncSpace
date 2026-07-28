@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { PlusIcon, MagnifyingGlassIcon, FolderIcon } from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
-import CreateWorkspaceModal from '../../components/common/CreateWorkspaceModal';
+import CreateWorkspaceWizard from '../../components/workspace/CreateWorkspaceWizard';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import WorkspaceCard from '../../components/workspace/WorkspaceCard';
 import { useToast } from '../../components/common/Toast';
 import {
   fetchWorkspaces,
-  createWorkspace,
   updateWorkspace,
   deleteWorkspace,
 } from '../../features/workspace/workspaceSlice';
@@ -20,11 +20,12 @@ import type { Workspace } from '../../types';
 
 export default function WorkspacesPage() {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { workspaces, isLoading, error } = useSelector((state: RootState) => state.workspace);
   const { rooms } = useSelector((state: RootState) => state.room);
   const { showToast } = useToast();
   const [search, setSearch] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [editingWs, setEditingWs] = useState<Workspace | null>(null);
   const [deletingWs, setDeletingWs] = useState<Workspace | null>(null);
   const [editName, setEditName] = useState('');
@@ -44,26 +45,10 @@ export default function WorkspacesPage() {
 
   const filtered = workspaces.filter((ws) => ws.name.toLowerCase().includes(search.toLowerCase()));
 
-  const handleCreate = (data: {
-    name: string;
-    description: string;
-    color: string;
-    icon: string;
-    isPublic: boolean;
-  }) => {
-    dispatch(createWorkspace(data)).then((action) => {
-      if (action.meta.requestStatus === 'fulfilled') {
-        showToast('Workspace created successfully!', 'success');
-        setShowCreateModal(false);
-      } else if (action.meta.requestStatus === 'rejected') {
-        const msg = action.payload as string;
-        if (msg.includes('already') || msg.includes('duplicate')) {
-          showToast('A workspace with this name already exists', 'error');
-        } else {
-          showToast(msg || 'Failed to create workspace', 'error');
-        }
-      }
-    });
+  const handleWizardCreated = (workspaceId: string) => {
+    setShowWizard(false);
+    dispatch(fetchWorkspaces());
+    navigate(`/dashboard/workspaces/${workspaceId}`);
   };
 
   const handleEdit = (ws: Workspace) => {
@@ -112,7 +97,11 @@ export default function WorkspacesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
             My Workspaces
@@ -121,13 +110,10 @@ export default function WorkspacesPage() {
             {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="btn-primary flex items-center gap-2"
-        >
+        <button onClick={() => setShowWizard(true)} className="btn-primary flex items-center gap-2">
           <PlusIcon className="w-4 h-4" /> New Workspace
         </button>
-      </div>
+      </motion.div>
 
       <div className="relative">
         <MagnifyingGlassIcon
@@ -160,7 +146,7 @@ export default function WorkspacesPage() {
           }
           action={
             !search ? (
-              <button onClick={() => setShowCreateModal(true)} className="btn-primary">
+              <button onClick={() => setShowWizard(true)} className="btn-primary">
                 Create Workspace
               </button>
             ) : undefined
@@ -187,11 +173,10 @@ export default function WorkspacesPage() {
         </div>
       )}
 
-      <CreateWorkspaceModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreate}
-        isLoading={isLoading}
+      <CreateWorkspaceWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+        onCreated={handleWizardCreated}
       />
 
       {editingWs && (

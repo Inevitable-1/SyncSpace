@@ -45,18 +45,20 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             }}
           >
             <div
-              className="flex items-center justify-between p-5 border-b"
-              style={{ borderColor: 'var(--border-color)' }}
+              className={`flex items-center justify-between p-5 ${title ? 'border-b' : 'pb-0'}`}
+              style={{ borderColor: title ? 'var(--border-color)' : undefined }}
             >
-              <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {title}
-              </h2>
+              {title && (
+                <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {title}
+                </h2>
+              )}
               <button
                 onClick={onClose}
-                className="p-1 rounded-lg transition-colors"
+                className={`p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)] ${!title ? 'ml-auto' : ''}`}
                 style={{ color: 'var(--text-tertiary)' }}
               >
-                <XIcon className="w-5 h-5" />
+                <XIcon className="w-4 h-4" />
               </button>
             </div>
             <div className="p-5">{children}</div>
