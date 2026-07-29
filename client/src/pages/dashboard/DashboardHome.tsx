@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlusIcon, ArrowRightIcon } from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
-import CreateWorkspaceModal from '../../components/common/CreateWorkspaceModal';
 import CreateRoomModal from '../../components/common/CreateRoomModal';
 import WorkspaceCard from '../../components/workspace/WorkspaceCard';
+import WorkspaceOnboarding from '../../components/workspace/WorkspaceOnboarding';
 import { useToast } from '../../components/common/Toast';
-import { fetchWorkspaces, createWorkspace } from '../../features/workspace/workspaceSlice';
+import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import { fetchRooms, createRoom } from '../../features/room/roomSlice';
 import { activityService } from '../../services/activityService';
 import type { RootState, AppDispatch } from '../../store';
@@ -94,21 +94,10 @@ export default function DashboardHome() {
     if (wsError) showToast(wsError, 'error');
   }, [wsError, showToast]);
 
-  const handleCreateWorkspace = (data: {
-    name: string;
-    description: string;
-    color: string;
-    icon: string;
-    isPublic: boolean;
-  }) => {
-    dispatch(createWorkspace(data)).then((action) => {
-      if (action.meta.requestStatus === 'fulfilled') {
-        showToast('Workspace created!', 'success');
-        setShowCreateWsModal(false);
-      } else {
-        showToast((action.payload as string) || 'Failed to create', 'error');
-      }
-    });
+  const handleWizardCreated = (workspaceId: string) => {
+    setShowCreateWsModal(false);
+    dispatch(fetchWorkspaces());
+    navigate(`/dashboard/workspaces/${workspaceId}`);
   };
 
   const handleCreateRoom = useCallback(
@@ -460,11 +449,10 @@ export default function DashboardHome() {
         </motion.div>
       </button>
 
-      <CreateWorkspaceModal
+      <WorkspaceOnboarding
         isOpen={showCreateWsModal}
         onClose={() => setShowCreateWsModal(false)}
-        onSubmit={handleCreateWorkspace}
-        isLoading={wsLoading}
+        onCreated={handleWizardCreated}
       />
       {showCreateRoomModal && (
         <CreateRoomModal

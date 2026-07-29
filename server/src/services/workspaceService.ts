@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { Workspace, type IWorkspaceDocument } from '../models/Workspace.js';
+import { Member } from '../models/Member.js';
 import { Room } from '../models/Room.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logActivity } from '../controllers/activity.js';
@@ -32,6 +33,15 @@ export class WorkspaceService {
       isPublic: data.isPublic || false,
       owner: userId,
       members: [userId],
+    });
+
+    await Member.create({
+      userId,
+      workspaceId: workspace._id,
+      role: 'owner',
+      status: 'active',
+      invitedBy: userId,
+      joinedAt: new Date(),
     });
 
     await logActivity({

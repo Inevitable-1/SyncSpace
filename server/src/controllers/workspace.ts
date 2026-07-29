@@ -165,6 +165,9 @@ export async function joinByInviteCode(req: AuthRequest, res: Response): Promise
 }
 
 export async function toggleFavorite(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
   const workspace = await Workspace.findById(req.params.id);
   if (!workspace) {
     throw new AppError('Workspace not found', 404);
@@ -175,6 +178,9 @@ export async function toggleFavorite(req: AuthRequest, res: Response): Promise<v
 }
 
 export async function archiveWorkspace(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
   const workspace = await Workspace.findById(req.params.id);
   if (!workspace) {
     throw new AppError('Workspace not found', 404);
@@ -185,6 +191,9 @@ export async function archiveWorkspace(req: AuthRequest, res: Response): Promise
 }
 
 export async function unarchiveWorkspace(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
   const workspace = await Workspace.findById(req.params.id);
   if (!workspace) {
     throw new AppError('Workspace not found', 404);

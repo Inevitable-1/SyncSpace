@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { PlusIcon, MagnifyingGlassIcon, FolderIcon } from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
-import CreateWorkspaceWizard from '../../components/workspace/CreateWorkspaceWizard';
+import WorkspaceOnboarding from '../../components/workspace/WorkspaceOnboarding';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import WorkspaceCard from '../../components/workspace/WorkspaceCard';
 import { useToast } from '../../components/common/Toast';
@@ -173,7 +173,7 @@ export default function WorkspacesPage() {
         </div>
       )}
 
-      <CreateWorkspaceWizard
+      <WorkspaceOnboarding
         isOpen={showWizard}
         onClose={() => setShowWizard(false)}
         onCreated={handleWizardCreated}
