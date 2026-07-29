@@ -168,9 +168,15 @@ export async function toggleFavorite(req: AuthRequest, res: Response): Promise<v
   if (!req.user) {
     throw new AppError('Not authenticated', 401);
   }
+  const userId = req.user.userId;
   const workspace = await Workspace.findById(req.params.id);
-  if (!workspace) {
+  if (!workspace || workspace.isDeleted) {
     throw new AppError('Workspace not found', 404);
+  }
+  const isMember =
+    workspace.owner.toString() === userId || workspace.members.some((m) => m.toString() === userId);
+  if (!isMember) {
+    throw new AppError('Not authorized', 403);
   }
   workspace.isFavorite = !workspace.isFavorite;
   await workspace.save();
@@ -182,8 +188,11 @@ export async function archiveWorkspace(req: AuthRequest, res: Response): Promise
     throw new AppError('Not authenticated', 401);
   }
   const workspace = await Workspace.findById(req.params.id);
-  if (!workspace) {
+  if (!workspace || workspace.isDeleted) {
     throw new AppError('Workspace not found', 404);
+  }
+  if (workspace.owner.toString() !== req.user.userId) {
+    throw new AppError('Only the owner can archive this workspace', 403);
   }
   workspace.isArchived = true;
   await workspace.save();
@@ -195,8 +204,11 @@ export async function unarchiveWorkspace(req: AuthRequest, res: Response): Promi
     throw new AppError('Not authenticated', 401);
   }
   const workspace = await Workspace.findById(req.params.id);
-  if (!workspace) {
+  if (!workspace || workspace.isDeleted) {
     throw new AppError('Workspace not found', 404);
+  }
+  if (workspace.owner.toString() !== req.user.userId) {
+    throw new AppError('Only the owner can unarchive this workspace', 403);
   }
   workspace.isArchived = false;
   await workspace.save();

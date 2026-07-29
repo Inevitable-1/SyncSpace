@@ -14,16 +14,6 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.4",
-    "prettier": "^3.9.5",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.5.2"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "prettier --write"
-    ],
-    "*.{json,css,md}": [
-      "prettier --write"
-    ]
+    "prettier": "^3.9.5"
   }
 }

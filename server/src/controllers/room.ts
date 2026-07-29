@@ -108,10 +108,18 @@ export async function getRoom(req: AuthRequest, res: Response): Promise<void> {
     throw new AppError('Not authenticated', 401);
   }
 
+  const userId = req.user.userId;
   const room = await Room.findById(req.params.id).populate('workspace', 'name color');
 
   if (!room) {
     throw new AppError('Room not found', 404);
+  }
+
+  const isParticipant =
+    room.owner.toString() === userId || room.participants.some((p) => p.toString() === userId);
+
+  if (!isParticipant) {
+    throw new AppError('Not authorized to view this room', 403);
   }
 
   res.json({
@@ -225,10 +233,11 @@ export async function joinRoom(req: AuthRequest, res: Response): Promise<void> {
     throw new AppError('Invalid invite code', 404);
   }
 
-  const isParticipant = room.participants.some((p) => p.toString() === req.user!.userId);
+  const userId = req.user.userId;
+  const isParticipant = room.participants.some((p) => p.toString() === userId);
 
   if (!isParticipant) {
-    room.participants.push(req.user.userId as unknown as never);
+    room.participants.push(userId as unknown as never);
     await room.save();
 
     await logNotification({
@@ -359,10 +368,18 @@ export async function getInviteLink(req: AuthRequest, res: Response): Promise<vo
     throw new AppError('Not authenticated', 401);
   }
 
+  const userId = req.user.userId;
   const room = await Room.findById(req.params.id);
 
   if (!room) {
     throw new AppError('Room not found', 404);
+  }
+
+  const isParticipant =
+    room.owner.toString() === userId || room.participants.some((p) => p.toString() === userId);
+
+  if (!isParticipant) {
+    throw new AppError('Not authorized', 403);
   }
 
   res.json({
