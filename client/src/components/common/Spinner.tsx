@@ -12,10 +12,8 @@ export default function Spinner({
   };
 
   return (
-    <div className={`flex items-center justify-center ${className}`}>
-      <div
-        className={`${sizeClasses[size]} animate-spin rounded-full border-[var(--border-color)] border-t-[var(--accent)]`}
-      />
-    </div>
+    <div
+      className={`${sizeClasses[size]} animate-spin rounded-full border-[var(--border-color)] border-t-[var(--accent)] ${className}`}
+    />
   );
 }

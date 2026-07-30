@@ -33,7 +33,6 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { workspaces: _workspaces } = useSelector((state: RootState) => state.workspace);
   const { notifications, unreadCount } = useSelector((state: RootState) => state.notification);
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);

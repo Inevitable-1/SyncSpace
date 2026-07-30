@@ -80,7 +80,7 @@ SyncSpace/
 │   └── tsconfig.json
 ├── docker/                          # Dockerfiles
 ├── docker-compose.yml               # MongoDB + Redis + Server + Client
-└── docs/                            # Development reports
+└── docs/                            # Development reports and API reference
 ```
 
 ## Getting Started
@@ -311,6 +311,22 @@ npm run build
 | `roompresences` | Real-time presence tracking             |
 | `refreshtokens` | JWT refresh token rotation              |
 | `uploadedfiles` | File upload metadata                    |
+
+## Latest Improvements
+
+### Day 8 — Code Cleanup & UI Polish
+
+- Removed dynamic import warning in `InviteModal` by switching to static import
+- Eliminated unused `roomId` prop from `InviteModal` interface
+- Removed unused Redux subscription (`workspaces`) from `TopNav`
+- Deleted dead files: `scripts/` directory, `docs/.gitkeep`
+- **UI Polish**:
+  - `Card`: Added subtle `hover:scale` lift effect for interactive cards
+  - `Button`: Added `active:scale-[0.98]` press feedback across all variants
+  - `Tooltip`: Replaced instant show/hide with smooth opacity transition
+  - `Spinner`: Removed unnecessary wrapping flex container for better composability
+  - `EmptyState`: Improved responsive padding with `sm:` breakpoint
+- Build verified clean (no warnings)
 
 ## Future Scope
 

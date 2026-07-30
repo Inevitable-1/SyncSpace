@@ -620,7 +620,6 @@ export default function RoomDetailPage() {
       <InviteModal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
-        roomId={room._id}
         inviteCode={room.inviteCode}
         roomName={room.name}
       />

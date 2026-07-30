@@ -24,8 +24,8 @@ export default function Card({
 
   return (
     <div
-      className={`rounded-2xl border transition-all duration-200 ${
-        hover ? 'hover:shadow-lg cursor-pointer' : ''
+      className={`rounded-2xl border transition-all duration-300 ${
+        hover ? 'hover:shadow-xl hover:-translate-y-0.5 cursor-pointer' : ''
       } ${paddingClasses[padding]} ${className}`}
       style={{
         background: 'var(--bg-card)',

@@ -14,7 +14,7 @@ export default function EmptyState({ icon, title, description, action }: EmptySt
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="flex flex-col items-center justify-center py-20 text-center"
+      className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-center"
     >
       <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-5 bg-[var(--surface-subtle)] ring-1 ring-[var(--border-light)]">
         {icon}

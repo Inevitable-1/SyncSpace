@@ -30,14 +30,14 @@ export default function Button({
   };
 
   const variantClasses = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
+    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] focus:ring-indigo-500',
     secondary:
-      'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700',
+      'bg-gray-100 text-gray-900 hover:bg-gray-200 active:scale-[0.98] focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700',
     outline:
-      'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800',
+      'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 active:scale-[0.98] focus:ring-gray-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800',
     ghost:
-      'text-gray-700 hover:bg-gray-100 focus:ring-gray-500 dark:text-gray-300 dark:hover:bg-gray-800',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+      'text-gray-700 hover:bg-gray-100 active:scale-[0.98] focus:ring-gray-500 dark:text-gray-300 dark:hover:bg-gray-800',
+    danger: 'bg-red-600 text-white hover:bg-red-700 active:scale-[0.98] focus:ring-red-500',
   };
 
   return (

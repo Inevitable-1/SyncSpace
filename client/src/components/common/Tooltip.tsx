@@ -29,14 +29,14 @@ export default function Tooltip({
       onMouseLeave={() => setIsVisible(false)}
     >
       {children}
-      {isVisible && (
-        <div
-          className={`absolute z-50 px-2 py-1 text-xs font-medium text-white rounded-lg whitespace-nowrap ${positionClasses[position]}`}
-          style={{ background: 'var(--bg-tooltip, #1f2937)' }}
-        >
-          {content}
-        </div>
-      )}
+      <div
+        className={`absolute z-50 px-2 py-1 text-xs font-medium text-white rounded-lg whitespace-nowrap transition-opacity duration-200 ${
+          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        } ${positionClasses[position]}`}
+        style={{ background: 'var(--bg-tooltip, #1f2937)' }}
+      >
+        {content}
+      </div>
     </div>
   );
 }

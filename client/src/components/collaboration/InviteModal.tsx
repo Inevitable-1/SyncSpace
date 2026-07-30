@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Modal from '../common/Modal';
 import { useToast } from '../common/Toast';
+import { roomService } from '../../services/roomService';
 
 interface InviteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  roomId?: string;
   inviteCode: string;
   roomName: string;
 }
@@ -34,7 +34,6 @@ export default function InviteModal({ isOpen, onClose, inviteCode, roomName }: I
     }
     setIsJoining(true);
     try {
-      const { roomService } = await import('../../services/roomService');
       await roomService.join(joinCode.trim());
       showToast('Successfully joined the room!', 'success');
       setJoinCode('');
