@@ -28,6 +28,19 @@ body {
   min-height: 100vh;
 }
 
+button:focus-visible,
+a:focus-visible,
+[role='button']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline-color: var(--accent);
+}
+
 ::selection {
   background: rgba(99, 102, 241, 0.3);
   color: inherit;
@@ -164,14 +177,19 @@ body {
 
   .btn-primary {
     @apply px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    background-image: linear-gradient(135deg, #4f46e5, #9333ea);
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
   }
 
   .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, #818cf8, #6366f1);
+    background-image: linear-gradient(135deg, #6366f1, #a855f7);
     box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
     transform: translateY(-1px);
+  }
+
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .btn-primary:active:not(:disabled) {
@@ -190,6 +208,11 @@ body {
     border-color: rgba(99, 102, 241, 0.3);
   }
 
+  .btn-secondary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   .btn-danger {
     @apply px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all duration-200;
     background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -202,6 +225,11 @@ body {
     transform: translateY(-1px);
   }
 
+  .btn-danger:focus-visible {
+    outline: 2px solid #ef4444;
+    outline-offset: 2px;
+  }
+
   .btn-ghost {
     @apply px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200;
     color: var(--text-secondary);
@@ -211,6 +239,11 @@ body {
   .btn-ghost:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
+  }
+
+  .btn-ghost:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .scrollbar-thin {

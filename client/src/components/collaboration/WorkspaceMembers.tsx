@@ -53,7 +53,7 @@ export default function WorkspaceMembers({ workspaceId: _workspaceId }: Workspac
             {members.length} member{members.length !== 1 ? 's' : ''} in this workspace
           </p>
         </div>
-        <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors self-start">
+        <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-colors self-start">
           <svg
             className="w-4 h-4"
             fill="none"

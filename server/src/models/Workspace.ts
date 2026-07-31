@@ -88,6 +88,5 @@ const workspaceSchema = new Schema<IWorkspaceDocument>(
 
 workspaceSchema.index({ owner: 1 });
 workspaceSchema.index({ members: 1 });
-workspaceSchema.index({ inviteCode: 1 }, { unique: true });
 
 export const Workspace = mongoose.model<IWorkspaceDocument>('Workspace', workspaceSchema);

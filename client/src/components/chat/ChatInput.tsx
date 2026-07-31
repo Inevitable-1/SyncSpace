@@ -155,7 +155,7 @@ export default function ChatInput({ onSend, onTypingStart, onTypingStop }: ChatI
         <button
           onClick={handleSend}
           disabled={!content.trim()}
-          className="p-2.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex-shrink-0"
+          className="p-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex-shrink-0"
         >
           <svg
             className="w-5 h-5"

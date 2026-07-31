@@ -5,7 +5,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useEditorSocket } from '../../hooks/useEditorSocket';
 import { fetchDocuments, setCurrentFile, closeFile } from '../../features/editor/editorSlice';
 import { useToast } from '../common/Toast';
-import FileExplorer from './FileExplorer';
+import CodeFileExplorer from './CodeFileExplorer';
 import MonacoEditor from './MonacoEditor';
 import LiveCursors from './LiveCursors';
 import TerminalPanel from './TerminalPanel';
@@ -169,7 +169,7 @@ export default function CodeIDE({ roomId, workspaceId, workspaceName }: CodeIDEP
       </div>
 
       <div className="flex flex-1 min-h-0">
-        {showFileExplorer && <FileExplorer roomId={roomId} workspaceId={workspaceId} />}
+        {showFileExplorer && <CodeFileExplorer roomId={roomId} workspaceId={workspaceId} />}
 
         <div className="flex-1 flex flex-col min-w-0">
           {openFiles.length > 0 && (

@@ -231,7 +231,7 @@ export default function RoomLayout({
 
             <button
               onClick={onOpenInvite}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-colors"
             >
               <svg
                 className="w-3.5 h-3.5"

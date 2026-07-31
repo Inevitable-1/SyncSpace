@@ -94,7 +94,7 @@ export default function InviteModal({ isOpen, onClose, inviteCode, roomName }: I
               />
               <button
                 onClick={() => copyToClipboard(inviteLink)}
-                className="px-4 py-2 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg text-xs font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-colors flex items-center gap-1.5"
               >
                 {copied ? (
                   <>
@@ -189,7 +189,7 @@ export default function InviteModal({ isOpen, onClose, inviteCode, roomName }: I
             <button
               onClick={handleJoin}
               disabled={!joinCode.trim() || isJoining}
-              className="w-full px-4 py-2.5 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full px-4 py-2.5 rounded-lg text-sm font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isJoining ? 'Joining...' : 'Join Room'}
             </button>

@@ -464,7 +464,7 @@ function TaskModal({
                   <button
                     onClick={addCheckItem}
                     disabled={!newCheckItem.trim()}
-                    className="px-3 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-3 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Add
                   </button>
@@ -492,7 +492,7 @@ function TaskModal({
                   />
                   <button
                     disabled={!comment.trim()}
-                    className="px-4 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-4 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Post
                   </button>
@@ -521,7 +521,7 @@ function TaskModal({
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-colors"
                 >
                   Save Changes
                 </button>

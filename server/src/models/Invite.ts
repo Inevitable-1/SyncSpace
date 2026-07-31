@@ -63,7 +63,6 @@ const inviteSchema = new Schema<IInviteDocument>(
 
 inviteSchema.index({ email: 1, workspaceId: 1 });
 inviteSchema.index({ workspaceId: 1, status: 1 });
-inviteSchema.index({ token: 1 }, { unique: true });
 inviteSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const Invite = mongoose.model<IInviteDocument>('Invite', inviteSchema);

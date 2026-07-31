@@ -183,7 +183,7 @@ export default function ChatMessageItem({
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="text-xs px-2 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                  className="text-xs px-2 py-1 rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500"
                 >
                   Save
                 </button>

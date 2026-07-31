@@ -141,7 +141,7 @@ export default function SettingsPage() {
               />
               <button
                 onClick={handleSaveName}
-                className="p-1.5 rounded-lg bg-indigo-600 text-white"
+                className="p-1.5 rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 text-white"
               >
                 <CheckIcon className="w-3.5 h-3.5" />
               </button>
