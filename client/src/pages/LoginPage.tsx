@@ -131,7 +131,7 @@ export default function LoginPage() {
               <Spinner size="sm" /> Signing in as demo user...
             </>
           ) : (
-            'Try Demo (Alex Johnson)'
+            'Try Demo (Manoj Kumar)'
           )}
         </button>
 
