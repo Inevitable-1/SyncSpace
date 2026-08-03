@@ -11,6 +11,7 @@ import taskReducer from './features/task/taskSlice';
 import fileReducer from './features/files/fileSlice';
 import editorReducer from './features/editor/editorSlice';
 import activityReducer from './features/activity/activitySlice';
+import meetingReducer from './features/meeting/meetingSlice';
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +27,7 @@ export const store = configureStore({
     files: fileReducer,
     editor: editorReducer,
     activity: activityReducer,
+    meeting: meetingReducer,
   },
 });
 

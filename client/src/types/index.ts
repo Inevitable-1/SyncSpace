@@ -394,6 +394,41 @@ export interface SearchResult {
   url: string;
 }
 
+export type MeetingStatus = 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
+
+export interface Meeting {
+  _id: string;
+  name: string;
+  description: string;
+  workspace: Workspace | string;
+  host: User | string;
+  participants: (User | string)[];
+  scheduledAt: string;
+  duration: number;
+  status: MeetingStatus;
+  agenda: string;
+  meetingCode: string;
+  endedAt?: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MeetingStats {
+  total: number;
+  upcoming: number;
+  ongoing: number;
+  completed: number;
+}
+
+export interface MeetingState {
+  meetings: Meeting[];
+  currentMeeting: Meeting | null;
+  stats: MeetingStats | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
 export interface CodeDocument {
   _id: string;
   name: string;

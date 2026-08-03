@@ -18,6 +18,11 @@ export const authService = {
     return response.data.data;
   },
 
+  async demoLogin(): Promise<AuthResponse> {
+    const response = await api.post('/auth/demo');
+    return response.data.data;
+  },
+
   async logout(): Promise<void> {
     await api.post('/auth/logout');
   },

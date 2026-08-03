@@ -10,6 +10,7 @@ import WorkspaceOnboarding from '../../components/workspace/WorkspaceOnboarding'
 import { useToast } from '../../components/common/Toast';
 import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import { fetchRooms, createRoom } from '../../features/room/roomSlice';
+import { fetchMeetings } from '../../features/meeting/meetingSlice';
 import { activityService } from '../../services/activityService';
 import type { RootState, AppDispatch } from '../../store';
 import type { Activity } from '../../types';
@@ -75,6 +76,7 @@ export default function DashboardHome() {
     error: wsError,
   } = useSelector((state: RootState) => state.workspace);
   const { rooms, isLoading: roomLoading } = useSelector((state: RootState) => state.room);
+  const { meetings } = useSelector((state: RootState) => state.meeting);
 
   const [showCreateWsModal, setShowCreateWsModal] = useState(false);
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
@@ -84,6 +86,7 @@ export default function DashboardHome() {
   useEffect(() => {
     dispatch(fetchWorkspaces());
     dispatch(fetchRooms(undefined));
+    dispatch(fetchMeetings());
     activityService
       .getAll()
       .then(setActivities)
@@ -350,6 +353,72 @@ export default function DashboardHome() {
         </div>
 
         <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="card p-5"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold">Meetings</h3>
+              <button
+                onClick={() => navigate('/dashboard/meetings')}
+                className="text-xs text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1"
+              >
+                View all <ArrowRightIcon className="w-3 h-3" />
+              </button>
+            </div>
+            {meetings.length === 0 ? (
+              <p className="text-xs text-center py-6" style={{ color: 'var(--text-tertiary)' }}>
+                No meetings scheduled
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {[...meetings]
+                  .sort(
+                    (a, b) =>
+                      new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+                  )
+                  .slice(0, 3)
+                  .map((meeting) => {
+                    const wsName =
+                      typeof meeting.workspace === 'object' ? meeting.workspace.name : '';
+                    return (
+                      <div
+                        key={meeting._id}
+                        className="flex items-center gap-3 rounded-xl p-3 border border-white/5 hover:bg-white/[0.03] transition-all"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm">🎥</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold truncate">{meeting.name}</p>
+                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                            {wsName ? `${wsName} · ` : ''}
+                            {meeting.status === 'ongoing' ? (
+                              <span className="text-emerald-400 font-semibold">Live now</span>
+                            ) : (
+                              new Date(meeting.scheduledAt).toLocaleString(undefined, {
+                                weekday: 'short',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                              })
+                            )}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => navigate('/dashboard/meetings')}
+                          className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-600/20 whitespace-nowrap"
+                        >
+                          {meeting.status === 'ongoing' ? 'Join now' : 'Join'}
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

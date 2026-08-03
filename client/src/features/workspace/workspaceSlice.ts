@@ -158,8 +158,8 @@ const workspaceSlice = createSlice({
       })
       .addCase(fetchWorkspaces.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.workspaces = action.payload.data;
-        state.pagination = action.payload.pagination;
+        state.workspaces = action.payload;
+        state.pagination = null;
       })
       .addCase(fetchWorkspaces.rejected, (state, action) => {
         state.isLoading = false;

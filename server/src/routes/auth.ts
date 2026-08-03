@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import {
   register,
   login,
+  demoLogin,
   refreshToken,
   logout,
   getMe,
@@ -36,6 +37,7 @@ const resetPasswordValidation = [
 
 router.post('/register', registerValidation, asyncHandler(register));
 router.post('/login', loginValidation, asyncHandler(login));
+router.post('/demo', asyncHandler(demoLogin));
 router.post('/refresh-token', asyncHandler(refreshToken));
 router.post('/logout', asyncHandler(logout));
 router.post('/forgot-password', forgotPasswordValidation, asyncHandler(forgotPassword));

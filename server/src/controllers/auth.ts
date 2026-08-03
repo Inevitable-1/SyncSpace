@@ -110,6 +110,43 @@ export async function login(req: Request, res: Response): Promise<void> {
   });
 }
 
+export async function demoLogin(req: Request, res: Response): Promise<void> {
+  const DEMO_EMAIL = process.env.DEMO_EMAIL || 'alex@syncspace.demo';
+  const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo1234';
+
+  let user = await User.findOne({ email: DEMO_EMAIL });
+
+  if (!user) {
+    user = await User.create({
+      name: 'Alex Johnson',
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+      avatar: '',
+      isEmailVerified: true,
+    });
+  }
+
+  const tokenPayload = { userId: user._id.toString(), email: user.email };
+  const { accessToken, refreshToken, hashedRefreshToken, refreshExpiresAt } =
+    generateTokenPair(tokenPayload);
+
+  await RefreshToken.create({
+    user: user._id,
+    token: hashedRefreshToken,
+    userAgent: req.headers['user-agent'] || '',
+    ip: req.ip || '',
+    expiresAt: refreshExpiresAt,
+  });
+
+  setRefreshTokenCookie(res, refreshToken, refreshExpiresAt);
+
+  res.json({
+    success: true,
+    message: 'Demo login successful',
+    data: { user: formatUser(user), accessToken },
+  });
+}
+
 export async function refreshToken(req: Request, res: Response): Promise<void> {
   const token = req.cookies?.refreshToken;
 

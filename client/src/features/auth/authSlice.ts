@@ -56,6 +56,27 @@ export const login = createAsyncThunk(
   },
 );
 
+export const demoLogin = createAsyncThunk('auth/demoLogin', async (_, { rejectWithValue }) => {
+  try {
+    const result = await authService.demoLogin();
+    localStorage.setItem(
+      'auth',
+      JSON.stringify({
+        state: {
+          user: result.user,
+          accessToken: result.accessToken,
+          isAuthenticated: true,
+          isDemo: true,
+        },
+      }),
+    );
+    return result;
+  } catch (err: unknown) {
+    const error = err as { response?: { data?: { message?: string } } };
+    return rejectWithValue(error.response?.data?.message || 'Demo login failed');
+  }
+});
+
 export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
   try {
     await authService.logout();
@@ -145,30 +166,6 @@ const authSlice = createSlice({
     setUser(state, action: PayloadAction<User>) {
       state.user = action.payload;
     },
-    demoLogin(state) {
-      state.user = {
-        id: 'demo-user-001',
-        name: 'Alex Johnson',
-        email: 'alex@syncspace.demo',
-        avatar: '',
-        isEmailVerified: true,
-      };
-      state.accessToken = 'demo-token';
-      state.isAuthenticated = true;
-      state.isDemo = true;
-      state.error = null;
-      localStorage.setItem(
-        'auth',
-        JSON.stringify({
-          state: {
-            user: state.user,
-            accessToken: state.accessToken,
-            isAuthenticated: true,
-            isDemo: true,
-          },
-        }),
-      );
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -199,6 +196,21 @@ const authSlice = createSlice({
         state.isDemo = false;
       })
       .addCase(login.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(demoLogin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(demoLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
+        state.isAuthenticated = true;
+        state.isDemo = true;
+      })
+      .addCase(demoLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
@@ -247,5 +259,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, setUser, demoLogin } = authSlice.actions;
+export const { clearError, setUser } = authSlice.actions;
 export default authSlice.reducer;

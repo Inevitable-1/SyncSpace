@@ -1,5 +1,5 @@
 import api from './api';
-import type { Workspace, PaginatedResponse } from '../types';
+import type { Workspace } from '../types';
 
 export interface WorkspaceQueryParams {
   page?: number;
@@ -11,9 +11,9 @@ export interface WorkspaceQueryParams {
 }
 
 export const workspaceService = {
-  async getAll(params?: WorkspaceQueryParams): Promise<PaginatedResponse<Workspace>> {
+  async getAll(params?: WorkspaceQueryParams): Promise<Workspace[]> {
     const response = await api.get('/workspaces', { params });
-    return response.data.data;
+    return response.data.data.workspaces;
   },
 
   async getOne(id: string): Promise<{ workspace: Workspace; roomCount: number }> {
@@ -60,9 +60,9 @@ export const workspaceService = {
     return response.data.data;
   },
 
-  async search(q: string, params?: WorkspaceQueryParams): Promise<PaginatedResponse<Workspace>> {
+  async search(q: string, params?: WorkspaceQueryParams): Promise<Workspace[]> {
     const response = await api.get('/workspaces/search', { params: { q, ...params } });
-    return response.data.data;
+    return response.data.data.workspaces;
   },
 
   async regenerateInviteCode(id: string): Promise<string> {

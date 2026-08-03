@@ -22,6 +22,7 @@ import WhiteboardPage from './pages/WhiteboardPage';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import InsightsPage from './pages/dashboard/InsightsPage';
 import FileManagerPage from './pages/dashboard/FileManagerPage';
+import MeetingsPage from './pages/dashboard/MeetingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import CommandPalette from './components/CommandPalette';
 import AISidebar from './components/AISidebar';
@@ -70,6 +71,7 @@ export default function App() {
                 <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
                 <Route path="rooms" element={<RoomsPage />} />
                 <Route path="rooms/:id" element={<RoomDetailPage />} />
+                <Route path="meetings" element={<MeetingsPage />} />
                 <Route path="shared" element={<SharedWithMePage />} />
                 <Route path="activity" element={<ActivityPage />} />
                 <Route path="trash" element={<TrashPage />} />

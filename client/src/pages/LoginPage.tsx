@@ -28,8 +28,11 @@ export default function LoginPage() {
   }
 
   function handleDemoLogin() {
-    dispatch(demoLogin());
-    navigate('/dashboard', { replace: true });
+    dispatch(demoLogin()).then((action) => {
+      if (demoLogin.fulfilled.match(action)) {
+        navigate(from, { replace: true });
+      }
+    });
   }
 
   return (
@@ -120,9 +123,16 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={handleDemoLogin}
-          className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold rounded-xl transition-all text-sm"
+          disabled={isLoading}
+          className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Demo Login (no DB required)
+          {isLoading ? (
+            <>
+              <Spinner size="sm" /> Signing in as demo user...
+            </>
+          ) : (
+            'Try Demo (Alex Johnson)'
+          )}
         </button>
 
         <p className="mt-6 text-center text-gray-400 text-sm">

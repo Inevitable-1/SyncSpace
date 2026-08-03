@@ -20,6 +20,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { initializeSocketHandlers } from './socket/whiteboardHandler.js';
 import { initializeEditorHandlers } from './socket/editorHandler.js';
 import codeDocumentRoutes from './routes/codeDocument.js';
+import meetingRoutes from './routes/meeting.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -55,6 +56,7 @@ app.use('/api/workspaces/:id/members', memberRoutes);
 app.use('/api/workspaces/:id/invites', inviteRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/documents', codeDocumentRoutes);
+app.use('/api/meetings', meetingRoutes);
 
 initializeSocketHandlers(io);
 initializeEditorHandlers(io);
