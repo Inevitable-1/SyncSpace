@@ -150,7 +150,9 @@ function StatCard({
       animate={{ opacity: 1, y: 0 }}
       className="card p-5 flex items-center gap-4"
     >
-      <div className={`w-12 h-12 rounded-xl ${accent} flex items-center justify-center flex-shrink-0`}>
+      <div
+        className={`w-12 h-12 rounded-xl ${accent} flex items-center justify-center flex-shrink-0`}
+      >
         {icon}
       </div>
       <div>
@@ -175,12 +177,19 @@ interface MeetingCardProps {
   onEnd: (m: Meeting) => void;
 }
 
-function MeetingCard({ meeting, currentUser, index, joining, onJoin, onStart, onEnd }: MeetingCardProps) {
+function MeetingCard({
+  meeting,
+  currentUser,
+  index,
+  joining,
+  onJoin,
+  onStart,
+  onEnd,
+}: MeetingCardProps) {
   const style = STATUS_STYLES[meeting.status];
   const wsName = typeof meeting.workspace === 'object' ? meeting.workspace.name : 'Workspace';
   const wsColor = typeof meeting.workspace === 'object' ? meeting.workspace.color : '#6366f1';
-  const isHost =
-    currentUser !== null && getMemberId(meeting.host) === currentUser.id;
+  const isHost = currentUser !== null && getMemberId(meeting.host) === currentUser.id;
 
   const canJoin = meeting.status === 'scheduled' || meeting.status === 'ongoing';
 
@@ -202,12 +211,19 @@ function MeetingCard({ meeting, currentUser, index, joining, onJoin, onStart, on
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold truncate">{meeting.name}</h3>
-            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${style.className}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${style.dot} ${meeting.status === 'ongoing' ? 'animate-pulse' : ''}`} />
+            <span
+              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${style.className}`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${style.dot} ${meeting.status === 'ongoing' ? 'animate-pulse' : ''}`}
+              />
               {style.label}
             </span>
           </div>
-          <p className="text-xs mt-1 flex items-center gap-2 flex-wrap" style={{ color: 'var(--text-tertiary)' }}>
+          <p
+            className="text-xs mt-1 flex items-center gap-2 flex-wrap"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
             <span className="inline-flex items-center gap-1">
               <span className="w-2 h-2 rounded-full" style={{ background: wsColor }} />
               {wsName}
@@ -222,7 +238,9 @@ function MeetingCard({ meeting, currentUser, index, joining, onJoin, onStart, on
             {meeting.status === 'scheduled' && (
               <>
                 <span>·</span>
-                <span className="text-brand-400 font-semibold">{timeUntil(meeting.scheduledAt)}</span>
+                <span className="text-brand-400 font-semibold">
+                  {timeUntil(meeting.scheduledAt)}
+                </span>
               </>
             )}
             <span>·</span>
@@ -352,7 +370,10 @@ function ScheduleModal({ isOpen, onClose, onSubmit, isLoading = false }: Schedul
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+          <label
+            className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             Meeting Title
           </label>
           <input
@@ -367,7 +388,10 @@ function ScheduleModal({ isOpen, onClose, onSubmit, isLoading = false }: Schedul
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+            <label
+              className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               Workspace
             </label>
             <select
@@ -385,7 +409,10 @@ function ScheduleModal({ isOpen, onClose, onSubmit, isLoading = false }: Schedul
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+            <label
+              className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+              style={{ color: 'var(--text-secondary)' }}
+            >
               Date &amp; Time
             </label>
             <input
@@ -399,7 +426,10 @@ function ScheduleModal({ isOpen, onClose, onSubmit, isLoading = false }: Schedul
           </div>
         </div>
         <div>
-          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+          <label
+            className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             Duration (minutes)
           </label>
           <div className="flex gap-2">
@@ -425,7 +455,10 @@ function ScheduleModal({ isOpen, onClose, onSubmit, isLoading = false }: Schedul
           </div>
         </div>
         <div>
-          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+          <label
+            className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             Agenda
           </label>
           <input
@@ -437,7 +470,10 @@ function ScheduleModal({ isOpen, onClose, onSubmit, isLoading = false }: Schedul
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+          <label
+            className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             Description
           </label>
           <textarea
@@ -448,12 +484,23 @@ function ScheduleModal({ isOpen, onClose, onSubmit, isLoading = false }: Schedul
             placeholder="Optional details"
           />
         </div>
-        <div className="flex gap-3 justify-end pt-3 border-t" style={{ borderColor: 'var(--border-light)' }}>
+        <div
+          className="flex gap-3 justify-end pt-3 border-t"
+          style={{ borderColor: 'var(--border-light)' }}
+        >
           <button type="button" onClick={onClose} className="btn-secondary">
             Cancel
           </button>
-          <button type="submit" className="btn-primary flex items-center gap-2" disabled={!name.trim() || !workspace || !scheduledAt || isLoading}>
-            {isLoading ? <Spinner size="sm" className="text-white" /> : <CheckIcon className="w-4 h-4" />}
+          <button
+            type="submit"
+            className="btn-primary flex items-center gap-2"
+            disabled={!name.trim() || !workspace || !scheduledAt || isLoading}
+          >
+            {isLoading ? (
+              <Spinner size="sm" className="text-white" />
+            ) : (
+              <CheckIcon className="w-4 h-4" />
+            )}
             Schedule Meeting
           </button>
         </div>
@@ -496,11 +543,9 @@ export default function MeetingsPage() {
     };
   }, [meetings]);
 
-  const handleSchedule = (data: Parameters<typeof ScheduleModal>[0]['onSubmit'] extends (
-    d: infer T,
-  ) => void
-    ? T
-    : never) => {
+  const handleSchedule = (
+    data: Parameters<typeof ScheduleModal>[0]['onSubmit'] extends (d: infer T) => void ? T : never,
+  ) => {
     setScheduling(true);
     dispatch(createMeeting(data)).then((action) => {
       setScheduling(false);
@@ -604,7 +649,10 @@ export default function MeetingsPage() {
             {stats?.upcoming ?? 0} upcoming · {stats?.ongoing ?? 0} live now
           </p>
         </div>
-        <button onClick={() => setShowSchedule(true)} className="btn-primary flex items-center gap-2">
+        <button
+          onClick={() => setShowSchedule(true)}
+          className="btn-primary flex items-center gap-2"
+        >
           <PlusIcon className="w-4 h-4" /> Schedule Meeting
         </button>
       </motion.div>
@@ -612,10 +660,30 @@ export default function MeetingsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats ? (
           <>
-            <StatCard value={stats.total} label="Total meetings" icon={<ChartBarIcon className="w-5 h-5 text-brand-500" />} accent="bg-brand-500/10" />
-            <StatCard value={stats.upcoming} label="Upcoming" icon={<ClockIcon className="w-5 h-5 text-blue-500" />} accent="bg-blue-500/10" />
-            <StatCard value={stats.ongoing} label="Live now" icon={<VideoCameraIcon className="w-5 h-5 text-emerald-500" />} accent="bg-emerald-500/10" />
-            <StatCard value={stats.completed} label="Completed" icon={<CheckIcon className="w-5 h-5 text-gray-400" />} accent="bg-gray-500/10" />
+            <StatCard
+              value={stats.total}
+              label="Total meetings"
+              icon={<ChartBarIcon className="w-5 h-5 text-brand-500" />}
+              accent="bg-brand-500/10"
+            />
+            <StatCard
+              value={stats.upcoming}
+              label="Upcoming"
+              icon={<ClockIcon className="w-5 h-5 text-blue-500" />}
+              accent="bg-blue-500/10"
+            />
+            <StatCard
+              value={stats.ongoing}
+              label="Live now"
+              icon={<VideoCameraIcon className="w-5 h-5 text-emerald-500" />}
+              accent="bg-emerald-500/10"
+            />
+            <StatCard
+              value={stats.completed}
+              label="Completed"
+              icon={<CheckIcon className="w-5 h-5 text-gray-400" />}
+              accent="bg-gray-500/10"
+            />
           </>
         ) : (
           <>

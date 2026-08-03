@@ -220,7 +220,10 @@ export default function MeetingRoom({ meeting, currentUser, onLeave, onEnd }: Me
                 const name = getDisplayName(member);
                 const avatar = getAvatar(member);
                 return (
-                  <div key={`${getMemberId(member)}-aside-${i}`} className="flex items-center gap-2.5">
+                  <div
+                    key={`${getMemberId(member)}-aside-${i}`}
+                    className="flex items-center gap-2.5"
+                  >
                     {avatar ? (
                       <img src={avatar} alt={name} className="w-7 h-7 rounded-lg object-cover" />
                     ) : (

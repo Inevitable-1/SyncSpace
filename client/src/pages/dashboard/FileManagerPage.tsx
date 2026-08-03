@@ -19,13 +19,16 @@ function getFileIcon(mimeType: string): string {
   if (mimeType.includes('zip')) return '📦';
   if (mimeType.includes('markdown') || mimeType.includes('text')) return '📝';
   if (mimeType.includes('fig')) return '🎨';
-  if (mimeType.includes('csv') || mimeType.includes('excel') || mimeType.includes('sheet')) return '📊';
+  if (mimeType.includes('csv') || mimeType.includes('excel') || mimeType.includes('sheet'))
+    return '📊';
   if (mimeType.includes('json')) return '🧾';
   return '📎';
 }
 
 function getUploaderName(file: UploadedFile): string {
-  return typeof file.uploader === 'object' && file.uploader !== null ? file.uploader.name : 'Member';
+  return typeof file.uploader === 'object' && file.uploader !== null
+    ? file.uploader.name
+    : 'Member';
 }
 
 function folderLabel(folder: string): string {
@@ -68,7 +71,9 @@ export default function FileManagerPage() {
   useEffect(() => {
     if (!workspaceId) return;
     const timeout = setTimeout(() => {
-      dispatch(fetchFiles({ workspaceId, folder: folder || undefined, search: search || undefined }));
+      dispatch(
+        fetchFiles({ workspaceId, folder: folder || undefined, search: search || undefined }),
+      );
     }, 300);
     return () => clearTimeout(timeout);
   }, [dispatch, workspaceId, folder, search]);
@@ -112,9 +117,7 @@ export default function FileManagerPage() {
         showToast('Files uploaded', 'success');
         return;
       }
-      dispatch(
-        uploadFile({ file: f, workspaceId, folder: folder || undefined }),
-      ).then((action) => {
+      dispatch(uploadFile({ file: f, workspaceId, folder: folder || undefined })).then((action) => {
         if (action.meta.requestStatus !== 'fulfilled') {
           showToast((action.payload as string) || 'Upload failed', 'error');
         }

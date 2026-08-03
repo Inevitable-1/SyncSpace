@@ -376,8 +376,7 @@ export default function DashboardHome() {
               <div className="space-y-3">
                 {[...meetings]
                   .sort(
-                    (a, b) =>
-                      new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+                    (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
                   )
                   .slice(0, 3)
                   .map((meeting) => {
@@ -393,7 +392,10 @@ export default function DashboardHome() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold truncate">{meeting.name}</p>
-                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                          <p
+                            className="text-[10px] mt-0.5"
+                            style={{ color: 'var(--text-tertiary)' }}
+                          >
                             {wsName ? `${wsName} · ` : ''}
                             {meeting.status === 'ongoing' ? (
                               <span className="text-emerald-400 font-semibold">Live now</span>

@@ -137,9 +137,7 @@ export async function updateMeeting(req: AuthRequest, res: Response): Promise<vo
   if (agenda !== undefined) meeting.agenda = agenda;
   if (status !== undefined) meeting.status = status;
   if (participants !== undefined) {
-    meeting.participants = (participants as string[]).map(
-      (p) => new mongoose.Types.ObjectId(p),
-    );
+    meeting.participants = (participants as string[]).map((p) => new mongoose.Types.ObjectId(p));
   }
 
   if (meeting.status === 'ongoing' && !meeting.endedAt) {

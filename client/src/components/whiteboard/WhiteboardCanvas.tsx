@@ -242,6 +242,107 @@ export default function WhiteboardCanvas({
     ],
   );
 
+  const [isDrawingSmooth, setIsDrawingSmooth] = useState(false);
+  const lastPointsRef = useRef<{ x: number; y: number; time: number }[]>([]);
+  const smoothedPointsRef = useRef<number[]>([]);
+  const animationFrameRef = useRef<number | null>(null);
+  const pressureHistoryRef = useRef<number[]>([]);
+
+  const smoothPoints = useCallback((points: { x: number; y: number; time: number }[]) => {
+    if (points.length < 3) return points;
+
+    const minDistance = 0.5;
+    const result: { x: number; y: number; time: number }[] = [];
+
+    for (let i = 0; i < points.length; i++) {
+      const point = points[i];
+      if (result.length === 0) {
+        result.push(point);
+        continue;
+      }
+
+      const lastAdded = result[result.length - 1];
+      const dx = point.x - lastAdded.x;
+      const dy = point.y - lastAdded.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance >= minDistance) {
+        result.push(point);
+      }
+    }
+
+    return result;
+  }, []);
+
+  const interpolatePoints = useCallback((points: { x: number; y: number; time: number }[]) => {
+    if (points.length < 2) return [];
+
+    const result: number[] = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const segments = Math.max(2, Math.min(8, Math.round(dist / 2)));
+
+      result.push(p1.x, p1.y);
+
+      for (let t = 1 / segments; t < 1; t += 1 / segments) {
+        const interpolatedX = p1.x + dx * t;
+        const interpolatedY = p1.y + dy * t;
+
+        const curveX = interpolatedX - dx * t * 0.1;
+        const curveY = interpolatedY - dy * t * 0.1;
+
+        result.push(curveX, curveY);
+      }
+    }
+
+    if (points.length >= 2) {
+      const last = points[points.length - 1];
+      result.push(last.x, last.y);
+    }
+
+    return result;
+  }, []);
+
+  const updateSmoothedPoints = useCallback(() => {
+    if (lastPointsRef.current.length > 0 && !isDrawingSmooth) {
+      setIsDrawingSmooth(true);
+      const smoothed = smoothPoints(lastPointsRef.current);
+      const interpolated = interpolatePoints(smoothed);
+      smoothedPointsRef.current = interpolated;
+
+      setCurrentObject((prev) => {
+        if (!prev || prev.type !== 'line') return prev;
+
+        const newStrokeWidth =
+          pressureHistoryRef.current.length > 0
+            ? Math.max(
+                1,
+                Math.min(8, 2 + pressureHistoryRef.current[pressureHistoryRef.current.length - 1]),
+              )
+            : prev.strokeWidth || 2;
+
+        return {
+          ...prev,
+          points: interpolated,
+          strokeWidth: newStrokeWidth,
+          tension: 0.7,
+          lineCap: 'round',
+          lineJoin: 'round',
+        };
+      });
+
+      setIsDrawingSmooth(false);
+      lastPointsRef.current = [];
+      pressureHistoryRef.current = [];
+    }
+    animationFrameRef.current = null;
+  }, [smoothPoints, interpolatePoints, isDrawingSmooth]);
+
   const handleMouseMove = useCallback(() => {
     const pos = getPointerPosition();
     onCursorMove(pos.x, pos.y);
@@ -257,9 +358,11 @@ export default function WhiteboardCanvas({
       return;
     }
 
+    const now = performance.now();
+
     if (!isDrawing || !currentObject) return;
 
-    if (tool === 'pencil' && currentObject.points) {
+    if (tool === 'pencil' && currentObject.type === 'line' && currentObject.points) {
       const lastPoint =
         currentObject.points.length >= 2
           ? [
@@ -269,10 +372,17 @@ export default function WhiteboardCanvas({
           : [0, 0];
       const dx = pos.x - (currentObject.x + (lastPoint[0] as number));
       const dy = pos.y - (currentObject.y + (lastPoint[1] as number));
-      setCurrentObject({
-        ...currentObject,
-        points: [...currentObject.points, dx, dy],
-      });
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      lastPointsRef.current.push({ x: pos.x, y: pos.y, time: now });
+      pressureHistoryRef.current.push(Math.max(1, Math.min(8, 2 + distance / 5)));
+
+      if (lastPointsRef.current.length > 1) {
+        if (animationFrameRef.current !== null) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        animationFrameRef.current = requestAnimationFrame(updateSmoothedPoints);
+      }
     } else if (tool === 'line' || tool === 'arrow') {
       setCurrentObject({
         ...currentObject,
@@ -291,7 +401,16 @@ export default function WhiteboardCanvas({
         radiusY: Math.abs(pos.y - currentObject.y),
       });
     }
-  }, [isPanning, isDrawing, currentObject, tool, lastPanPoint, getPointerPosition, onCursorMove]);
+  }, [
+    isPanning,
+    isDrawing,
+    currentObject,
+    tool,
+    lastPanPoint,
+    getPointerPosition,
+    onCursorMove,
+    updateSmoothedPoints,
+  ]);
 
   const handleMouseUp = useCallback(() => {
     if (isPanning) {
