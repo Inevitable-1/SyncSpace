@@ -1,6 +1,7 @@
 import api from './api';
 import { demo, noop, ok } from './demo';
-import { getInvitesForWorkspace, demoInvites, demoUser, demoWorkspaces } from '../data/demoData';
+import { getInvitesForWorkspace, demoInvites, demoUser } from '../data/demoData';
+import { toWorkspaceShape, getAllDemoWorkspaces } from '../data/demoWorkspaces';
 import type { Invite, InviteRole, InviteStatus } from '../types';
 
 function buildDemoInvite(workspaceId: string, email: string, role?: string): Invite {
@@ -58,7 +59,7 @@ export const inviteService = {
   async acceptInvite(token: string) {
     return demo(
       () => api.post(`/invites/${token}/accept`).then((response) => response.data),
-      () => ok(demoWorkspaces[0]),
+      () => ok(toWorkspaceShape(getAllDemoWorkspaces()[0])),
     );
   },
 

@@ -1,20 +1,15 @@
 import type {
-  User,
-  Workspace,
-  Room,
-  Meeting,
   Task,
-  UploadedFile,
-  Activity,
   Notification,
-  Member,
   Invite,
   ChatMessage,
   WhiteboardObject,
   CodeDocument,
-  MeetingStats,
 } from '../types';
 import type { WhiteboardData } from '../services/whiteboardService';
+
+import { findUser } from './demoWorkspaces';
+export { demoUser, demoUsers, findUser } from './demoWorkspaces';
 
 const now = Date.now();
 const MIN = 60_000;
@@ -22,330 +17,8 @@ const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
 
 const hoursAgo = (h: number) => new Date(now - h * HOUR).toISOString();
-const hoursFromNow = (h: number) => new Date(now + h * HOUR).toISOString();
 const daysAgo = (d: number) => new Date(now - d * DAY).toISOString();
 const daysFromNow = (d: number) => new Date(now + d * DAY).toISOString();
-
-export const demoUser: User = {
-  id: 'demo-user',
-  name: 'Manoj Kumar',
-  email: 'mr.manojmanu05@gmail.com',
-  avatar: 'M',
-  isEmailVerified: true,
-};
-
-export const demoUsers: User[] = [
-  demoUser,
-  {
-    id: 'u-priya',
-    name: 'Priya Sharma',
-    email: 'priya@syncspace.dev',
-    avatar: 'PS',
-    isEmailVerified: true,
-  },
-  {
-    id: 'u-ravi',
-    name: 'Ravi Patel',
-    email: 'ravi@syncspace.dev',
-    avatar: 'RP',
-    isEmailVerified: true,
-  },
-  {
-    id: 'u-alex',
-    name: 'Alex Johnson',
-    email: 'alex@syncspace.dev',
-    avatar: 'AJ',
-    isEmailVerified: true,
-  },
-  {
-    id: 'u-sarah',
-    name: 'Sarah Chen',
-    email: 'sarah@syncspace.dev',
-    avatar: 'SC',
-    isEmailVerified: true,
-  },
-  {
-    id: 'u-mike',
-    name: 'Mike Wilson',
-    email: 'mike@syncspace.dev',
-    avatar: 'MW',
-    isEmailVerified: true,
-  },
-];
-
-function findUser(id: string): User {
-  return demoUsers.find((u) => u.id === id) || demoUser;
-}
-
-export const demoWorkspaces: Workspace[] = [
-  {
-    _id: 'ws-1',
-    name: 'SyncSpace Development',
-    description: 'Main product development workspace for the SyncSpace collaboration suite.',
-    color: '#6366f1',
-    icon: '🚀',
-    isPublic: false,
-    isFavorite: true,
-    inviteCode: 'WS-DEV-2024',
-    owner: demoUser.id,
-    members: [demoUser.id, 'u-priya', 'u-alex', 'u-ravi'],
-    memberCount: 4,
-    roomCount: 3,
-    isDeleted: false,
-    createdAt: daysAgo(120),
-    updatedAt: hoursAgo(1),
-  },
-  {
-    _id: 'ws-2',
-    name: 'Axlero Internship',
-    description: 'Internship projects, reports and weekly deliverables.',
-    color: '#8b5cf6',
-    icon: '🎓',
-    isPublic: false,
-    isFavorite: false,
-    inviteCode: 'WS-INTERN-24',
-    owner: demoUser.id,
-    members: [demoUser.id, 'u-sarah', 'u-alex'],
-    memberCount: 3,
-    roomCount: 1,
-    isDeleted: false,
-    createdAt: daysAgo(90),
-    updatedAt: daysAgo(2),
-  },
-  {
-    _id: 'ws-3',
-    name: 'Final Year Project',
-    description: 'Capstone project planning, research and implementation.',
-    color: '#10b981',
-    icon: '📚',
-    isPublic: false,
-    isFavorite: false,
-    inviteCode: 'WS-FYP-2024',
-    owner: demoUser.id,
-    members: [demoUser.id, 'u-priya', 'u-mike'],
-    memberCount: 3,
-    roomCount: 0,
-    isDeleted: false,
-    createdAt: daysAgo(200),
-    updatedAt: daysAgo(5),
-  },
-  {
-    _id: 'ws-4',
-    name: 'Hackathon Team',
-    description: '48-hour hackathon project: AI-powered code reviewer.',
-    color: '#f59e0b',
-    icon: '⚡',
-    isPublic: false,
-    isFavorite: false,
-    inviteCode: 'WS-HACK-2024',
-    owner: 'u-alex',
-    members: ['u-alex', demoUser.id, 'u-priya', 'u-mike'],
-    memberCount: 4,
-    roomCount: 1,
-    isDeleted: false,
-    createdAt: daysAgo(30),
-    updatedAt: daysAgo(3),
-  },
-  {
-    _id: 'ws-5',
-    name: 'AI Research',
-    description: 'Exploring vector databases and retrieval-augmented generation.',
-    color: '#ec4899',
-    icon: '🤖',
-    isPublic: false,
-    isFavorite: false,
-    inviteCode: 'WS-AI-RND',
-    owner: 'u-priya',
-    members: ['u-priya', demoUser.id, 'u-sarah'],
-    memberCount: 3,
-    roomCount: 1,
-    isDeleted: false,
-    createdAt: daysAgo(45),
-    updatedAt: daysAgo(1),
-  },
-  {
-    _id: 'ws-6',
-    name: 'UI Design',
-    description: 'Design system, mockups and user flows.',
-    color: '#06b6d4',
-    icon: '🎨',
-    isPublic: false,
-    isFavorite: false,
-    inviteCode: 'WS-UI-DESIGN',
-    owner: 'u-ravi',
-    members: ['u-ravi', demoUser.id],
-    memberCount: 2,
-    roomCount: 0,
-    isDeleted: false,
-    createdAt: daysAgo(60),
-    updatedAt: daysAgo(4),
-  },
-];
-
-export function getWorkspace(id: string): Workspace | undefined {
-  return demoWorkspaces.find((ws) => ws._id === id);
-}
-
-export function getWorkspacesByMember(userId: string): Workspace[] {
-  return demoWorkspaces.filter(
-    (ws) =>
-      ws.owner === userId || ws.members.some((m) => (typeof m === 'string' ? m : m.id) === userId),
-  );
-}
-
-export const demoRooms: Room[] = [
-  {
-    _id: 'room-1',
-    name: 'Daily Standup',
-    type: 'whiteboard',
-    workspace: demoWorkspaces[0],
-    owner: demoUser.id,
-    inviteCode: 'ROOM-STANDUP',
-    isActive: true,
-    participants: [demoUser.id, 'u-priya', 'u-alex', 'u-ravi'],
-    isDeleted: false,
-    createdAt: daysAgo(40),
-    updatedAt: hoursAgo(2),
-  },
-  {
-    _id: 'room-2',
-    name: 'Project Review',
-    type: 'code',
-    workspace: demoWorkspaces[1],
-    owner: demoUser.id,
-    inviteCode: 'ROOM-REVIEW',
-    isActive: true,
-    participants: [demoUser.id, 'u-sarah', 'u-alex'],
-    isDeleted: false,
-    createdAt: daysAgo(35),
-    updatedAt: hoursAgo(5),
-  },
-  {
-    _id: 'room-3',
-    name: 'Frontend Discussion',
-    type: 'document',
-    workspace: demoWorkspaces[0],
-    owner: demoUser.id,
-    inviteCode: 'ROOM-FE-DISC',
-    isActive: false,
-    participants: [demoUser.id, 'u-alex', 'u-ravi'],
-    isDeleted: false,
-    createdAt: daysAgo(25),
-    updatedAt: daysAgo(1),
-  },
-  {
-    _id: 'room-4',
-    name: 'Backend Planning',
-    type: 'code',
-    workspace: demoWorkspaces[3],
-    owner: 'u-alex',
-    inviteCode: 'ROOM-BE-PLAN',
-    isActive: true,
-    participants: ['u-alex', demoUser.id, 'u-priya', 'u-mike'],
-    isDeleted: false,
-    createdAt: daysAgo(20),
-    updatedAt: hoursAgo(3),
-  },
-  {
-    _id: 'room-5',
-    name: 'System Design',
-    type: 'whiteboard',
-    workspace: demoWorkspaces[4],
-    owner: 'u-priya',
-    inviteCode: 'ROOM-SYS-DES',
-    isActive: false,
-    participants: ['u-priya', demoUser.id, 'u-sarah'],
-    isDeleted: false,
-    createdAt: daysAgo(15),
-    updatedAt: daysAgo(2),
-  },
-];
-
-export function getRoom(id: string): Room | undefined {
-  return demoRooms.find((r) => r._id === id);
-}
-
-export const demoMeetings: Meeting[] = [
-  {
-    _id: 'meet-1',
-    name: "Today's Meeting",
-    description: 'Quick sync on sprint goals and blockers.',
-    workspace: demoWorkspaces[0],
-    host: findUser(demoUser.id),
-    participants: [findUser(demoUser.id), findUser('u-priya'), findUser('u-alex')],
-    scheduledAt: hoursFromNow(2),
-    duration: 30,
-    status: 'scheduled',
-    agenda: 'Sprint goals, blockers, next steps',
-    meetingCode: 'MEET-TODAY-01',
-    isDeleted: false,
-    createdAt: daysAgo(2),
-    updatedAt: hoursAgo(1),
-  },
-  {
-    _id: 'meet-2',
-    name: 'Sprint Review',
-    description: 'Review completed work and demo features.',
-    workspace: demoWorkspaces[0],
-    host: findUser('u-sarah'),
-    participants: [
-      findUser(demoUser.id),
-      findUser('u-sarah'),
-      findUser('u-alex'),
-      findUser('u-ravi'),
-    ],
-    scheduledAt: daysFromNow(1),
-    duration: 60,
-    status: 'scheduled',
-    agenda: 'Demo features, retro, planning',
-    meetingCode: 'MEET-SPRINT-02',
-    isDeleted: false,
-    createdAt: daysAgo(3),
-    updatedAt: daysAgo(1),
-  },
-  {
-    _id: 'meet-3',
-    name: 'Client Demo',
-    description: 'Live demo of the dashboard for stakeholders.',
-    workspace: demoWorkspaces[1],
-    host: findUser(demoUser.id),
-    participants: [findUser(demoUser.id), findUser('u-sarah')],
-    scheduledAt: hoursAgo(2),
-    duration: 45,
-    status: 'ongoing',
-    agenda: 'Feature walkthrough, Q&A',
-    meetingCode: 'MEET-CLIENT-03',
-    isDeleted: false,
-    createdAt: daysAgo(4),
-    updatedAt: hoursAgo(2),
-  },
-  {
-    _id: 'meet-4',
-    name: 'Architecture Discussion',
-    description: 'Agree on the service architecture for the next milestone.',
-    workspace: demoWorkspaces[3],
-    host: findUser('u-alex'),
-    participants: [
-      findUser('u-alex'),
-      findUser(demoUser.id),
-      findUser('u-priya'),
-      findUser('u-mike'),
-    ],
-    scheduledAt: daysAgo(3),
-    duration: 90,
-    status: 'completed',
-    agenda: 'Monorepo layout, API contracts, deployment',
-    meetingCode: 'MEET-ARCH-04',
-    endedAt: daysAgo(3),
-    isDeleted: false,
-    createdAt: daysAgo(6),
-    updatedAt: daysAgo(3),
-  },
-];
-
-export function getMeeting(id: string): Meeting | undefined {
-  return demoMeetings.find((m) => m._id === id);
-}
 
 export const demoTasks: Task[] = [
   {
@@ -354,7 +27,7 @@ export const demoTasks: Task[] = [
     description: 'Create high-fidelity mockups for the new analytics dashboard.',
     workspace: 'ws-1',
     room: 'room-1',
-    creator: findUser(demoUser.id),
+    creator: findUser('demo-user'),
     assignee: findUser('u-ravi'),
     status: 'todo',
     priority: 'high',
@@ -398,7 +71,7 @@ export const demoTasks: Task[] = [
     workspace: 'ws-1',
     room: 'room-4',
     creator: findUser('u-priya'),
-    assignee: findUser(demoUser.id),
+    assignee: findUser('demo-user'),
     status: 'review',
     priority: 'high',
     labels: ['bug', 'backend'],
@@ -419,7 +92,7 @@ export const demoTasks: Task[] = [
     description: 'Cover auth, workspaces, rooms and files with integration tests.',
     workspace: 'ws-1',
     room: 'room-4',
-    creator: findUser(demoUser.id),
+    creator: findUser('demo-user'),
     assignee: findUser('u-alex'),
     status: 'in-progress',
     priority: 'medium',
@@ -441,7 +114,7 @@ export const demoTasks: Task[] = [
     workspace: 'ws-1',
     room: 'room-3',
     creator: findUser('u-alex'),
-    assignee: findUser(demoUser.id),
+    assignee: findUser('demo-user'),
     status: 'todo',
     priority: 'medium',
     labels: ['feature', 'frontend'],
@@ -458,7 +131,7 @@ export const demoTasks: Task[] = [
     description: 'Summarise projects, learnings and weekly progress.',
     workspace: 'ws-2',
     creator: findUser('u-sarah'),
-    assignee: findUser(demoUser.id),
+    assignee: findUser('demo-user'),
     status: 'completed',
     priority: 'medium',
     labels: ['documentation'],
@@ -572,177 +245,12 @@ export function getTasksForWorkspace(workspaceId: string): Task[] {
   return demoTasks.filter((t) => t.workspace === workspaceId);
 }
 
-export const demoFiles: UploadedFile[] = [
-  {
-    _id: 'file-1',
-    name: 'README.md',
-    originalName: 'README.md',
-    mimeType: 'text/markdown',
-    size: 2456,
-    path: '/Documentation/README.md',
-    workspace: 'ws-1',
-    folder: 'Documentation',
-    uploader: findUser('u-priya'),
-    isDeleted: false,
-    createdAt: daysAgo(30),
-    updatedAt: daysAgo(6),
-  },
-  {
-    _id: 'file-2',
-    name: 'ProjectReport.pdf',
-    originalName: 'ProjectReport.pdf',
-    mimeType: 'application/pdf',
-    size: 4521984,
-    path: '/Reports/ProjectReport.pdf',
-    workspace: 'ws-2',
-    folder: 'Reports',
-    uploader: findUser(demoUser.id),
-    isDeleted: false,
-    createdAt: daysAgo(9),
-    updatedAt: daysAgo(9),
-  },
-  {
-    _id: 'file-3',
-    name: 'UI.fig',
-    originalName: 'UI.fig',
-    mimeType: 'application/octet-stream',
-    size: 8912230,
-    path: '/Design/UI.fig',
-    workspace: 'ws-6',
-    folder: 'Design',
-    uploader: findUser('u-ravi'),
-    isDeleted: false,
-    createdAt: daysAgo(12),
-    updatedAt: daysAgo(4),
-  },
-  {
-    _id: 'file-4',
-    name: 'Presentation.pptx',
-    originalName: 'Presentation.pptx',
-    mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    size: 12034000,
-    path: '/Presentations/Presentation.pptx',
-    workspace: 'ws-2',
-    folder: 'Presentations',
-    uploader: findUser('u-sarah'),
-    isDeleted: false,
-    createdAt: daysAgo(7),
-    updatedAt: daysAgo(7),
-  },
-  {
-    _id: 'file-5',
-    name: 'MeetingNotes.docx',
-    originalName: 'MeetingNotes.docx',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    size: 345678,
-    path: '/Documentation/MeetingNotes.docx',
-    workspace: 'ws-1',
-    folder: 'Documentation',
-    uploader: findUser(demoUser.id),
-    isDeleted: false,
-    createdAt: daysAgo(5),
-    updatedAt: hoursAgo(9),
-  },
-  {
-    _id: 'file-6',
-    name: 'DatabaseSchema.sql',
-    originalName: 'DatabaseSchema.sql',
-    mimeType: 'text/plain',
-    size: 8450,
-    path: '/Database/DatabaseSchema.sql',
-    workspace: 'ws-3',
-    folder: 'Database',
-    uploader: findUser('u-mike'),
-    isDeleted: false,
-    createdAt: daysAgo(11),
-    updatedAt: daysAgo(11),
-  },
-];
-
-export function getFilesForWorkspace(workspaceId: string): UploadedFile[] {
-  return demoFiles.filter((f) => f.workspace === workspaceId);
-}
-
 export const demoFolders: string[] = [
   'Documentation',
   'Design',
   'Reports',
   'Presentations',
   'Database',
-];
-
-export const demoActivities: Activity[] = [
-  {
-    _id: 'act-1',
-    user: findUser('u-priya'),
-    action: 'created a new task',
-    entityType: 'task',
-    entityId: 'task-3',
-    entityName: 'Fix login token refresh bug',
-    createdAt: hoursAgo(4),
-  },
-  {
-    _id: 'act-2',
-    user: findUser(demoUser.id),
-    action: 'created',
-    entityType: 'workspace',
-    entityId: 'ws-1',
-    entityName: 'SyncSpace Development',
-    createdAt: daysAgo(120),
-  },
-  {
-    _id: 'act-3',
-    user: findUser('u-alex'),
-    action: 'invited',
-    entityType: 'invite',
-    entityName: 'sarah@syncspace.dev',
-    createdAt: daysAgo(1),
-  },
-  {
-    _id: 'act-4',
-    user: findUser('u-ravi'),
-    action: 'uploaded',
-    entityType: 'file',
-    entityId: 'file-3',
-    entityName: 'UI.fig',
-    createdAt: daysAgo(4),
-  },
-  {
-    _id: 'act-5',
-    user: findUser(demoUser.id),
-    action: 'joined',
-    entityType: 'room',
-    entityId: 'room-4',
-    entityName: 'Backend Planning',
-    createdAt: daysAgo(3),
-  },
-  {
-    _id: 'act-6',
-    user: findUser('u-mike'),
-    action: 'completed',
-    entityType: 'task',
-    entityId: 'task-8',
-    entityName: 'Migrate database to MongoDB',
-    createdAt: daysAgo(4),
-  },
-  {
-    _id: 'act-7',
-    user: findUser('u-sarah'),
-    action: 'started',
-    entityType: 'room',
-    entityId: 'room-2',
-    entityName: 'Project Review',
-    createdAt: hoursAgo(5),
-  },
-  {
-    _id: 'act-8',
-    user: findUser(demoUser.id),
-    action: 'renamed',
-    entityType: 'file',
-    entityId: 'file-5',
-    entityName: 'MeetingNotes.docx',
-    createdAt: hoursAgo(9),
-  },
 ];
 
 export const demoNotifications: Notification[] = [
@@ -814,45 +322,12 @@ export const demoNotifications: Notification[] = [
   },
 ];
 
-export function getMembersForWorkspace(workspaceId: string): Member[] {
-  const memberList: Array<
-    [string, 'owner' | 'admin' | 'member', 'active' | 'invited' | 'suspended']
-  > = [];
-  const ws = getWorkspace(workspaceId);
-  if (!ws) return [];
-  const ownerId = typeof ws.owner === 'object' ? ws.owner.id : ws.owner;
-
-  memberList.push([ownerId, 'owner', 'active']);
-  ws.members.forEach((m) => {
-    const id = typeof m === 'string' ? m : m.id;
-    if (id !== ownerId) {
-      memberList.push([id, 'member', 'active']);
-    }
-  });
-
-  if (workspaceId === 'ws-1') {
-    memberList.push(['u-sarah', 'admin', 'invited']);
-  }
-
-  return memberList.map(([id, role, status], i) => ({
-    _id: `mem-${workspaceId}-${i}`,
-    userId: findUser(id),
-    workspaceId,
-    role,
-    status,
-    invitedBy: ownerId === id ? undefined : findUser(ownerId),
-    joinedAt: daysAgo(20 - i),
-    createdAt: daysAgo(20 - i),
-    updatedAt: daysAgo(20 - i),
-  }));
-}
-
 export const demoInvites: Invite[] = [
   {
     _id: 'inv-1',
     email: 'sarah@syncspace.dev',
     workspaceId: 'ws-1',
-    invitedBy: findUser(demoUser.id),
+    invitedBy: findUser('demo-user'),
     role: 'admin',
     status: 'pending',
     token: 'inv-token-sarah',
@@ -899,14 +374,14 @@ export const demoChatMessages: ChatMessage[] = [
     type: 'text',
     edited: false,
     isDeleted: false,
-    seenBy: [findUser(demoUser.id), findUser('u-alex'), findUser('u-ravi')],
+    seenBy: [findUser('demo-user'), findUser('u-alex'), findUser('u-ravi')],
     createdAt: hoursAgo(2),
     updatedAt: hoursAgo(2),
   },
   {
     _id: 'msg-2',
     room: 'room-1',
-    sender: findUser(demoUser.id),
+    sender: findUser('demo-user'),
     content: 'Morning! I wrapped up the token refresh fix yesterday.',
     type: 'text',
     edited: false,
@@ -923,7 +398,7 @@ export const demoChatMessages: ChatMessage[] = [
     type: 'text',
     edited: false,
     isDeleted: false,
-    seenBy: [findUser(demoUser.id), findUser('u-priya'), findUser('u-ravi')],
+    seenBy: [findUser('demo-user'), findUser('u-priya'), findUser('u-ravi')],
     createdAt: hoursAgo(2),
     updatedAt: hoursAgo(2),
   },
@@ -935,7 +410,7 @@ export const demoChatMessages: ChatMessage[] = [
     type: 'text',
     edited: false,
     isDeleted: false,
-    seenBy: [findUser(demoUser.id), findUser('u-priya'), findUser('u-alex')],
+    seenBy: [findUser('demo-user'), findUser('u-priya'), findUser('u-alex')],
     createdAt: hoursAgo(1),
     updatedAt: hoursAgo(1),
   },
@@ -947,14 +422,14 @@ export const demoChatMessages: ChatMessage[] = [
     type: 'text',
     edited: false,
     isDeleted: false,
-    seenBy: [findUser(demoUser.id), findUser('u-ravi')],
+    seenBy: [findUser('demo-user'), findUser('u-ravi')],
     createdAt: daysAgo(1),
     updatedAt: daysAgo(1),
   },
   {
     _id: 'msg-6',
     room: 'room-3',
-    sender: findUser(demoUser.id),
+    sender: findUser('demo-user'),
     content: 'Yes, with a manual override persisted to localStorage.',
     type: 'text',
     edited: false,
@@ -971,7 +446,7 @@ export const demoChatMessages: ChatMessage[] = [
     type: 'text',
     edited: false,
     isDeleted: false,
-    seenBy: [findUser(demoUser.id), findUser('u-alex')],
+    seenBy: [findUser('demo-user'), findUser('u-alex')],
     createdAt: daysAgo(1),
     updatedAt: daysAgo(1),
   },
@@ -983,7 +458,7 @@ export const demoChatMessages: ChatMessage[] = [
     type: 'text',
     edited: false,
     isDeleted: false,
-    seenBy: [findUser(demoUser.id), findUser('u-priya'), findUser('u-mike')],
+    seenBy: [findUser('demo-user'), findUser('u-priya'), findUser('u-mike')],
     createdAt: hoursAgo(3),
     updatedAt: hoursAgo(3),
   },
@@ -995,14 +470,14 @@ export const demoChatMessages: ChatMessage[] = [
     type: 'text',
     edited: false,
     isDeleted: false,
-    seenBy: [findUser(demoUser.id), findUser('u-alex'), findUser('u-mike')],
+    seenBy: [findUser('demo-user'), findUser('u-alex'), findUser('u-mike')],
     createdAt: hoursAgo(3),
     updatedAt: hoursAgo(3),
   },
   {
     _id: 'msg-10',
     room: 'room-4',
-    sender: findUser(demoUser.id),
+    sender: findUser('demo-user'),
     content: 'I will draft the API contract for auth and workspaces.',
     type: 'text',
     edited: false,
@@ -1019,7 +494,7 @@ export const demoChatMessages: ChatMessage[] = [
     type: 'text',
     edited: false,
     isDeleted: false,
-    seenBy: [findUser(demoUser.id), findUser('u-alex'), findUser('u-priya')],
+    seenBy: [findUser('demo-user'), findUser('u-alex'), findUser('u-priya')],
     createdAt: hoursAgo(2),
     updatedAt: hoursAgo(2),
   },
@@ -1112,7 +587,7 @@ export const demoWhiteboards: Record<string, WhiteboardData> = {
     _id: 'wb-room-1',
     roomId: 'room-1',
     objects: whiteboardObjects(),
-    createdBy: demoUser.id,
+    createdBy: 'demo-user',
     createdAt: daysAgo(40),
     updatedAt: hoursAgo(2),
   },
@@ -1132,7 +607,7 @@ export function getWhiteboardForRoom(roomId: string): WhiteboardData {
       _id: `wb-${roomId}`,
       roomId,
       objects: [],
-      createdBy: demoUser.id,
+      createdBy: 'demo-user',
       createdAt: hoursAgo(1),
       updatedAt: hoursAgo(1),
     }
@@ -1150,7 +625,7 @@ export const demoDocuments: CodeDocument[] = [
     room: 'room-4',
     workspace: 'ws-4',
     createdBy: findUser('u-alex'),
-    lastEditedBy: findUser(demoUser.id),
+    lastEditedBy: findUser('demo-user'),
     isFolder: false,
     isDeleted: false,
     versionTimestamps: [daysAgo(20), hoursAgo(3)],
@@ -1166,7 +641,7 @@ export const demoDocuments: CodeDocument[] = [
     language: 'javascript',
     room: 'room-4',
     workspace: 'ws-4',
-    createdBy: findUser(demoUser.id),
+    createdBy: findUser('demo-user'),
     lastEditedBy: findUser('u-priya'),
     isFolder: false,
     isDeleted: false,
@@ -1199,8 +674,8 @@ export const demoDocuments: CodeDocument[] = [
     language: 'markdown',
     room: 'room-2',
     workspace: 'ws-2',
-    createdBy: findUser(demoUser.id),
-    lastEditedBy: findUser(demoUser.id),
+    createdBy: findUser('demo-user'),
+    lastEditedBy: findUser('demo-user'),
     isFolder: false,
     isDeleted: false,
     versionTimestamps: [daysAgo(9)],
@@ -1212,26 +687,3 @@ export const demoDocuments: CodeDocument[] = [
 export function getDocumentsForRoom(roomId: string): CodeDocument[] {
   return demoDocuments.filter((d) => d.room === roomId);
 }
-
-export const demoStats = {
-  totalWorkspaces: demoWorkspaces.length,
-  totalRooms: demoRooms.length,
-  filesShared: 12,
-  onlineMembers: 24,
-  activeSessions: 8,
-  recentActivity: demoActivities.length,
-  projectsCreated: demoWorkspaces.length,
-  growth: {
-    workspaces: demoWorkspaces.length,
-    rooms: demoRooms.length,
-    members: 18,
-    activity: demoActivities.length,
-  },
-};
-
-export const demoMeetingStats: MeetingStats = {
-  total: demoMeetings.length,
-  upcoming: demoMeetings.filter((m) => m.status === 'scheduled').length,
-  ongoing: demoMeetings.filter((m) => m.status === 'ongoing').length,
-  completed: demoMeetings.filter((m) => m.status === 'completed').length,
-};

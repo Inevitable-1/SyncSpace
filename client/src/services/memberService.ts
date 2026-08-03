@@ -1,34 +1,17 @@
-import api from './api';
-import { demo, noop, ok } from './demo';
-import { getMembersForWorkspace, demoUsers, demoUser } from '../data/demoData';
-import type { Member, MemberRole, MemberStatus } from '../types';
+import {
+  getDemoMembersForWorkspace,
+  addDemoMember,
+  updateDemoMember,
+  removeDemoMember,
+} from '../data/demoWorkspaces';
+import type { MemberRole, MemberStatus } from '../types';
 
-function buildDemoMember(
-  workspaceId: string,
-  memberId: string,
-  role: MemberRole,
-  status: MemberStatus,
-): Member {
-  const existing = getMembersForWorkspace(workspaceId).find((m) => m._id === memberId);
-  if (existing) {
-    return { ...existing, role, status, updatedAt: new Date().toISOString() };
-  }
-  const nowIso = new Date().toISOString();
-  return {
-    _id: memberId,
-    userId: demoUser,
-    workspaceId,
-    role,
-    status,
-    invitedBy: demoUser,
-    joinedAt: nowIso,
-    createdAt: nowIso,
-    updatedAt: nowIso,
-  };
+function ok<T>(data: T) {
+  return { data };
 }
 
 function memberStats(workspaceId: string) {
-  const members = getMembersForWorkspace(workspaceId);
+  const members = getDemoMembersForWorkspace(workspaceId);
   return {
     total: members.length,
     active: members.filter((m) => m.status === 'active').length,
@@ -38,82 +21,39 @@ function memberStats(workspaceId: string) {
 }
 
 export const memberService = {
-  async getMembers(workspaceId: string, params?: Record<string, unknown>) {
-    return demo(
-      () =>
-        api.get(`/workspaces/${workspaceId}/members`, { params }).then((response) => response.data),
-      () => {
-        const members = getMembersForWorkspace(workspaceId);
-        return ok({
-          data: members,
-          pagination: { page: 1, limit: 50, total: members.length, totalPages: 1 },
-        });
-      },
-    );
+  async getMembers(workspaceId: string, _params?: Record<string, unknown>) {
+    const members = getDemoMembersForWorkspace(workspaceId);
+    return ok({
+      data: members,
+      pagination: { page: 1, limit: 50, total: members.length, totalPages: 1 },
+    });
   },
 
   async addMember(workspaceId: string, userId: string, role?: string) {
-    return demo(
-      () =>
-        api
-          .post(`/workspaces/${workspaceId}/members`, { userId, role })
-          .then((response) => response.data),
-      () => {
-        const user = demoUsers.find((u) => u.id === userId) || demoUser;
-        const nowIso = new Date().toISOString();
-        return ok({
-          _id: `mem-${Date.now()}`,
-          userId: user,
-          workspaceId,
-          role: (role as MemberRole) || 'member',
-          status: 'active' as MemberStatus,
-          invitedBy: demoUser,
-          joinedAt: nowIso,
-          createdAt: nowIso,
-          updatedAt: nowIso,
-        } as Member);
-      },
-    );
+    const member = addDemoMember(workspaceId, { userId, role });
+    return ok(member);
   },
 
   async removeMember(workspaceId: string, memberId: string) {
-    await noop(() => api.delete(`/workspaces/${workspaceId}/members/${memberId}`));
+    removeDemoMember(workspaceId, memberId);
   },
 
   async updateMemberRole(workspaceId: string, memberId: string, role: string) {
-    return demo(
-      () =>
-        api
-          .put(`/workspaces/${workspaceId}/members/${memberId}/role`, { role })
-          .then((response) => response.data),
-      () => ok(buildDemoMember(workspaceId, memberId, role as MemberRole, 'active')),
-    );
+    const member = updateDemoMember(workspaceId, memberId, { role: role as MemberRole });
+    return ok(member || getDemoMembersForWorkspace(workspaceId)[0]);
   },
 
   async suspendMember(workspaceId: string, memberId: string) {
-    return demo(
-      () =>
-        api
-          .put(`/workspaces/${workspaceId}/members/${memberId}/suspend`)
-          .then((response) => response.data),
-      () => ok(buildDemoMember(workspaceId, memberId, 'member', 'suspended')),
-    );
+    const member = updateDemoMember(workspaceId, memberId, { status: 'suspended' as MemberStatus });
+    return ok(member || getDemoMembersForWorkspace(workspaceId)[0]);
   },
 
   async reactivateMember(workspaceId: string, memberId: string) {
-    return demo(
-      () =>
-        api
-          .put(`/workspaces/${workspaceId}/members/${memberId}/reactivate`)
-          .then((response) => response.data),
-      () => ok(buildDemoMember(workspaceId, memberId, 'member', 'active')),
-    );
+    const member = updateDemoMember(workspaceId, memberId, { status: 'active' as MemberStatus });
+    return ok(member || getDemoMembersForWorkspace(workspaceId)[0]);
   },
 
   async getMemberStats(workspaceId: string) {
-    return demo(
-      () => api.get(`/workspaces/${workspaceId}/members/stats`).then((response) => response.data),
-      () => ok(memberStats(workspaceId)),
-    );
+    return ok(memberStats(workspaceId));
   },
 };
