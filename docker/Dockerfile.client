@@ -3,5 +3,6 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
 COPY client/ .
+RUN apk add --no-cache curl
 EXPOSE 5173
 CMD ["npm", "run", "dev"]
