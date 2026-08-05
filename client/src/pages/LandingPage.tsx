@@ -254,6 +254,50 @@ function AnimatedCounter({ target, duration = 2 }: { target: string; duration?: 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  // Enable demo mode and redirect to dashboard
+  const enableDemoMode = () => {
+    localStorage.setItem('demo-mode', 'true');
+    window.location.href = '/dashboard';
+  };
+
+  // Initialize demo mode for landing page demo button
+  useEffect(() => {
+    if (localStorage.getItem('auth')) {
+      const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+      if (!auth?.state?.isDemo) {
+        localStorage.setItem('auth', JSON.stringify({
+          state: {
+            user: {
+              id: 'demo-user',
+              name: 'Manoj Kumar',
+              email: 'mr.manojmanu05@gmail.com',
+              avatar: 'M',
+              isEmailVerified: true
+            },
+            accessToken: 'demo-token',
+            isAuthenticated: true,
+            isDemo: true
+          }
+        }));
+      }
+    } else {
+      localStorage.setItem('auth', JSON.stringify({
+        state: {
+          user: {
+            id: 'demo-user',
+            name: 'Manoj Kumar',
+            email: 'mr.manojmanu05@gmail.com',
+            avatar: 'M',
+            isEmailVerified: true
+          },
+          accessToken: 'demo-token',
+          isAuthenticated: true,
+          isDemo: true
+        }
+      }));
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#030712] text-white overflow-hidden">
       {/* Animated Background */}
@@ -346,18 +390,26 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/register"
+              <button
+                onClick={() => {
+                  // Enable demo mode and redirect to dashboard
+                  const demoData = localStorage.getItem('syncspace-demo-user-workspaces');
+                  if (!demoData) {
+                    // If no demo data, store the demo user
+                    localStorage.setItem('syncspace-demo-user-workspaces', JSON.stringify([]));
+                  }
+                  window.location.href = '/dashboard';
+                }}
                 className="group relative px-8 py-4 rounded-2xl text-base font-semibold text-white bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 transition-all shadow-xl shadow-brand-600/30 hover:shadow-brand-500/40 hover:scale-105"
               >
-                <span className="relative z-10">Start Building Free</span>
+                <span className="relative z-10">Live Demo</span>
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-              </Link>
+              </button>
               <Link
-                to="/login"
+                to="/register"
                 className="px-8 py-4 rounded-2xl text-base font-semibold text-gray-300 border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all"
               >
-                Live Demo
+                Get Started Free
               </Link>
             </div>
           </motion.div>
