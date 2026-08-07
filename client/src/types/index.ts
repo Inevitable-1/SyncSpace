@@ -118,7 +118,7 @@ export interface Activity {
   _id: string;
   user: User | string;
   action: string;
-  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth' | 'task' | 'file';
+  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth' | 'task' | 'file' | 'meeting';
   entityId?: string;
   entityName?: string;
   metadata?: Record<string, unknown>;

@@ -1,7 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
-import { PencilIcon, TrashIcon, ShareIcon, UserIcon } from '../Icons';
+import {
+  PencilIcon,
+  TrashIcon,
+  ShareIcon,
+  UserIcon,
+  FolderIcon,
+  ArrowRightIcon,
+  ClockIcon,
+} from '../Icons';
 import { toggleFavorite } from '../../features/workspace/workspaceSlice';
 import type { Workspace } from '../../types';
 import type { RootState, AppDispatch } from '../../store';
@@ -25,6 +33,18 @@ interface WorkspaceCardProps {
   variant?: 'grid' | 'dashboard';
 }
 
+function timeAgo(date: string): string {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(date).toLocaleDateString();
+}
+
 export default function WorkspaceCard({
   workspace,
   index,
@@ -44,6 +64,8 @@ export default function WorkspaceCard({
     dispatch(toggleFavorite(workspace._id));
   };
 
+  const openWorkspace = () => navigate(`/dashboard/workspaces/${workspace._id}`);
+
   if (variant === 'dashboard') {
     return (
       <motion.div
@@ -51,7 +73,7 @@ export default function WorkspaceCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.06 }}
         className="card-hover overflow-hidden cursor-pointer group"
-        onClick={() => navigate(`/dashboard/workspaces/${workspace._id}`)}
+        onClick={openWorkspace}
       >
         <div className={`h-24 bg-gradient-to-br ${gradient} relative`}>
           <div className="absolute inset-0 bg-black/10" />
@@ -138,25 +160,37 @@ export default function WorkspaceCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      className="card-hover p-5 cursor-pointer"
-      onClick={() => navigate(`/dashboard/workspaces/${workspace._id}`)}
+      transition={{ delay: index * 0.05, duration: 0.4, ease: 'easeOut' }}
+      whileHover={{ y: -4 }}
+      className="group relative overflow-hidden rounded-2xl cursor-pointer border border-white/5 bg-white/[0.02] backdrop-blur-2xl hover:border-brand-500/30 hover:bg-white/[0.03] transition-all duration-300"
+      onClick={openWorkspace}
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className={`h-28 sm:h-32 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center"
-          style={{ background: workspace.color || '#6366f1' }}
-        >
-          <span className="text-white font-bold">{workspace.name.charAt(0).toUpperCase()}</span>
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.35) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(0,0,0,0.25) 0%, transparent 45%)',
+          }}
+        />
+        <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute top-3 left-3 flex items-center gap-2">
+          <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-xl shadow-lg">
+            {workspace.icon || workspace.name.charAt(0).toUpperCase()}
+          </div>
         </div>
-        <div className="flex gap-1">
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          <span
+            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white/20 text-white backdrop-blur-sm border border-white/30`}
+          >
+            {workspace.isPublic ? 'Public' : 'Private'}
+          </span>
           <motion.button
             onClick={handleToggleFavorite}
             whileTap={{ scale: 0.8 }}
-            className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-            style={{ color: workspace.isFavorite ? '#facc15' : 'var(--text-tertiary)' }}
+            className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 transition-colors hover:bg-white/30"
             title={workspace.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
             <motion.svg
@@ -166,94 +200,135 @@ export default function WorkspaceCard({
               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
               className="w-4 h-4"
               viewBox="0 0 24 24"
-              fill={workspace.isFavorite ? 'currentColor' : 'none'}
-              stroke="currentColor"
+              fill={workspace.isFavorite ? '#facc15' : 'none'}
+              stroke={workspace.isFavorite ? '#facc15' : 'white'}
               strokeWidth="2"
             >
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </motion.svg>
           </motion.button>
-          {onShare && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onShare(workspace);
-              }}
-              className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-              style={{ color: 'var(--text-tertiary)' }}
-              title="Share"
-            >
-              <ShareIcon className="w-4 h-4" />
-            </button>
-          )}
-          {onEdit && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(workspace);
-              }}
-              className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
-              style={{ color: 'var(--text-tertiary)' }}
-              title="Edit"
-            >
-              <PencilIcon className="w-4 h-4" />
-            </button>
-          )}
-          {onDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(workspace);
-              }}
-              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              title="Delete"
-            >
-              <TrashIcon className="w-4 h-4" />
-            </button>
-          )}
+        </div>
+        <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+          <FolderIcon className="w-3.5 h-3.5 text-white/90" />
+          <span className="text-[11px] font-medium text-white/90 truncate max-w-[200px]">
+            Project · {workspace.name}
+          </span>
         </div>
       </div>
-      <p className="font-semibold mb-1 truncate" style={{ color: 'var(--text-primary)' }}>
-        {workspace.name}
-      </p>
-      {workspace.description && (
-        <p className="text-sm mb-3 line-clamp-2" style={{ color: 'var(--text-tertiary)' }}>
-          {workspace.description}
-        </p>
-      )}
-      <div
-        className="flex items-center justify-between pt-3 border-t"
-        style={{ borderColor: 'var(--border-light)' }}
-      >
-        <div className="flex items-center gap-3">
+
+      <div className="p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <p
+            className="font-bold text-sm sm:text-base truncate"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {workspace.name}
+          </p>
           <span
-            className="text-xs flex items-center gap-1"
+            className="text-[10px] flex items-center gap-1 flex-shrink-0"
             style={{ color: 'var(--text-tertiary)' }}
           >
-            <UserIcon className="w-3 h-3" />
-            {workspace.owner === user?.id ? 'You' : 'Owner'}
-          </span>
-          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            {workspace.members.length + 1} member{workspace.members.length + 1 !== 1 ? 's' : ''}
-          </span>
-          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            {roomCount} room{roomCount !== 1 ? 's' : ''}
+            <ClockIcon className="w-3 h-3" />
+            {timeAgo(workspace.updatedAt)}
           </span>
         </div>
-        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-          {new Date(workspace.createdAt).toLocaleDateString()}
-        </span>
-      </div>
-      <div className="mt-2 flex items-center gap-2">
-        <span
-          className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-            workspace.isPublic
-              ? 'bg-green-500/10 text-green-600 dark:text-green-400'
-              : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
-          }`}
+        {workspace.description && (
+          <p
+            className="text-xs mt-1.5 line-clamp-2 leading-relaxed"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            {workspace.description}
+          </p>
+        )}
+
+        <div
+          className="flex items-center justify-between mt-3.5 pt-3.5 border-t"
+          style={{ borderColor: 'var(--border-light)' }}
         >
-          {workspace.isPublic ? 'Public' : 'Private'}
-        </span>
+          <div className="flex items-center gap-2.5">
+            <div className="flex -space-x-1.5">
+              {[0, 1, 2].slice(0, Math.min(3, workspace.members.length + 1)).map((j) => (
+                <div
+                  key={j}
+                  className="w-6 h-6 rounded-full border-2 border-[var(--bg-card)] flex items-center justify-center text-[9px] font-bold text-white"
+                  style={{
+                    background:
+                      j === 0
+                        ? workspace.color || '#6366f1'
+                        : ['#818cf8', '#a78bfa', '#c084fc'][j - 1],
+                  }}
+                >
+                  {j === 0 ? user?.name?.charAt(0) || 'Y' : ''}
+                </div>
+              ))}
+            </div>
+            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              {workspace.members.length + 1}
+            </span>
+            <UserIcon
+              className="w-3.5 h-3.5 opacity-40"
+              style={{ color: 'var(--text-tertiary)' }}
+            />
+            <span className="text-xs ml-1" style={{ color: 'var(--text-tertiary)' }}>
+              {roomCount} room{roomCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 mt-3">
+          <div className="flex items-center gap-1">
+            {onShare && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShare(workspace);
+                }}
+                className="p-2 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
+                style={{ color: 'var(--text-tertiary)' }}
+                title="Share"
+              >
+                <ShareIcon className="w-4 h-4" />
+              </button>
+            )}
+            {onEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(workspace);
+                }}
+                className="p-2 rounded-lg transition-colors hover:bg-[var(--bg-hover)]"
+                style={{ color: 'var(--text-tertiary)' }}
+                title="Edit"
+              >
+                <PencilIcon className="w-4 h-4" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(workspace);
+                }}
+                className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                title="Delete"
+              >
+                <TrashIcon className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              openWorkspace();
+            }}
+            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-600/25 flex items-center gap-1.5"
+          >
+            Open
+            <ArrowRightIcon className="w-3.5 h-3.5" />
+          </motion.button>
+        </div>
       </div>
     </motion.div>
   );
