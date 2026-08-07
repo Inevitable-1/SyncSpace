@@ -254,47 +254,47 @@ function AnimatedCounter({ target, duration = 2 }: { target: string; duration?: 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // Enable demo mode and redirect to dashboard
-  const enableDemoMode = () => {
-    localStorage.setItem('demo-mode', 'true');
-    window.location.href = '/dashboard';
-  };
-
   // Initialize demo mode for landing page demo button
   useEffect(() => {
     if (localStorage.getItem('auth')) {
       const auth = JSON.parse(localStorage.getItem('auth') || '{}');
       if (!auth?.state?.isDemo) {
-        localStorage.setItem('auth', JSON.stringify({
+        localStorage.setItem(
+          'auth',
+          JSON.stringify({
+            state: {
+              user: {
+                id: 'demo-user',
+                name: 'Manoj Kumar',
+                email: 'mr.manojmanu05@gmail.com',
+                avatar: 'M',
+                isEmailVerified: true,
+              },
+              accessToken: 'demo-token',
+              isAuthenticated: true,
+              isDemo: true,
+            },
+          }),
+        );
+      }
+    } else {
+      localStorage.setItem(
+        'auth',
+        JSON.stringify({
           state: {
             user: {
               id: 'demo-user',
               name: 'Manoj Kumar',
               email: 'mr.manojmanu05@gmail.com',
               avatar: 'M',
-              isEmailVerified: true
+              isEmailVerified: true,
             },
             accessToken: 'demo-token',
             isAuthenticated: true,
-            isDemo: true
-          }
-        }));
-      }
-    } else {
-      localStorage.setItem('auth', JSON.stringify({
-        state: {
-          user: {
-            id: 'demo-user',
-            name: 'Manoj Kumar',
-            email: 'mr.manojmanu05@gmail.com',
-            avatar: 'M',
-            isEmailVerified: true
+            isDemo: true,
           },
-          accessToken: 'demo-token',
-          isAuthenticated: true,
-          isDemo: true
-        }
-      }));
+        }),
+      );
     }
   }, []);
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../common/Toast';
@@ -27,9 +27,27 @@ interface TopNavProps {
   onMenuClick: () => void;
 }
 
+const PAGE_TITLES: Array<{ pattern: RegExp; title: string }> = [
+  { pattern: /^\/dashboard\/workspaces\/.+/, title: 'Workspace' },
+  { pattern: /^\/dashboard\/workspaces/, title: 'Workspaces' },
+  { pattern: /^\/dashboard\/rooms\/.+/, title: 'Room' },
+  { pattern: /^\/dashboard\/rooms/, title: 'Rooms' },
+  { pattern: /^\/dashboard\/meetings/, title: 'Meetings' },
+  { pattern: /^\/dashboard\/files/, title: 'Files' },
+  { pattern: /^\/dashboard\/shared/, title: 'Shared' },
+  { pattern: /^\/dashboard\/insights/, title: 'Insights' },
+  { pattern: /^\/dashboard\/activity/, title: 'Activity' },
+  { pattern: /^\/dashboard\/notifications/, title: 'Notifications' },
+  { pattern: /^\/dashboard\/trash/, title: 'Trash' },
+  { pattern: /^\/dashboard\/settings/, title: 'Settings' },
+  { pattern: /^\/dashboard\/profile/, title: 'Profile' },
+  { pattern: /^\/dashboard$/, title: 'Dashboard' },
+];
+
 export default function TopNav({ onMenuClick }: TopNavProps) {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -60,24 +78,38 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
     navigate('/login');
   };
 
+  const pageTitle =
+    PAGE_TITLES.find((p) => p.pattern.test(location.pathname))?.title || 'Dashboard';
+
   return (
     <header className="sticky top-0 z-20 border-b border-white/5 bg-[#030712]/80 backdrop-blur-2xl">
-      <div className="flex items-center justify-between h-16 px-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-          >
-            <Bars3Icon className="w-5 h-5" />
-          </button>
+      <div className="flex items-center gap-3 h-16 px-4 sm:px-6">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all flex-shrink-0"
+        >
+          <Bars3Icon className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-2.5 min-w-0 flex-shrink-0">
+          <h1 className="text-base sm:text-lg font-bold tracking-tight text-white truncate">
+            {pageTitle}
+          </h1>
+          <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-brand-600/20 to-purple-600/20 border border-brand-500/20 text-brand-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
+            Overview
+          </span>
+        </div>
+
+        <div className="flex-1 flex justify-center min-w-0">
           <button
             onClick={() => {
               document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }));
             }}
-            className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-gray-400 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all"
+            className="hidden sm:flex items-center gap-2 w-full max-w-md px-3.5 py-2 rounded-xl text-sm text-gray-400 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group"
           >
             <svg
-              className="w-4 h-4"
+              className="w-4 h-4 group-hover:text-brand-300 transition-colors"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -89,14 +121,14 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                 d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
               />
             </svg>
-            <span>Search...</span>
-            <kbd className="text-[10px] font-mono text-gray-500 border border-white/10 rounded px-1.5 py-0.5 ml-4">
+            <span className="truncate">Search workspaces, rooms, files...</span>
+            <kbd className="text-[10px] font-mono text-gray-500 border border-white/10 rounded px-1.5 py-0.5 ml-auto flex-shrink-0">
               ⌘K
             </kbd>
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
           <button
             onClick={toggleTheme}
             className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"

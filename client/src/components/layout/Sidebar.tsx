@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +15,8 @@ import {
   XIcon,
   ChartBarIcon,
   ChevronLeftIcon,
+  ChevronDownIcon,
+  UserIcon,
 } from '../Icons';
 import { logout } from '../../features/auth/authSlice';
 import type { RootState, AppDispatch } from '../../store';
@@ -121,6 +123,18 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const { workspaces } = useSelector((state: RootState) => state.workspace);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     await dispatch(logout());
@@ -128,6 +142,99 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
   };
 
   const workspaceCount = workspaces.length;
+
+  const profileCard = collapsed ? (
+    <NavLink
+      to="/dashboard/profile"
+      onClick={onClose}
+      title={user?.name || 'Profile'}
+      className="flex items-center justify-center p-3 rounded-xl transition-all bg-white/[0.03] border border-white/5 hover:bg-white/5"
+    >
+      <div className="relative">
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+          {user?.name?.charAt(0).toUpperCase() || 'U'}
+        </div>
+        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#060a14]" />
+      </div>
+    </NavLink>
+  ) : (
+    <div ref={profileRef} className="relative">
+      <button
+        onClick={() => setProfileOpen((v) => !v)}
+        className="flex items-center gap-3 w-full p-3 rounded-xl transition-all bg-white/[0.03] border border-white/5 hover:bg-white/5 hover:border-white/10"
+      >
+        <div className="relative flex-shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-brand-600/20">
+            {user?.name?.charAt(0).toUpperCase() || 'U'}
+          </div>
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0a0f1e]" />
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-sm font-semibold truncate flex items-center gap-1.5">
+            {user?.name || 'User'}
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          </p>
+          <p className="text-[10px] text-gray-500 truncate">{user?.email || ''}</p>
+        </div>
+        <ChevronDownIcon
+          className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      <AnimatePresence>
+        {profileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-3 right-3 bottom-full mb-2 rounded-xl border border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
+          >
+            <div className="p-3 border-b border-white/5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold truncate">{user?.name || 'User'}</p>
+                  <p className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Online
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-1.5">
+              <button
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate('/dashboard/profile');
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-all"
+              >
+                <UserIcon className="w-4 h-4" /> Profile
+              </button>
+              <button
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate('/dashboard/settings');
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-all"
+              >
+                <Cog6ToothIcon className="w-4 h-4" /> Settings
+              </button>
+              <div className="my-1 border-t border-white/5" />
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 transition-all"
+              >
+                <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -186,31 +293,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
           <NavItem key={item.to} {...item} count={0} collapsed={collapsed} onClose={onClose} />
         ))}
 
-        <NavLink
-          to="/dashboard/profile"
-          onClick={onClose}
-          className={`flex items-center gap-3 p-3 rounded-xl transition-all mt-2 ${
-            collapsed ? 'justify-center' : ''
-          } bg-white/[0.03] border border-white/5 hover:bg-white/5`}
-        >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{user?.name || 'User'}</p>
-              <p className="text-[10px] text-gray-500 truncate">{user?.email || ''}</p>
-            </div>
-          )}
-        </NavLink>
-
-        <button
-          onClick={handleLogout}
-          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-red-500/10 text-red-400 hover:text-red-300 ${collapsed ? 'justify-center' : ''}`}
-        >
-          <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && 'Logout'}
-        </button>
+        <div className="mt-2">{profileCard}</div>
       </div>
     </div>
   );

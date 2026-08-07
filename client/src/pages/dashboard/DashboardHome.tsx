@@ -1,29 +1,64 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PlusIcon, ArrowRightIcon } from '../../components/Icons';
+import { motion, AnimatePresence, animate } from 'framer-motion';
+import {
+  FolderIcon,
+  ClockIcon,
+  VideoCameraIcon,
+  UserGroupIcon,
+  ArrowRightIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  DocumentTextIcon,
+  CodeBracketIcon,
+  PaintBrushIcon,
+  CheckIcon,
+  BellIcon,
+  LinkIcon,
+  StarIcon,
+} from '../../components/Icons';
 import { CardSkeleton } from '../../components/common/Skeleton';
+import Modal from '../../components/common/Modal';
+import Spinner from '../../components/common/Spinner';
 import CreateRoomModal from '../../components/common/CreateRoomModal';
-import WorkspaceCard from '../../components/workspace/WorkspaceCard';
 import WorkspaceOnboarding from '../../components/workspace/WorkspaceOnboarding';
+import InviteModal from '../../components/collaboration/InviteModal';
 import { useToast } from '../../components/common/Toast';
 import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import { fetchRooms, createRoom } from '../../features/room/roomSlice';
-import { fetchMeetings } from '../../features/meeting/meetingSlice';
+import { fetchMeetings, createMeeting } from '../../features/meeting/meetingSlice';
+import { fetchNotifications } from '../../features/notification/notificationSlice';
 import { activityService } from '../../services/activityService';
+import { fileService } from '../../services/fileService';
+import { taskService } from '../../services/taskService';
 import type { RootState, AppDispatch } from '../../store';
-import type { Activity } from '../../types';
+import type { Activity, Task, UploadedFile, Meeting, Room, User } from '../../types';
 
-const ROOM_TYPE_COLORS: Record<string, string> = {
-  whiteboard: 'from-purple-500 to-pink-500',
-  code: 'from-emerald-500 to-teal-500',
-  document: 'from-blue-500 to-indigo-500',
+const ROOM_TYPE_META: Record<string, { icon: React.ReactNode; gradient: string }> = {
+  whiteboard: {
+    icon: <PaintBrushIcon className="w-5 h-5 text-white" />,
+    gradient: 'from-purple-500 to-pink-500',
+  },
+  code: {
+    icon: <CodeBracketIcon className="w-5 h-5 text-white" />,
+    gradient: 'from-emerald-500 to-teal-500',
+  },
+  document: {
+    icon: <DocumentTextIcon className="w-5 h-5 text-white" />,
+    gradient: 'from-blue-500 to-indigo-500',
+  },
+};
+
+const PRIORITY_META: Record<string, { label: string; className: string }> = {
+  urgent: { label: 'Urgent', className: 'bg-red-500/10 text-red-400' },
+  high: { label: 'High', className: 'bg-orange-500/10 text-orange-400' },
+  medium: { label: 'Medium', className: 'bg-amber-500/10 text-amber-400' },
+  low: { label: 'Low', className: 'bg-blue-500/10 text-blue-400' },
 };
 
 function timeAgo(date: string): string {
-  const now = Date.now();
-  const diff = now - new Date(date).getTime();
+  const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;
@@ -34,34 +69,1158 @@ function timeAgo(date: string): string {
   return new Date(date).toLocaleDateString();
 }
 
-function AnimatedStatCard({
-  value,
-  label,
-  icon,
-  delay,
+function formatTime(date: string): string {
+  return new Date(date).toLocaleString(undefined, {
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatShortDate(date: string): string {
+  return new Date(date).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function formatFileSize(bytes: number): string {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`;
+}
+
+function fileMeta(name: string): { label: string; gradient: string } {
+  const ext = name.split('.').pop()?.toLowerCase() || '';
+  if (['md', 'txt', 'doc', 'docx', 'pdf', 'xlsx', 'pptx', 'csv', 'yaml'].includes(ext)) {
+    return { label: ext.toUpperCase(), gradient: 'from-blue-500 to-indigo-600' };
+  }
+  if (['js', 'ts', 'tsx', 'jsx', 'css', 'html', 'sql', 'json'].includes(ext)) {
+    return { label: 'CODE', gradient: 'from-emerald-500 to-teal-600' };
+  }
+  if (['png', 'jpg', 'jpeg', 'svg', 'fig', 'gif'].includes(ext)) {
+    return { label: 'IMG', gradient: 'from-purple-500 to-pink-600' };
+  }
+  return { label: 'FILE', gradient: 'from-gray-500 to-slate-600' };
+}
+
+function getTaskAssigneeId(task: Task): string {
+  if (!task.assignee) return '';
+  if (typeof task.assignee === 'object') {
+    const a = task.assignee as { id?: string; _id?: string };
+    return a.id || a._id || '';
+  }
+  return task.assignee;
+}
+
+function getName(user: User | string | null): string {
+  if (!user) return 'Someone';
+  return typeof user === 'object' ? user.name : 'Someone';
+}
+
+function AnimatedNumber({ value }: { value: number }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const controls = animate(0, value, {
+      duration: 0.9,
+      ease: 'easeOut',
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [value]);
+  return <span>{display.toLocaleString()}</span>;
+}
+
+function SectionTitle({
+  title,
+  subtitle,
+  action,
 }: {
-  value: string | number;
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="w-1 h-5 rounded-full bg-gradient-to-b from-brand-500 to-purple-500 flex-shrink-0" />
+        <div className="min-w-0">
+          <h2 className="font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+            {title}
+          </h2>
+          {subtitle && (
+            <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function ViewAllLink({ to, label = 'View all' }: { to: string; label?: string }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate(to)}
+      className="text-xs font-semibold flex items-center gap-1 text-brand-400 hover:text-brand-300 transition-colors whitespace-nowrap"
+    >
+      {label} <ArrowRightIcon className="w-3 h-3" />
+    </button>
+  );
+}
+
+interface StatDef {
   label: string;
-  icon: string;
-  delay: number;
+  value: number;
+  icon: React.ElementType;
+  trend: string;
+  trendUp: boolean;
+  iconGradient: string;
+  borderGradient: string;
+}
+
+function StatCards({ stats }: { stats: StatDef[] }) {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {stats.map((stat, i) => (
+        <motion.div
+          key={stat.label}
+          initial={{ opacity: 0, y: 18, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: i * 0.08, duration: 0.45, ease: 'easeOut' }}
+          whileHover={{ y: -5 }}
+          className="group relative p-px rounded-2xl bg-gradient-to-br transition-all duration-300"
+          style={{
+            backgroundImage: `linear-gradient(135deg, ${stat.borderGradient})`,
+          }}
+        >
+          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-br opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-60 pointer-events-none" />
+          <div
+            className="relative rounded-[calc(1rem-1px)] p-4 sm:p-5 backdrop-blur-2xl h-full overflow-hidden"
+            style={{ background: 'var(--bg-card)' }}
+          >
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-brand-500/10 blur-2xl group-hover:bg-brand-500/20 transition-colors duration-300" />
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p
+                  className="text-2xl sm:text-3xl font-black tracking-tight"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  <AnimatedNumber value={stat.value} />
+                </p>
+                <p
+                  className="text-[11px] sm:text-xs mt-1 truncate"
+                  style={{ color: 'var(--text-tertiary)' }}
+                >
+                  {stat.label}
+                </p>
+              </div>
+              <div
+                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br ${stat.iconGradient} flex items-center justify-center shadow-lg flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
+              >
+                <stat.icon className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div
+              className="flex items-center gap-1.5 mt-3 pt-3 border-t"
+              style={{ borderColor: 'var(--border-light)' }}
+            >
+              {stat.trendUp ? (
+                <ArrowUpIcon className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+              ) : (
+                <ArrowDownIcon className="w-3 h-3 text-red-400 flex-shrink-0" />
+              )}
+              <span
+                className={`text-[11px] font-semibold ${stat.trendUp ? 'text-emerald-400' : 'text-red-400'}`}
+              >
+                {stat.trend}
+              </span>
+              <span className="text-[10px] ml-auto" style={{ color: 'var(--text-tertiary)' }}>
+                vs last week
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function MeetingTimeline({
+  meetings,
+  onJoin,
+}: {
+  meetings: Meeting[];
+  onJoin: (m: Meeting) => void;
+}) {
+  if (meetings.length === 0) {
+    return (
+      <div
+        className="h-full flex flex-col items-center justify-center text-center py-10 px-4 rounded-2xl border border-dashed"
+        style={{ borderColor: 'var(--border-color)' }}
+      >
+        <VideoCameraIcon
+          className="w-8 h-8 mb-2 opacity-30"
+          style={{ color: 'var(--text-tertiary)' }}
+        />
+        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+          No meetings scheduled
+        </p>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+          Schedule one from Quick Actions
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="relative max-h-[300px] overflow-y-auto scrollbar-thin pr-1 -ml-1 pl-1">
+      <div className="absolute left-[13px] top-3 bottom-3 w-px bg-gradient-to-b from-brand-500/60 via-purple-500/30 to-transparent" />
+      <div className="space-y-4">
+        {meetings.map((m, i) => {
+          const wsName = typeof m.workspace === 'object' ? m.workspace.name : 'Workspace';
+          const wsColor = typeof m.workspace === 'object' ? m.workspace.color : '#6366f1';
+          const isLive = m.status === 'ongoing';
+          return (
+            <motion.div
+              key={m._id}
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: i * 0.06 }}
+              className="relative pl-9"
+            >
+              <span
+                className={`absolute left-[7px] top-3 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${
+                  isLive ? 'bg-emerald-400 border-emerald-400 animate-pulse' : 'bg-[var(--bg-card)]'
+                }`}
+                style={!isLive ? { borderColor: wsColor } : undefined}
+              />
+              <div className="group flex items-center gap-3 rounded-xl p-3 transition-all duration-200 hover:bg-white/[0.04] border border-transparent hover:border-white/5">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${wsColor}1a`, color: wsColor }}
+                >
+                  <VideoCameraIcon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p
+                      className="text-sm font-semibold truncate"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {m.name}
+                    </p>
+                    {isLive && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 flex-shrink-0">
+                        Live
+                      </span>
+                    )}
+                  </div>
+                  <p
+                    className="text-[11px] mt-0.5 truncate"
+                    style={{ color: 'var(--text-tertiary)' }}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full inline-block"
+                        style={{ background: wsColor }}
+                      />
+                      {wsName}
+                    </span>
+                    <span className="mx-1">·</span>
+                    {formatTime(m.scheduledAt)}
+                    <span className="mx-1">·</span>
+                    {m.duration}m
+                  </p>
+                </div>
+                {(m.status === 'scheduled' || isLive) && (
+                  <button
+                    onClick={() => onJoin(m)}
+                    className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-600/20 flex-shrink-0"
+                  >
+                    {isLive ? 'Join now' : 'Join'}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TaskRow({ task }: { task: Task }) {
+  const meta = PRIORITY_META[task.priority] || PRIORITY_META.medium;
+  const isDone = task.status === 'completed';
+  const isOverdue = task.dueDate && !isDone && new Date(task.dueDate).getTime() < Date.now();
+  return (
+    <div className="group flex items-center gap-3 rounded-xl p-3 transition-all duration-200 hover:bg-white/[0.04] border border-transparent hover:border-white/5">
+      <div
+        className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+          isDone
+            ? 'bg-emerald-500/15 text-emerald-400'
+            : 'bg-white/5 text-gray-500 group-hover:bg-brand-500/10 group-hover:text-brand-300'
+        }`}
+      >
+        <CheckIcon className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p
+          className={`text-sm font-medium truncate ${isDone ? 'line-through opacity-50' : ''}`}
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {task.title}
+        </p>
+        <p
+          className="text-[11px] mt-0.5 flex items-center gap-1.5"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          <span className={`px-1.5 py-px rounded text-[9px] font-bold ${meta.className}`}>
+            {meta.label}
+          </span>
+          {task.dueDate && (
+            <span className={isOverdue ? 'text-red-400 font-semibold' : ''}>
+              {isDone
+                ? 'Completed'
+                : isOverdue
+                  ? `Overdue · ${formatShortDate(task.dueDate)}`
+                  : `Due ${formatShortDate(task.dueDate)}`}
+            </span>
+          )}
+        </p>
+      </div>
+      <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+        {timeAgo(task.updatedAt)}
+      </span>
+    </div>
+  );
+}
+
+function FileRow({ file }: { file: UploadedFile }) {
+  const meta = fileMeta(file.name);
+  return (
+    <div className="group flex items-center gap-3 rounded-xl p-3 transition-all duration-200 hover:bg-white/[0.04] border border-transparent hover:border-white/5">
+      <div
+        className={`w-9 h-9 rounded-xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center flex-shrink-0 shadow-md`}
+      >
+        <DocumentTextIcon className="w-4 h-4 text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+          {file.name}
+        </p>
+        <p className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--text-tertiary)' }}>
+          {file.folder || 'Root'} · {formatFileSize(file.size)}
+        </p>
+      </div>
+      <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+        {timeAgo(file.updatedAt)}
+      </span>
+    </div>
+  );
+}
+
+function ActivityFeed({ activities }: { activities: Activity[] }) {
+  if (activities.length === 0) {
+    return (
+      <div
+        className="h-full flex flex-col items-center justify-center text-center py-10 px-4 rounded-2xl border border-dashed"
+        style={{ borderColor: 'var(--border-color)' }}
+      >
+        <BellIcon className="w-8 h-8 mb-2 opacity-30" style={{ color: 'var(--text-tertiary)' }} />
+        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+          No activity yet
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-1 max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
+      {activities.slice(0, 8).map((act, i) => {
+        const userName = getName(act.user as User | string | null);
+        return (
+          <motion.div
+            key={act._id}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.04 }}
+            className="flex items-start gap-3 p-2.5 rounded-xl transition-colors hover:bg-white/[0.03]"
+          >
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 mt-0.5">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {userName}
+                </span>{' '}
+                {act.action}
+                {act.entityName && (
+                  <span className="font-semibold text-brand-400"> {act.entityName}</span>
+                )}
+              </p>
+              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                {timeAgo(act.createdAt)}
+              </p>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+function WidgetCard({
+  title,
+  subtitle,
+  action,
+  children,
+  delay = 0,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  delay?: number;
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, duration: 0.4, ease: 'easeOut' }}
-      className="card-premium p-5"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4 }}
+      className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 hover:bg-white/[0.03] transition-all duration-300"
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-2xl">{icon}</div>
-      </div>
-      <div className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
-        {value}
-      </div>
-      <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-        {label}
-      </div>
+      <SectionTitle title={title} subtitle={subtitle} action={action} />
+      {children}
     </motion.div>
+  );
+}
+
+function TodaysWork({
+  meetings,
+  tasks,
+  files,
+  activities,
+  onJoinMeeting,
+}: {
+  meetings: Meeting[];
+  tasks: Task[];
+  files: UploadedFile[];
+  activities: Activity[];
+  onJoinMeeting: (m: Meeting) => void;
+}) {
+  const completed = tasks.filter((t) => t.status === 'completed').length;
+  const pct = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
+  const pending = tasks.filter((t) => t.status !== 'completed');
+  const upcoming = pending.find((t) => t.dueDate) || null;
+  const today = new Date();
+  const dateLabel = today.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+  const openTasks = pending.length;
+
+  return (
+    <section>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05, duration: 0.45 }}
+        className="rounded-3xl p-5 sm:p-6 relative overflow-hidden border border-white/5 bg-white/[0.02] backdrop-blur-2xl"
+      >
+        <div className="absolute -top-20 right-0 w-72 h-72 bg-brand-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div>
+            <h1
+              className="text-2xl font-black tracking-tight flex items-center gap-2.5"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Today&apos;s Work
+              <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+            </h1>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+              {dateLabel} · {openTasks} open task{openTasks !== 1 ? 's' : ''}
+              {upcoming?.dueDate && (
+                <>
+                  {' '}
+                  · Next deadline{' '}
+                  <span className="font-semibold text-brand-400">
+                    {formatShortDate(upcoming.dueDate)}
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-xl font-black" style={{ color: 'var(--text-primary)' }}>
+                {pct}%
+              </p>
+              <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                complete
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center shadow-lg shadow-brand-600/25">
+              <CheckIcon className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="relative mb-6">
+          <div
+            className="flex items-center justify-between text-[11px] mb-1.5"
+            style={{ color: 'var(--text-tertiary)' }}
+          >
+            <span className="font-semibold">Daily progress</span>
+            <span className="font-semibold">
+              {completed}/{tasks.length} tasks
+            </span>
+          </div>
+          <div className="h-2.5 rounded-full overflow-hidden bg-white/5 border border-white/5">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 1.1, ease: 'easeOut', delay: 0.3 }}
+              className="h-full rounded-full bg-gradient-to-r from-brand-500 via-purple-500 to-pink-500 shadow-lg shadow-brand-500/30"
+            />
+          </div>
+        </div>
+
+        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          <WidgetCard
+            title="Upcoming Meetings"
+            subtitle="Your schedule today"
+            action={<ViewAllLink to="/dashboard/meetings" />}
+          >
+            <MeetingTimeline meetings={meetings} onJoin={onJoinMeeting} />
+          </WidgetCard>
+
+          <WidgetCard
+            title="Assigned Tasks"
+            subtitle={`${openTasks} pending · ${completed} done`}
+            action={<ViewAllLink to="/dashboard/workspaces" label="My tasks" />}
+          >
+            <div className="max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
+              <div className="space-y-1">
+                {tasks.slice(0, 6).map((t) => (
+                  <TaskRow key={t._id} task={t} />
+                ))}
+              </div>
+            </div>
+          </WidgetCard>
+
+          <WidgetCard
+            title="Recent Files"
+            subtitle="Latest uploads"
+            action={<ViewAllLink to="/dashboard/files" />}
+          >
+            <div className="max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
+              <div className="space-y-1">
+                {files.slice(0, 6).map((f) => (
+                  <FileRow key={f._id} file={f} />
+                ))}
+              </div>
+            </div>
+          </WidgetCard>
+
+          <WidgetCard
+            title="Recent Activity"
+            subtitle="Live team updates"
+            action={<ViewAllLink to="/dashboard/activity" />}
+          >
+            <ActivityFeed activities={activities} />
+          </WidgetCard>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+function QuickActions({
+  onCreateWorkspace,
+  onCreateRoom,
+  onCreateMeeting,
+  onInviteMember,
+  onUploadFile,
+}: {
+  onCreateWorkspace: () => void;
+  onCreateRoom: () => void;
+  onCreateMeeting: () => void;
+  onInviteMember: () => void;
+  onUploadFile: () => void;
+}) {
+  const actions = [
+    {
+      label: 'Create Room',
+      desc: 'Start a whiteboard, doc or code session',
+      icon: <PaintBrushIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-purple-500 to-pink-600',
+      onClick: onCreateRoom,
+    },
+    {
+      label: 'Create Workspace',
+      desc: 'Spin up a space for your team',
+      icon: <FolderIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-brand-500 to-purple-600',
+      onClick: onCreateWorkspace,
+    },
+    {
+      label: 'Create Meeting',
+      desc: 'Schedule a video call with your team',
+      icon: <VideoCameraIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-amber-500 to-orange-600',
+      onClick: onCreateMeeting,
+    },
+    {
+      label: 'Invite Member',
+      desc: 'Share an invite link with teammates',
+      icon: <LinkIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-emerald-500 to-teal-600',
+      onClick: onInviteMember,
+    },
+    {
+      label: 'Upload File',
+      desc: 'Drop a file into your workspace',
+      icon: <DocumentTextIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-cyan-500 to-blue-600',
+      onClick: onUploadFile,
+    },
+  ];
+
+  return (
+    <div className="lg:sticky lg:top-24 space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.4 }}
+        className="rounded-3xl p-5 relative overflow-hidden border border-white/5 bg-white/[0.02] backdrop-blur-2xl"
+      >
+        <div className="absolute -top-16 -right-16 w-48 h-48 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <h2
+              className="font-bold flex items-center gap-2"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Quick Actions
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-300 border border-brand-500/20">
+                {actions.length}
+              </span>
+            </h2>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          </div>
+          <div className="space-y-2.5">
+            {actions.map((a, i) => (
+              <motion.button
+                key={a.label}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.06 }}
+                whileHover={{ y: -3, scale: 1.015 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={a.onClick}
+                className="group relative w-full flex items-center gap-3.5 p-3.5 rounded-2xl text-left border transition-all duration-300 gradient-border"
+                style={{ background: 'var(--bg-card)' }}
+              >
+                <div
+                  className={`w-11 h-11 rounded-xl bg-gradient-to-br ${a.gradient} flex items-center justify-center shadow-lg flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}
+                >
+                  {a.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    {a.label}
+                  </p>
+                  <p
+                    className="text-[11px] mt-0.5 truncate"
+                    style={{ color: 'var(--text-tertiary)' }}
+                  >
+                    {a.desc}
+                  </p>
+                </div>
+                <ArrowRightIcon className="w-4 h-4 text-brand-400 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 flex-shrink-0" />
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="rounded-2xl p-4 border border-white/5 bg-gradient-to-br from-brand-600/10 via-purple-600/5 to-transparent backdrop-blur-xl"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg flex-shrink-0">
+            <StarIcon className="w-4 h-4 text-white" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Pro tip
+            </p>
+            <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+              Press ⌘K anywhere to jump between pages.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function WorkspaceMiniRow({
+  workspace,
+}: {
+  workspace: {
+    _id: string;
+    name: string;
+    icon?: string;
+    color?: string;
+    memberCount?: number;
+    updatedAt: string;
+  };
+}) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate(`/dashboard/workspaces/${workspace._id}`)}
+      className="group w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 hover:bg-white/[0.04] text-left"
+    >
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0"
+        style={{ background: workspace.color || '#6366f1' }}
+      >
+        {workspace.name.charAt(0).toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+          {workspace.name}
+        </p>
+        <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+          {workspace.memberCount || 0} members
+        </p>
+      </div>
+      <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+        {timeAgo(workspace.updatedAt)}
+      </span>
+    </button>
+  );
+}
+
+function RoomRow({ room }: { room: Room }) {
+  const navigate = useNavigate();
+  const meta = ROOM_TYPE_META[room.type] || ROOM_TYPE_META.document;
+  const wsName = typeof room.workspace === 'object' ? room.workspace.name : 'Workspace';
+  return (
+    <button
+      onClick={() =>
+        room.type === 'whiteboard'
+          ? navigate(`/whiteboard/${room._id}`)
+          : navigate(`/dashboard/rooms/${room._id}`)
+      }
+      className="group w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 hover:bg-white/[0.04] text-left"
+    >
+      <div
+        className={`w-9 h-9 rounded-xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center flex-shrink-0 shadow-md`}
+      >
+        {meta.icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+            {room.name}
+          </p>
+          {room.isActive && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 flex-shrink-0">
+              Live
+            </span>
+          )}
+        </div>
+        <p className="text-[11px] truncate" style={{ color: 'var(--text-tertiary)' }}>
+          {wsName} · {room.type}
+        </p>
+      </div>
+      <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+        {timeAgo(room.updatedAt)}
+      </span>
+    </button>
+  );
+}
+
+function MeetingRow({ meeting }: { meeting: Meeting }) {
+  const navigate = useNavigate();
+  const wsColor = typeof meeting.workspace === 'object' ? meeting.workspace.color : '#6366f1';
+  const isLive = meeting.status === 'ongoing';
+  return (
+    <button
+      onClick={() => navigate('/dashboard/meetings')}
+      className="group w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 hover:bg-white/[0.04] text-left"
+    >
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ background: `${wsColor}1a`, color: wsColor }}
+      >
+        <VideoCameraIcon className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+            {meeting.name}
+          </p>
+          {isLive && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 flex-shrink-0">
+              Live
+            </span>
+          )}
+        </div>
+        <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+          {formatTime(meeting.scheduledAt)}
+        </p>
+      </div>
+      <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+        {meeting.duration}m
+      </span>
+    </button>
+  );
+}
+
+function NotificationRow({
+  notification,
+}: {
+  notification: { _id: string; title: string; message: string; isRead: boolean; createdAt: string };
+}) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => navigate('/dashboard/notifications')}
+      className="group w-full flex items-start gap-3 p-2.5 rounded-xl transition-all duration-200 hover:bg-white/[0.04] text-left"
+    >
+      <div
+        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+          notification.isRead ? 'bg-white/5 text-gray-500' : 'bg-brand-500/15 text-brand-300'
+        }`}
+      >
+        <BellIcon className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+            {notification.title}
+          </p>
+          {!notification.isRead && (
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-400 flex-shrink-0" />
+          )}
+        </div>
+        <p className="text-[11px] mt-0.5 line-clamp-2" style={{ color: 'var(--text-tertiary)' }}>
+          {notification.message}
+        </p>
+      </div>
+      <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+        {timeAgo(notification.createdAt)}
+      </span>
+    </button>
+  );
+}
+
+function LowerSections({
+  workspaces,
+  rooms,
+  files,
+  meetings,
+  notifications,
+  loading,
+}: {
+  workspaces: {
+    _id: string;
+    name: string;
+    icon?: string;
+    color?: string;
+    memberCount?: number;
+    updatedAt: string;
+  }[];
+  rooms: Room[];
+  files: UploadedFile[];
+  meetings: Meeting[];
+  notifications: {
+    _id: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+  }[];
+  loading: boolean;
+}) {
+  return (
+    <section className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4 }}
+          className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+        >
+          <SectionTitle
+            title="Recent Workspaces"
+            action={<ViewAllLink to="/dashboard/workspaces" />}
+          />
+          <div className="space-y-1">
+            {loading
+              ? [1, 2, 3].map((i) => <CardSkeleton key={i} />)
+              : workspaces
+                  .slice(0, 4)
+                  .map((ws) => <WorkspaceMiniRow key={ws._id} workspace={ws} />)}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.05 }}
+          className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+        >
+          <SectionTitle title="Recent Rooms" action={<ViewAllLink to="/dashboard/rooms" />} />
+          <div className="space-y-1">
+            {loading
+              ? [1, 2, 3].map((i) => <CardSkeleton key={i} />)
+              : rooms.slice(0, 4).map((r) => <RoomRow key={r._id} room={r} />)}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+        >
+          <SectionTitle title="Recent Files" action={<ViewAllLink to="/dashboard/files" />} />
+          <div className="space-y-1">
+            {files.slice(0, 4).map((f) => (
+              <FileRow key={f._id} file={f} />
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+        >
+          <SectionTitle title="Recent Meetings" action={<ViewAllLink to="/dashboard/meetings" />} />
+          <div className="space-y-1">
+            {meetings.slice(0, 4).map((m) => (
+              <MeetingRow key={m._id} meeting={m} />
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+        className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+      >
+        <SectionTitle
+          title="Recent Notifications"
+          subtitle="Latest updates across your workspace"
+          action={<ViewAllLink to="/dashboard/notifications" />}
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
+          {notifications.slice(0, 6).map((n) => (
+            <NotificationRow key={n._id} notification={n} />
+          ))}
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
+interface ScheduleMeetingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: {
+    name: string;
+    description: string;
+    workspace: string;
+    scheduledAt: string;
+    duration: number;
+    agenda: string;
+  }) => void;
+  isLoading?: boolean;
+}
+
+function ScheduleMeetingModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  isLoading = false,
+}: ScheduleMeetingModalProps) {
+  const { workspaces } = useSelector((state: RootState) => state.workspace);
+  const [name, setName] = useState('');
+  const [workspace, setWorkspace] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
+  const [duration, setDuration] = useState(30);
+
+  useEffect(() => {
+    if (isOpen && workspaces.length > 0 && !workspace) {
+      setWorkspace(workspaces[0]._id);
+    }
+  }, [isOpen, workspaces, workspace]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name.trim() && workspace && scheduledAt) {
+      onSubmit({
+        name: name.trim(),
+        description: '',
+        workspace,
+        scheduledAt: new Date(scheduledAt).toISOString(),
+        duration,
+        agenda: '',
+      });
+      setName('');
+      setScheduledAt('');
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
+          <VideoCameraIcon className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Schedule Meeting
+          </h2>
+          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            Plan a video session with your team
+          </p>
+        </div>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label
+            className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Meeting Title
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input-base"
+            placeholder="Weekly sync"
+            required
+            autoFocus
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label
+              className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Workspace
+            </label>
+            <select
+              value={workspace}
+              onChange={(e) => setWorkspace(e.target.value)}
+              className="input-base"
+              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+              required
+            >
+              {workspaces.map((ws) => (
+                <option key={ws._id} value={ws._id}>
+                  {ws.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Date &amp; Time
+            </label>
+            <input
+              type="datetime-local"
+              value={scheduledAt}
+              onChange={(e) => setScheduledAt(e.target.value)}
+              min={new Date(Date.now() + 3600000).toISOString().slice(0, 16)}
+              className="input-base"
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label
+            className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Duration (minutes)
+          </label>
+          <div className="flex gap-2">
+            {[15, 30, 45, 60].map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDuration(d)}
+                className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-all ${
+                  duration === d
+                    ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+                    : 'hover:bg-[var(--bg-hover)]'
+                }`}
+                style={
+                  duration !== d
+                    ? { borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }
+                    : undefined
+                }
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div
+          className="flex gap-3 justify-end pt-3 border-t"
+          style={{ borderColor: 'var(--border-light)' }}
+        >
+          <button type="button" onClick={onClose} className="btn-secondary">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="btn-primary flex items-center gap-2"
+            disabled={!name.trim() || !workspace || !scheduledAt || isLoading}
+          >
+            {isLoading ? (
+              <Spinner size="sm" className="text-white" />
+            ) : (
+              <CheckIcon className="w-4 h-4" />
+            )}
+            Schedule Meeting
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -75,18 +1234,25 @@ export default function DashboardHome() {
     isLoading: wsLoading,
     error: wsError,
   } = useSelector((state: RootState) => state.workspace);
-  const { rooms, isLoading: roomLoading } = useSelector((state: RootState) => state.room);
-  const { meetings } = useSelector((state: RootState) => state.meeting);
+  const { rooms } = useSelector((state: RootState) => state.room);
+  const { meetings, isLoading: meetingLoading } = useSelector((state: RootState) => state.meeting);
+  const { notifications } = useSelector((state: RootState) => state.notification);
 
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [showCreateWsModal, setShowCreateWsModal] = useState(false);
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
-  const [showFAB, setShowFAB] = useState(false);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
     dispatch(fetchRooms(undefined));
     dispatch(fetchMeetings());
+    dispatch(fetchNotifications(20));
     activityService
       .getAll()
       .then(setActivities)
@@ -96,6 +1262,24 @@ export default function DashboardHome() {
   useEffect(() => {
     if (wsError) showToast(wsError, 'error');
   }, [wsError, showToast]);
+
+  const loadWorkspaceData = useCallback(async () => {
+    if (workspaces.length === 0) return;
+    const [f, t] = await Promise.all([
+      Promise.all(workspaces.map((w) => fileService.getAll({ workspaceId: w._id }))).then((l) =>
+        l.flat(),
+      ),
+      Promise.all(workspaces.map((w) => taskService.getTasksByWorkspace(w._id))).then((l) =>
+        l.flat(),
+      ),
+    ]);
+    setFiles(f);
+    setTasks(t);
+  }, [workspaces]);
+
+  useEffect(() => {
+    loadWorkspaceData();
+  }, [loadWorkspaceData]);
 
   const handleWizardCreated = (workspaceId: string) => {
     setShowCreateWsModal(false);
@@ -120,419 +1304,213 @@ export default function DashboardHome() {
     [dispatch, showToast, navigate],
   );
 
+  const handleScheduleMeeting = (data: {
+    name: string;
+    description: string;
+    workspace: string;
+    scheduledAt: string;
+    duration: number;
+    agenda: string;
+  }) => {
+    setScheduling(true);
+    dispatch(createMeeting(data)).then((action) => {
+      setScheduling(false);
+      if (action.meta.requestStatus === 'fulfilled') {
+        showToast('Meeting scheduled!', 'success');
+        setShowScheduleModal(false);
+        dispatch(fetchMeetings());
+      } else {
+        showToast((action.payload as string) || 'Failed to schedule meeting', 'error');
+      }
+    });
+  };
+
+  const handleJoinMeeting = () => {
+    navigate('/dashboard/meetings');
+  };
+
+  const handleUploadFile = async (file: File) => {
+    if (workspaces.length === 0) {
+      showToast('Create a workspace first', 'error');
+      return;
+    }
+    try {
+      await fileService.upload(file, { workspaceId: workspaces[0]._id, folder: 'Documentation' });
+      showToast('File uploaded!', 'success');
+      loadWorkspaceData();
+    } catch {
+      showToast('Upload failed', 'error');
+    }
+  };
+
+  const totalMembers = workspaces.reduce((sum, ws) => sum + (ws.memberCount || 0), 0);
+  const activeRooms = rooms.filter((r) => r.isActive).length;
+  const liveMeetings = meetings.filter((m) => m.status === 'ongoing').length;
+
+  const stats: StatDef[] = [
+    {
+      label: 'Total Workspaces',
+      value: workspaces.length,
+      icon: FolderIcon,
+      trend: '+2 this month',
+      trendUp: true,
+      iconGradient: 'from-brand-500 to-purple-600',
+      borderGradient: 'from-brand-500/60 via-purple-500/40 to-pink-500/50',
+    },
+    {
+      label: 'Total Rooms',
+      value: rooms.length,
+      icon: ClockIcon,
+      trend: `${activeRooms} active now`,
+      trendUp: true,
+      iconGradient: 'from-emerald-500 to-teal-600',
+      borderGradient: 'from-emerald-500/60 via-teal-500/40 to-cyan-500/50',
+    },
+    {
+      label: 'Total Meetings',
+      value: meetings.length,
+      icon: VideoCameraIcon,
+      trend: liveMeetings > 0 ? `${liveMeetings} live now` : '2 today',
+      trendUp: liveMeetings > 0,
+      iconGradient: 'from-amber-500 to-orange-600',
+      borderGradient: 'from-amber-500/60 via-orange-500/40 to-rose-500/50',
+    },
+    {
+      label: 'Total Members',
+      value: totalMembers,
+      icon: UserGroupIcon,
+      trend: '+8 this month',
+      trendUp: true,
+      iconGradient: 'from-pink-500 to-rose-600',
+      borderGradient: 'from-pink-500/60 via-rose-500/40 to-red-500/50',
+    },
+  ];
+
+  const recentWorkspaces = [...workspaces]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 4);
   const recentRooms = [...rooms]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, 5);
+    .slice(0, 4);
+  const recentFiles = [...files]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 4);
+  const upcomingMeetings = [...meetings]
+    .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())
+    .filter((m) => m.status === 'scheduled' || m.status === 'ongoing')
+    .slice(0, 4);
+  const recentMeetings = [...meetings]
+    .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())
+    .slice(0, 4);
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const myTasks = tasks.filter((t) => getTaskAssigneeId(t) === user?.id);
+  const todaysTasks = myTasks.length > 0 ? myTasks : tasks;
+
+  const loading = wsLoading || meetingLoading;
 
   return (
-    <div className="space-y-8 pb-16">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-3xl p-8 sm:p-10 bg-gradient-to-br from-brand-600/20 via-purple-600/10 to-pink-600/10 border border-brand-500/20 relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-600/5 via-transparent to-purple-600/5" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl" />
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <motion.h1
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-3xl sm:text-4xl font-black mb-2"
-            >
-              {greeting}, {user?.name?.split(' ')[0] || 'there'}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-gray-400"
-            >
-              {workspaces.length === 0 && rooms.length === 0
-                ? 'Create your first workspace to get started.'
-                : `You have ${workspaces.length} workspace${workspaces.length !== 1 ? 's' : ''} and ${rooms.length} room${rooms.length !== 1 ? 's' : ''}.`}
-            </motion.p>
-          </div>
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            onClick={() => setShowCreateWsModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-brand-600 to-purple-600 text-white rounded-2xl font-semibold text-sm hover:from-brand-500 hover:to-purple-500 transition-all shadow-xl shadow-brand-600/25 whitespace-nowrap"
-          >
-            + New Workspace
-          </motion.button>
+    <div className="space-y-6 pb-16">
+      <StatCards stats={stats} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 lg:gap-6 items-start">
+        <div className="lg:col-span-3">
+          <TodaysWork
+            meetings={upcomingMeetings}
+            tasks={todaysTasks}
+            files={recentFiles}
+            activities={activities}
+            onJoinMeeting={handleJoinMeeting}
+          />
         </div>
-      </motion.div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <AnimatedStatCard value={workspaces.length} label="Workspaces" icon="📁" delay={0.1} />
-        <AnimatedStatCard value={rooms.length} label="Rooms" icon="💬" delay={0.15} />
-        <AnimatedStatCard
-          value={rooms.filter((r) => r.isActive).length}
-          label="Active Now"
-          icon="🟢"
-          delay={0.2}
-        />
-        <AnimatedStatCard value={activities.length} label="Activities" icon="📊" delay={0.25} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {workspaces.some((ws) => ws.isFavorite) && (
-            <div>
-              <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
-                <span className="text-yellow-400">★</span> Starred
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {workspaces
-                  .filter((ws) => ws.isFavorite)
-                  .slice(0, 4)
-                  .map((ws, i) => {
-                    const wsRooms = rooms.filter(
-                      (r) =>
-                        (typeof r.workspace === 'object' ? r.workspace._id : r.workspace) ===
-                        ws._id,
-                    );
-                    return (
-                      <WorkspaceCard
-                        key={ws._id}
-                        workspace={ws}
-                        index={i}
-                        roomCount={wsRooms.length}
-                        variant="dashboard"
-                      />
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">Workspaces</h2>
-            <button
-              onClick={() => navigate('/dashboard/workspaces')}
-              className="text-sm text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1"
-            >
-              View all <ArrowRightIcon className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {wsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[1, 2].map((i) => (
-                <CardSkeleton key={i} />
-              ))}
-            </div>
-          ) : workspaces.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="card p-8 text-center"
-            >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-brand-600/10 flex items-center justify-center">
-                <span className="text-3xl">📁</span>
-              </div>
-              <p className="font-semibold mb-1">No workspaces yet</p>
-              <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
-                Create a workspace to start collaborating.
-              </p>
-              <button onClick={() => setShowCreateWsModal(true)} className="btn-primary">
-                Create Workspace
-              </button>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[...workspaces]
-                .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-                .slice(0, 4)
-                .map((ws, i) => {
-                  const wsRooms = rooms.filter(
-                    (r) =>
-                      (typeof r.workspace === 'object' ? r.workspace._id : r.workspace) === ws._id,
-                  );
-                  return (
-                    <WorkspaceCard
-                      key={ws._id}
-                      workspace={ws}
-                      index={i}
-                      roomCount={wsRooms.length}
-                      variant="dashboard"
-                    />
-                  );
-                })}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">Recent Rooms</h2>
-            <button
-              onClick={() => navigate('/dashboard/rooms')}
-              className="text-sm text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1"
-            >
-              View all <ArrowRightIcon className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {roomLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <CardSkeleton key={i} />
-              ))}
-            </div>
-          ) : recentRooms.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="card p-8 text-center"
-            >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-purple-600/10 flex items-center justify-center">
-                <span className="text-3xl">💬</span>
-              </div>
-              <p className="font-semibold mb-1">No rooms yet</p>
-              <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                Create a room to start collaborating.
-              </p>
-            </motion.div>
-          ) : (
-            <div className="space-y-3">
-              {recentRooms.map((room, i) => {
-                const wsName = typeof room.workspace === 'object' ? room.workspace.name : '';
-                return (
-                  <motion.div
-                    key={room._id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() =>
-                      room.type === 'whiteboard'
-                        ? navigate(`/whiteboard/${room._id}`)
-                        : navigate(`/dashboard/rooms/${room._id}`)
-                    }
-                    className="card-hover p-4 flex items-center gap-4 cursor-pointer"
-                  >
-                    <div
-                      className={`w-11 h-11 rounded-xl bg-gradient-to-br ${ROOM_TYPE_COLORS[room.type] || 'from-gray-500 to-gray-600'} flex items-center justify-center flex-shrink-0`}
-                    >
-                      <span className="text-white text-sm font-bold">
-                        {room.type === 'whiteboard' ? '🎨' : room.type === 'code' ? '💻' : '📝'}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm truncate">{room.name}</p>
-                        {room.isActive && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400">
-                            Live
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                        {wsName} · {room.type} · {timeAgo(room.updatedAt)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (room.type === 'whiteboard') navigate(`/whiteboard/${room._id}`);
-                        else navigate(`/dashboard/rooms/${room._id}`);
-                      }}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-600/20"
-                    >
-                      Open
-                    </button>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="card p-5"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold">Meetings</h3>
-              <button
-                onClick={() => navigate('/dashboard/meetings')}
-                className="text-xs text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1"
-              >
-                View all <ArrowRightIcon className="w-3 h-3" />
-              </button>
-            </div>
-            {meetings.length === 0 ? (
-              <p className="text-xs text-center py-6" style={{ color: 'var(--text-tertiary)' }}>
-                No meetings scheduled
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {[...meetings]
-                  .sort(
-                    (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
-                  )
-                  .slice(0, 3)
-                  .map((meeting) => {
-                    const wsName =
-                      typeof meeting.workspace === 'object' ? meeting.workspace.name : '';
-                    return (
-                      <div
-                        key={meeting._id}
-                        className="flex items-center gap-3 rounded-xl p-3 border border-white/5 hover:bg-white/[0.03] transition-all"
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm">🎥</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold truncate">{meeting.name}</p>
-                          <p
-                            className="text-[10px] mt-0.5"
-                            style={{ color: 'var(--text-tertiary)' }}
-                          >
-                            {wsName ? `${wsName} · ` : ''}
-                            {meeting.status === 'ongoing' ? (
-                              <span className="text-emerald-400 font-semibold">Live now</span>
-                            ) : (
-                              new Date(meeting.scheduledAt).toLocaleString(undefined, {
-                                weekday: 'short',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                              })
-                            )}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => navigate('/dashboard/meetings')}
-                          className="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-600/20 whitespace-nowrap"
-                        >
-                          {meeting.status === 'ongoing' ? 'Join now' : 'Join'}
-                        </button>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="card p-5"
-          >
-            <h3 className="text-sm font-bold mb-4">Activity Feed</h3>
-            {activities.length === 0 ? (
-              <p className="text-xs text-center py-6" style={{ color: 'var(--text-tertiary)' }}>
-                No activity yet
-              </p>
-            ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto scrollbar-thin">
-                {activities.slice(0, 10).map((act, i) => {
-                  const userName =
-                    typeof act.user === 'object' && act.user !== null
-                      ? (act.user as { name: string }).name
-                      : 'Someone';
-                  return (
-                    <motion.div
-                      key={act._id}
-                      initial={{ opacity: 0, x: -5 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="flex items-start gap-3 py-2"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs leading-relaxed">
-                          <span className="font-semibold">{userName}</span> {act.action}
-                          {act.entityName && (
-                            <span className="font-semibold text-brand-400"> {act.entityName}</span>
-                          )}
-                        </p>
-                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                          {timeAgo(act.createdAt)}
-                        </p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="card p-5"
-          >
-            <h3 className="text-sm font-bold mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setShowCreateWsModal(true)}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-dashed border-white/10 hover:border-brand-500/50 hover:bg-brand-500/5 transition-all"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center">
-                  <PlusIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xs font-semibold">Workspace</span>
-              </button>
-              <button
-                onClick={() => setShowCreateRoomModal(true)}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-dashed border-white/10 hover:border-purple-500/50 hover:bg-purple-500/5 transition-all"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                  <PlusIcon className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xs font-semibold">Room</span>
-              </button>
-            </div>
-          </motion.div>
+        <div className="lg:col-span-1">
+          <QuickActions
+            onCreateWorkspace={() => setShowCreateWsModal(true)}
+            onCreateRoom={() => setShowCreateRoomModal(true)}
+            onCreateMeeting={() => setShowScheduleModal(true)}
+            onInviteMember={() => setShowInviteModal(true)}
+            onUploadFile={() => fileInputRef.current?.click()}
+          />
         </div>
       </div>
 
-      <AnimatePresence>
-        {showFAB && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40"
-            onClick={() => setShowFAB(false)}
-          >
-            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <LowerSections
+        workspaces={recentWorkspaces}
+        rooms={recentRooms}
+        files={recentFiles}
+        meetings={recentMeetings}
+        notifications={notifications}
+        loading={loading}
+      />
 
-      <button
-        onClick={() => setShowFAB((v) => !v)}
-        className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 text-white shadow-xl shadow-brand-600/30 hover:shadow-brand-500/40 hover:scale-110 transition-all flex items-center justify-center"
-      >
-        <motion.div animate={{ rotate: showFAB ? 45 : 0 }} transition={{ duration: 0.2 }}>
-          <PlusIcon className="w-6 h-6" />
-        </motion.div>
-      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleUploadFile(file);
+          e.target.value = '';
+        }}
+      />
 
       <WorkspaceOnboarding
         isOpen={showCreateWsModal}
         onClose={() => setShowCreateWsModal(false)}
         onCreated={handleWizardCreated}
       />
+
       {showCreateRoomModal && (
         <CreateRoomModal
           isOpen={showCreateRoomModal}
           onClose={() => setShowCreateRoomModal(false)}
           onSubmit={handleCreateRoom}
-          isLoading={roomLoading}
+          isLoading={wsLoading}
         />
       )}
+
+      <ScheduleMeetingModal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        onSubmit={handleScheduleMeeting}
+        isLoading={scheduling}
+      />
+
+      {showInviteModal && rooms[0] && (
+        <InviteModal
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          inviteCode={rooms[0].inviteCode}
+          roomName={rooms[0].name}
+        />
+      )}
+
+      <AnimatePresence>
+        {showInviteModal && !rooms[0] && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 flex items-center justify-center p-4"
+          >
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowInviteModal(false)}
+            />
+            <div className="relative card p-6 max-w-sm w-full text-center">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-brand-600/10 flex items-center justify-center">
+                <UserGroupIcon className="w-6 h-6 text-brand-400" />
+              </div>
+              <p className="font-semibold mb-1">No rooms yet</p>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-tertiary)' }}>
+                Create a room first to share an invite link.
+              </p>
+              <button onClick={() => setShowInviteModal(false)} className="btn-secondary">
+                Close
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -567,6 +567,259 @@ export const demoWorkspaces: DemoWorkspace[] = [
   },
 ];
 
+const EXTRA_ROOM_SEED: Array<{
+  id: string;
+  workspaceId: string;
+  name: string;
+  type: Room['type'];
+  owner: string;
+  isActive: boolean;
+  participants: string[];
+  daysAgo: number;
+}> = [
+  {
+    id: 'room-6',
+    workspaceId: 'ws-1',
+    name: 'Sprint Planning',
+    type: 'document',
+    owner: 'demo-user',
+    isActive: false,
+    participants: ['demo-user', 'u-priya', 'u-alex', 'u-sarah'],
+    daysAgo: 12,
+  },
+  {
+    id: 'room-7',
+    workspaceId: 'ws-2',
+    name: 'Design Critique',
+    type: 'whiteboard',
+    owner: 'u-sarah',
+    isActive: false,
+    participants: ['demo-user', 'u-sarah', 'u-ravi'],
+    daysAgo: 8,
+  },
+  {
+    id: 'room-8',
+    workspaceId: 'ws-3',
+    name: 'Code Review',
+    type: 'code',
+    owner: 'u-mike',
+    isActive: true,
+    participants: ['demo-user', 'u-mike', 'u-priya'],
+    daysAgo: 3,
+  },
+];
+
+for (const seed of EXTRA_ROOM_SEED) {
+  const ws = demoWorkspaces.find((w) => w.id === seed.workspaceId);
+  if (!ws) continue;
+  const created = daysAgo(seed.daysAgo);
+  ws.rooms.push({
+    _id: seed.id,
+    name: seed.name,
+    type: seed.type,
+    workspace: seed.workspaceId,
+    owner: seed.owner,
+    inviteCode: `ROOM-${seed.id.toUpperCase().replace('-', '-')}`,
+    isActive: seed.isActive,
+    participants: seed.participants,
+    isDeleted: false,
+    createdAt: created,
+    updatedAt: created,
+  });
+}
+
+const EXTRA_FILE_SEED: Array<{
+  workspaceId: string;
+  name: string;
+  folder: string;
+  uploaderId: string;
+  size: number;
+  mimeType: string;
+  daysAgo: number;
+}> = [
+  {
+    workspaceId: 'ws-1',
+    name: 'requirements.docx',
+    folder: 'Documentation',
+    uploaderId: 'demo-user',
+    size: 98432,
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    daysAgo: 2,
+  },
+  {
+    workspaceId: 'ws-1',
+    name: 'design-system.fig',
+    folder: 'Design',
+    uploaderId: 'u-ravi',
+    size: 4521984,
+    mimeType: 'application/octet-stream',
+    daysAgo: 4,
+  },
+  {
+    workspaceId: 'ws-1',
+    name: 'sprint-board.png',
+    folder: 'Design',
+    uploaderId: 'u-priya',
+    size: 1288450,
+    mimeType: 'image/png',
+    daysAgo: 6,
+  },
+  {
+    workspaceId: 'ws-1',
+    name: 'api-contract.yaml',
+    folder: 'Documentation',
+    uploaderId: 'u-alex',
+    size: 15432,
+    mimeType: 'text/yaml',
+    daysAgo: 8,
+  },
+  {
+    workspaceId: 'ws-1',
+    name: 'performance-report.pdf',
+    folder: 'Reports',
+    uploaderId: 'u-priya',
+    size: 2408990,
+    mimeType: 'application/pdf',
+    daysAgo: 10,
+  },
+  {
+    workspaceId: 'ws-1',
+    name: 'onboarding-guide.md',
+    folder: 'Documentation',
+    uploaderId: 'demo-user',
+    size: 8456,
+    mimeType: 'text/markdown',
+    daysAgo: 12,
+  },
+  {
+    workspaceId: 'ws-2',
+    name: 'weekly-report-w1.pdf',
+    folder: 'Reports',
+    uploaderId: 'demo-user',
+    size: 1230450,
+    mimeType: 'application/pdf',
+    daysAgo: 3,
+  },
+  {
+    workspaceId: 'ws-2',
+    name: 'weekly-report-w2.pdf',
+    folder: 'Reports',
+    uploaderId: 'demo-user',
+    size: 1452090,
+    mimeType: 'application/pdf',
+    daysAgo: 5,
+  },
+  {
+    workspaceId: 'ws-2',
+    name: 'internship-proposal.docx',
+    folder: 'Documentation',
+    uploaderId: 'demo-user',
+    size: 230890,
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    daysAgo: 7,
+  },
+  {
+    workspaceId: 'ws-2',
+    name: 'mockups-v1.fig',
+    folder: 'Design',
+    uploaderId: 'u-ravi',
+    size: 6890230,
+    mimeType: 'application/octet-stream',
+    daysAgo: 9,
+  },
+  {
+    workspaceId: 'ws-2',
+    name: 'demo-slides.pptx',
+    folder: 'Presentations',
+    uploaderId: 'u-sarah',
+    size: 5689230,
+    mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    daysAgo: 11,
+  },
+  {
+    workspaceId: 'ws-2',
+    name: 'checklist.md',
+    folder: 'Documentation',
+    uploaderId: 'demo-user',
+    size: 2310,
+    mimeType: 'text/markdown',
+    daysAgo: 13,
+  },
+  {
+    workspaceId: 'ws-3',
+    name: 'literature-review.docx',
+    folder: 'Documentation',
+    uploaderId: 'demo-user',
+    size: 456730,
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    daysAgo: 2,
+  },
+  {
+    workspaceId: 'ws-3',
+    name: 'schema-v2.sql',
+    folder: 'Database',
+    uploaderId: 'u-mike',
+    size: 12580,
+    mimeType: 'text/plain',
+    daysAgo: 5,
+  },
+  {
+    workspaceId: 'ws-3',
+    name: 'progress-slides.pptx',
+    folder: 'Presentations',
+    uploaderId: 'u-priya',
+    size: 4231090,
+    mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    daysAgo: 7,
+  },
+  {
+    workspaceId: 'ws-3',
+    name: 'survey-data.xlsx',
+    folder: 'Reports',
+    uploaderId: 'u-mike',
+    size: 67890,
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    daysAgo: 9,
+  },
+  {
+    workspaceId: 'ws-3',
+    name: 'milestone-tracking.md',
+    folder: 'Documentation',
+    uploaderId: 'demo-user',
+    size: 5340,
+    mimeType: 'text/markdown',
+    daysAgo: 11,
+  },
+  {
+    workspaceId: 'ws-6',
+    name: 'color-tokens.css',
+    folder: 'Design',
+    uploaderId: 'u-ravi',
+    size: 8230,
+    mimeType: 'text/css',
+    daysAgo: 4,
+  },
+];
+
+for (const seed of EXTRA_FILE_SEED) {
+  const ws = demoWorkspaces.find((w) => w.id === seed.workspaceId);
+  if (!ws) continue;
+  ws.files.push({
+    _id: `file-${seed.workspaceId}-${seed.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`,
+    name: seed.name,
+    originalName: seed.name,
+    mimeType: seed.mimeType,
+    size: seed.size,
+    path: `/${seed.folder}/${seed.name}`,
+    workspace: seed.workspaceId,
+    folder: seed.folder,
+    uploader: findUser(seed.uploaderId),
+    isDeleted: false,
+    createdAt: daysAgo(seed.daysAgo),
+    updatedAt: daysAgo(Math.max(0, seed.daysAgo - 2)),
+  });
+}
+
 const STORAGE_KEY = 'syncspace-demo-user-workspaces';
 
 function loadUserWorkspaces(): DemoWorkspace[] {
