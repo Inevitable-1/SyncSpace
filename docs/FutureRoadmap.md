@@ -56,3 +56,22 @@ Where SyncSpace goes next.
 - **CI/CD** — GitHub Actions for test, build and deploy.
 - **E2E testing** with Playwright across core collaboration flows.
 - **Mobile apps** — React Native companions for whiteboard + chat.
+
+---
+
+## Planned Improvements (Aug 2026)
+
+### Performance & Scalability
+- Redis caching layer for frequently accessed workspace data.
+- Database indexing audit and query optimization.
+- CDN integration for static assets and file uploads.
+
+### Developer Experience
+- Comprehensive API documentation with interactive Swagger UI.
+- TypeScript strict mode across the entire codebase.
+- Automated code quality checks with ESLint and Prettier.
+
+### Collaboration Features
+- Real-time cursor tracking with user avatars in code editor.
+- Branching and merging for whiteboard versions.
+- Inline commenting on documents with mention support.
