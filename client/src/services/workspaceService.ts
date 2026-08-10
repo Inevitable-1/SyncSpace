@@ -44,14 +44,6 @@ export const workspaceService = {
     return list;
   },
 
-  async getOne(id: string): Promise<{ workspace: Workspace; roomCount: number }> {
-    const ws = getDemoWorkspace(id) || getAllDemoWorkspaces()[0];
-    return {
-      workspace: toWorkspaceShape(ws),
-      roomCount: ws.rooms.length,
-    };
-  },
-
   async create(data: {
     name: string;
     description?: string;
@@ -93,17 +85,6 @@ export const workspaceService = {
       .filter((ws) => ws.isDeleted)
       .flatMap((ws) => ws.rooms.map((r) => ({ _id: r._id })));
     return { workspaces, rooms };
-  },
-
-  async search(q: string, _params?: WorkspaceQueryParams): Promise<Workspace[]> {
-    const search = q.toLowerCase();
-    return getAllDemoWorkspaces()
-      .filter((ws) => !ws.isDeleted)
-      .filter(
-        (ws) =>
-          ws.name.toLowerCase().includes(search) || ws.description.toLowerCase().includes(search),
-      )
-      .map(toWorkspaceShape);
   },
 
   async regenerateInviteCode(id: string): Promise<string> {

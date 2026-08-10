@@ -34,7 +34,7 @@ function rgbCss(c: [number, number, number], a: number): string {
 /* BrainCanvas — neural particle cloud with orbit, pulse, morph        */
 /* ------------------------------------------------------------------ */
 
-export interface BrainCanvasProps {
+interface BrainCanvasProps {
   cloud: PointCloud;
   edges: Edge[];
   morphTo?: PointCloud;
@@ -327,7 +327,7 @@ export function BrainCanvas({
 /* AmbientField — drifting starfield with soft bokeh                   */
 /* ------------------------------------------------------------------ */
 
-export interface AmbientFieldProps {
+interface AmbientFieldProps {
   density?: number;
   drift?: number;
   className?: string;
@@ -442,7 +442,7 @@ export function AmbientField({
 /* EnergyBeam — four streams merging into a vertical beam              */
 /* ------------------------------------------------------------------ */
 
-export interface EnergyBeamProps {
+interface EnergyBeamProps {
   progress?: number;
   className?: string;
 }

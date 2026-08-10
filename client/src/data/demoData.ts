@@ -1,11 +1,4 @@
-import type {
-  Task,
-  Notification,
-  Invite,
-  ChatMessage,
-  WhiteboardObject,
-  CodeDocument,
-} from '../types';
+import type { Task, Notification, ChatMessage, WhiteboardObject, CodeDocument } from '../types';
 import type { WhiteboardData } from '../services/whiteboardService';
 
 import { findUser } from './demoWorkspaces';
@@ -322,49 +315,6 @@ export const demoNotifications: Notification[] = [
   },
 ];
 
-export const demoInvites: Invite[] = [
-  {
-    _id: 'inv-1',
-    email: 'sarah@syncspace.dev',
-    workspaceId: 'ws-1',
-    invitedBy: findUser('demo-user'),
-    role: 'admin',
-    status: 'pending',
-    token: 'inv-token-sarah',
-    expiresAt: daysFromNow(6),
-    createdAt: daysAgo(1),
-    updatedAt: daysAgo(1),
-  },
-  {
-    _id: 'inv-2',
-    email: 'mike@syncspace.dev',
-    workspaceId: 'ws-1',
-    invitedBy: findUser('u-priya'),
-    role: 'member',
-    status: 'accepted',
-    token: 'inv-token-mike',
-    expiresAt: daysAgo(2),
-    createdAt: daysAgo(8),
-    updatedAt: daysAgo(7),
-  },
-  {
-    _id: 'inv-3',
-    email: 'newhire@syncspace.dev',
-    workspaceId: 'ws-1',
-    invitedBy: findUser('u-priya'),
-    role: 'member',
-    status: 'pending',
-    token: 'inv-token-newhire',
-    expiresAt: daysFromNow(4),
-    createdAt: hoursAgo(10),
-    updatedAt: hoursAgo(10),
-  },
-];
-
-export function getInvitesForWorkspace(workspaceId: string): Invite[] {
-  return demoInvites.filter((inv) => inv.workspaceId === workspaceId);
-}
-
 export const demoChatMessages: ChatMessage[] = [
   {
     _id: 'msg-1',
@@ -582,7 +532,7 @@ function whiteboardObjects(): WhiteboardObject[] {
   ];
 }
 
-export const demoWhiteboards: Record<string, WhiteboardData> = {
+const demoWhiteboards: Record<string, WhiteboardData> = {
   'room-1': {
     _id: 'wb-room-1',
     roomId: 'room-1',

@@ -40,13 +40,6 @@ export const documentService = {
     );
   },
 
-  async getById(id: string): Promise<CodeDocument> {
-    return demo(
-      () => api.get(`/documents/${id}`).then((response) => response.data.data.document),
-      () => demoDocuments.find((d) => d._id === id) || demoDocuments[0],
-    );
-  },
-
   async create(data: {
     name: string;
     content?: string;

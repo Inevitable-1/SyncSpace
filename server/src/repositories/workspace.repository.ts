@@ -6,7 +6,7 @@ import type {
 } from '../dto/workspace.dto.js';
 import type { PaginatedResponse } from '../dto/common.dto.js';
 
-export class WorkspaceRepository {
+class WorkspaceRepository {
   async create(userId: string, data: CreateWorkspaceDto): Promise<IWorkspaceDocument> {
     const workspace = new Workspace({
       ...data,

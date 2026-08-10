@@ -88,17 +88,6 @@ export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValu
   }
 });
 
-export const fetchMe = createAsyncThunk('auth/fetchMe', async (_, { rejectWithValue }) => {
-  try {
-    const result = await authService.getMe();
-    return result;
-  } catch (err: unknown) {
-    localStorage.removeItem('auth');
-    const error = err as { response?: { data?: { message?: string } } };
-    return rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
-  }
-});
-
 export const forgotPassword = createAsyncThunk(
   'auth/forgotPassword',
   async (data: ForgotPasswordRequest, { rejectWithValue }) => {
@@ -219,20 +208,6 @@ const authSlice = createSlice({
         state.accessToken = null;
         state.isAuthenticated = false;
         state.isDemo = false;
-      })
-      .addCase(fetchMe.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(fetchMe.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
-      })
-      .addCase(fetchMe.rejected, (state) => {
-        state.isLoading = false;
-        state.user = null;
-        state.accessToken = null;
-        state.isAuthenticated = false;
       })
       .addCase(forgotPassword.pending, (state) => {
         state.isLoading = true;

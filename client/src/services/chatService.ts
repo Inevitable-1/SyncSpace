@@ -77,8 +77,4 @@ export const chatService = {
   async deleteMessage(messageId: string): Promise<void> {
     await noop(() => api.delete(`/chat/${messageId}`));
   },
-
-  async markSeen(roomId: string): Promise<void> {
-    await noop(() => api.post(`/chat/${roomId}/seen`));
-  },
 };

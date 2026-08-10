@@ -1,4 +1,4 @@
-export interface Pt {
+interface Pt {
   x: number;
   y: number;
   z: number;
@@ -9,16 +9,9 @@ export type Edge = [number, number];
 
 export const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 
-export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-
 export const easeInOut = (t: number): number => {
   const x = clamp01(t);
   return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
-};
-
-export const easeOutCubic = (t: number): number => {
-  const x = clamp01(t);
-  return 1 - Math.pow(1 - x, 3);
 };
 
 function mulberry32(seed: number): () => number {
@@ -32,7 +25,7 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-export function catmullRomClosed(control: Pt[], samplesPer: number): PointCloud {
+function catmullRomClosed(control: Pt[], samplesPer: number): PointCloud {
   const n = control.length;
   const out: PointCloud = [];
   const at = (i: number): Pt => control[((i % n) + n) % n];
@@ -94,11 +87,11 @@ const LOGO_CONTROL: Pt[] = [
   { x: 0.68, y: -0.52, z: 0 },
 ];
 
-export function brainOutline(samplesPer = 14): PointCloud {
+function brainOutline(samplesPer = 14): PointCloud {
   return catmullRomClosed(BRAIN_CONTROL, samplesPer);
 }
 
-export function logoOutline(samplesPer = 14): PointCloud {
+function logoOutline(samplesPer = 14): PointCloud {
   return catmullRomClosed(LOGO_CONTROL, samplesPer);
 }
 
@@ -150,15 +143,6 @@ export function logoCloud(count = 260, seed = 2): PointCloud {
   return out;
 }
 
-export function scatterCloud(cloud: PointCloud, spread = 0.9, seed = 3): PointCloud {
-  const rnd = seededRandom(seed);
-  return cloud.map((p) => ({
-    x: p.x + (rnd() - 0.5) * spread * 2,
-    y: p.y + (rnd() - 0.5) * spread * 2,
-    z: p.z,
-  }));
-}
-
 export function connectionEdges(points: PointCloud, maxDist: number, maxNeighbors = 3): Edge[] {
   const edges: Edge[] = [];
   for (let i = 0; i < points.length; i++) {
@@ -181,31 +165,4 @@ export function connectionEdges(points: PointCloud, maxDist: number, maxNeighbor
     }
   }
   return edges;
-}
-
-export interface MorphState {
-  cloud: PointCloud;
-  edges: Edge[];
-}
-
-export function morphCloud(from: PointCloud, to: PointCloud, t: number): PointCloud {
-  const e = easeInOut(t);
-  const out: PointCloud = [];
-  for (let i = 0; i < from.length; i++) {
-    const a = from[i];
-    const b = to[i % to.length];
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
-    const amp = Math.sin(Math.PI * e) * 0.22;
-    const wob = a.z;
-    out.push({
-      x: a.x + dx * e + nx * amp * Math.sin(wob * 6.283 + e * 6),
-      y: a.y + dy * e + ny * amp * Math.sin(wob * 6.283 + e * 6),
-      z: lerp(a.z, b.z, e),
-    });
-  }
-  return out;
 }

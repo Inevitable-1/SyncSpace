@@ -6,7 +6,7 @@ import { logActivity } from '../controllers/activity.js';
 import { logNotification } from '../controllers/notification.js';
 import type { InviteRole, InviteStatus, IInviteDocument } from '../models/Invite.js';
 
-export class InviteService {
+class InviteService {
   async createInvite(
     workspaceId: string,
     invitedBy: string,

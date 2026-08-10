@@ -34,13 +34,6 @@ export const authService = {
     await noop(() => api.post('/auth/logout'));
   },
 
-  async getMe(): Promise<{ user: AuthResponse['user'] }> {
-    return demo(
-      () => api.get('/auth/me').then((response) => response.data.data),
-      () => ({ user: demoAuth().user }),
-    );
-  },
-
   async forgotPassword(data: ForgotPasswordRequest): Promise<{ resetToken: string }> {
     return demo(
       () => api.post('/auth/forgot-password', data).then((response) => response.data.data),

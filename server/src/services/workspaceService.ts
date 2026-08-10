@@ -23,7 +23,7 @@ interface UpdateWorkspaceData {
   isPublic?: boolean;
 }
 
-export class WorkspaceService {
+class WorkspaceService {
   async create(userId: string, data: CreateWorkspaceData): Promise<IWorkspaceDocument> {
     const workspace = await Workspace.create({
       name: data.name,

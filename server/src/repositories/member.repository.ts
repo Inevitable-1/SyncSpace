@@ -7,7 +7,7 @@ import {
 import type { MemberQueryDto } from '../dto/member.dto.js';
 import type { PaginatedResponse } from '../dto/common.dto.js';
 
-export class MemberRepository {
+class MemberRepository {
   async create(data: {
     userId: string;
     workspaceId: string;

@@ -7,12 +7,6 @@ export const activityService = {
     return getAllDemoActivities().filter((a) => a.entityType === entityType);
   },
 
-  async delete(id: string): Promise<void> {
-    for (const ws of getAllDemoWorkspaces()) {
-      ws.activity = ws.activity.filter((a) => a._id !== id);
-    }
-  },
-
   async clearAll(): Promise<void> {
     for (const ws of getAllDemoWorkspaces()) {
       ws.activity = [];

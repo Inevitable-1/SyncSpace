@@ -4,7 +4,6 @@ import {
   getDemoMeeting,
   addDemoMeeting,
   updateDemoMeeting,
-  deleteDemoMeeting,
   getDemoMeetingStats,
   getDemoWorkspace,
 } from '../data/demoWorkspaces';
@@ -14,10 +13,6 @@ export const meetingService = {
   async getAll(params?: { workspaceId?: string }): Promise<Meeting[]> {
     if (!params?.workspaceId) return getAllDemoMeetings().filter((m) => !m.isDeleted);
     return getDemoMeetingsForWorkspace(params.workspaceId).filter((m) => !m.isDeleted);
-  },
-
-  async getById(id: string): Promise<Meeting> {
-    return getDemoMeeting(id) || getAllDemoMeetings()[0];
   },
 
   async create(data: {
@@ -32,27 +27,6 @@ export const meetingService = {
     const ws = getDemoWorkspace(data.workspace);
     if (!ws) throw new Error('Workspace not found');
     return addDemoMeeting(data.workspace, data);
-  },
-
-  async update(
-    id: string,
-    data: Partial<{
-      name: string;
-      description: string;
-      participants: string[];
-      scheduledAt: string;
-      duration: number;
-      agenda: string;
-      status: string;
-    }>,
-  ): Promise<Meeting> {
-    const meeting = updateDemoMeeting(id, data as Partial<Meeting>);
-    if (meeting) return meeting;
-    return getDemoMeeting(id) || getAllDemoMeetings()[0];
-  },
-
-  async delete(id: string): Promise<void> {
-    deleteDemoMeeting(id);
   },
 
   async start(id: string): Promise<Meeting> {

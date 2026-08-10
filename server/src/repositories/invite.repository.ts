@@ -7,7 +7,7 @@ import {
 import type { InviteQueryDto } from '../dto/invite.dto.js';
 import type { PaginatedResponse } from '../dto/common.dto.js';
 
-export class InviteRepository {
+class InviteRepository {
   async create(data: {
     email: string;
     workspaceId: string;

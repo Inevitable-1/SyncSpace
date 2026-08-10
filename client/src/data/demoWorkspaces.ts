@@ -75,7 +75,7 @@ export function findUser(id: string): User {
  * entity (rooms, files, members, meetings, activity). Pages and services all
  * read from this one shared data source.
  */
-export interface DemoWorkspace {
+interface DemoWorkspace {
   id: string;
   name: string;
   description: string;
@@ -986,10 +986,6 @@ export function restoreDemoWorkspace(id: string): DemoWorkspace | undefined {
   return undefined;
 }
 
-export function isUserWorkspace(id: string): boolean {
-  return getUserWorkspaces().some((ws) => ws.id === id);
-}
-
 export function toWorkspaceShape(dw: DemoWorkspace): Workspace {
   const ownerId = dw.owner || demoUser.id;
   return {
@@ -1029,10 +1025,6 @@ export function getAllDemoMeetings(): Meeting[] {
   return getAllDemoWorkspaces().flatMap((ws) => ws.meetings.map((m) => toAppMeeting(ws, m)));
 }
 
-export function getAllDemoFiles(): UploadedFile[] {
-  return getAllDemoWorkspaces().flatMap((ws) => ws.files);
-}
-
 export function getAllDemoActivities(): Activity[] {
   return getAllDemoWorkspaces().flatMap((ws) => ws.activity);
 }
@@ -1049,10 +1041,6 @@ export function getDemoMeetingsForWorkspace(workspaceId: string): Meeting[] {
 
 export function getDemoFilesForWorkspace(workspaceId: string): UploadedFile[] {
   return getDemoWorkspace(workspaceId)?.files || [];
-}
-
-export function getDemoActivitiesForWorkspace(workspaceId: string): Activity[] {
-  return getDemoWorkspace(workspaceId)?.activity || [];
 }
 
 export function getDemoMembersForWorkspace(workspaceId: string): Member[] {
@@ -1081,40 +1069,6 @@ export function getDemoFile(id: string): UploadedFile | undefined {
     if (file) return file;
   }
   return undefined;
-}
-
-export function getWorkspacesByMember(userId: string): Workspace[] {
-  return getAllDemoWorkspaces()
-    .filter((ws) => !ws.isDeleted)
-    .filter(
-      (ws) =>
-        ws.owner === userId ||
-        ws.members.some((m) => (typeof m.userId === 'string' ? m.userId : m.userId.id) === userId),
-    )
-    .map(toWorkspaceShape);
-}
-
-export function getDemoStats() {
-  const all = getAllDemoWorkspaces().filter((ws) => !ws.isDeleted);
-  const rooms = all.reduce((sum, ws) => sum + ws.rooms.length, 0);
-  const files = all.reduce((sum, ws) => sum + ws.files.length, 0);
-  const members = all.reduce((sum, ws) => sum + ws.members.length, 0);
-  const activity = all.reduce((sum, ws) => sum + ws.activity.length, 0);
-  return {
-    totalWorkspaces: all.length,
-    totalRooms: rooms,
-    filesShared: files,
-    onlineMembers: 24,
-    activeSessions: 8,
-    recentActivity: activity,
-    projectsCreated: all.length,
-    growth: {
-      workspaces: all.length,
-      rooms,
-      members,
-      activity,
-    },
-  };
 }
 
 export function getDemoMeetingStats(): MeetingStats {
@@ -1221,17 +1175,6 @@ export function updateDemoMeeting(id: string, patch: Partial<Meeting>): Meeting 
     }
   }
   return undefined;
-}
-
-export function deleteDemoMeeting(id: string): void {
-  for (const ws of getAllDemoWorkspaces()) {
-    const meeting = ws.meetings.find((m) => m._id === id);
-    if (meeting) {
-      meeting.isDeleted = true;
-      persist();
-      return;
-    }
-  }
 }
 
 export function addDemoFile(

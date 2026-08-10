@@ -213,12 +213,6 @@ export interface Stats {
   };
 }
 
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  message: string;
-  data?: T;
-}
-
 export type ToolType =
   'pointer' | 'hand' | 'pencil' | 'line' | 'rectangle' | 'circle' | 'arrow' | 'text' | 'eraser';
 
@@ -256,18 +250,6 @@ export interface WhiteboardUser {
   color: string;
   x?: number;
   y?: number;
-}
-
-export interface WhiteboardState {
-  objects: WhiteboardObject[];
-  selectedIds: string[];
-  tool: ToolType;
-  strokeColor: string;
-  fillColor: string;
-  strokeWidth: number;
-  opacity: number;
-  fontSize: number;
-  fontFamily: string;
 }
 
 export interface ChatMessage {
@@ -340,18 +322,6 @@ export interface Task {
   dueDate?: string;
   checklist: { text: string; done: boolean }[];
   order: number;
-  isDeleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface TaskComment {
-  _id: string;
-  task: string;
-  author: User | string;
-  content: string;
-  edited: boolean;
-  editedAt?: string;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;

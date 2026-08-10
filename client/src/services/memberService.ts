@@ -10,16 +10,6 @@ function ok<T>(data: T) {
   return { data };
 }
 
-function memberStats(workspaceId: string) {
-  const members = getDemoMembersForWorkspace(workspaceId);
-  return {
-    total: members.length,
-    active: members.filter((m) => m.status === 'active').length,
-    invited: members.filter((m) => m.status === 'invited').length,
-    suspended: members.filter((m) => m.status === 'suspended').length,
-  };
-}
-
 export const memberService = {
   async getMembers(workspaceId: string, _params?: Record<string, unknown>) {
     const members = getDemoMembersForWorkspace(workspaceId);
@@ -51,9 +41,5 @@ export const memberService = {
   async reactivateMember(workspaceId: string, memberId: string) {
     const member = updateDemoMember(workspaceId, memberId, { status: 'active' as MemberStatus });
     return ok(member || getDemoMembersForWorkspace(workspaceId)[0]);
-  },
-
-  async getMemberStats(workspaceId: string) {
-    return ok(memberStats(workspaceId));
   },
 };

@@ -5,7 +5,7 @@ import { logActivity } from '../controllers/activity.js';
 import { logNotification } from '../controllers/notification.js';
 import type { MemberRole } from '../models/Member.js';
 
-export class MemberService {
+class MemberService {
   async addMember(
     workspaceId: string,
     ownerId: string,

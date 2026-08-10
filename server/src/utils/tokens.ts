@@ -6,11 +6,11 @@ const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET || 'fallback-secret';
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '15m') as jwt.SignOptions['expiresIn'];
 const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 
-export function generateAccessToken(payload: AuthPayload): string {
+function generateAccessToken(payload: AuthPayload): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
-export function generateRefreshToken(): { token: string; hashedToken: string; expiresAt: Date } {
+function generateRefreshToken(): { token: string; hashedToken: string; expiresAt: Date } {
   const token = crypto.randomBytes(40).toString('hex');
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
   const expiresAt = new Date();

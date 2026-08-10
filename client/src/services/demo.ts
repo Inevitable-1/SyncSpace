@@ -1,9 +1,9 @@
 import { demoUser } from '../data/demoData';
 import type { AuthResponse } from '../types';
 
-export const DEMO_TOKEN = 'demo-token';
+const DEMO_TOKEN = 'demo-token';
 
-export interface DemoEnvelope<T> {
+interface DemoEnvelope<T> {
   success: boolean;
   message: string;
   data: T;
