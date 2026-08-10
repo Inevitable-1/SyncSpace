@@ -16,7 +16,7 @@ export default function EmptyState({ icon, title, description, action }: EmptySt
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="flex flex-col items-center justify-center py-16 sm:py-20 px-4 text-center"
     >
-      <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-5 bg-[var(--surface-subtle)] ring-1 ring-[var(--border-light)]">
+      <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-5 bg-[var(--surface-subtle)] ring-1 ring-[var(--border-light)] backdrop-blur-xl shadow-lg">
         {icon}
       </div>
       <h3 className="text-lg font-semibold mb-1.5" style={{ color: 'var(--text-primary)' }}>

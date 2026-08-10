@@ -190,7 +190,7 @@ export default function CommandPalette() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.15 }}
-              className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
+              className="w-full max-w-lg rounded-2xl border border-white/10 bg-surface-850/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
             >
               <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
                 <svg

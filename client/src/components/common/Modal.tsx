@@ -37,7 +37,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
-            className="relative w-full max-w-md rounded-2xl border shadow-xl overflow-hidden"
+            className="relative w-full max-w-md rounded-2xl border shadow-xl overflow-hidden backdrop-blur-2xl"
             style={{
               background: 'var(--bg-card)',
               borderColor: 'var(--border-color)',

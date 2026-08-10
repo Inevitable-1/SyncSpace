@@ -118,7 +118,7 @@ export default function AISidebar() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 400, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 z-[191] w-96 border-l border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl flex flex-col"
+              className="fixed right-0 top-0 bottom-0 z-[191] w-96 border-l border-white/10 bg-surface-850/95 backdrop-blur-2xl flex flex-col"
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
                 <div className="flex items-center gap-2">

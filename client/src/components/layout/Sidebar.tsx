@@ -17,6 +17,7 @@ import {
   ChevronLeftIcon,
   ChevronDownIcon,
   UserIcon,
+  DocumentTextIcon,
 } from '../Icons';
 import { logout } from '../../features/auth/authSlice';
 import type { RootState, AppDispatch } from '../../store';
@@ -37,25 +38,6 @@ const bottomNavItems = [
   { to: '/dashboard/trash', icon: TrashIcon, label: 'Trash' },
   { to: '/dashboard/settings', icon: Cog6ToothIcon, label: 'Settings' },
 ];
-
-function DocumentTextIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-      />
-    </svg>
-  );
-}
 
 const NavItem = memo(
   ({
@@ -154,7 +136,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
           {user?.name?.charAt(0).toUpperCase() || 'U'}
         </div>
-        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#060a14]" />
+        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-surface-900" />
       </div>
     </NavLink>
   ) : (
@@ -167,7 +149,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-brand-600/20">
             {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0a0f1e]" />
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-surface-900" />
         </div>
         <div className="flex-1 min-w-0 text-left">
           <p className="text-sm font-semibold truncate flex items-center gap-1.5">
@@ -187,7 +169,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.96 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-3 right-3 bottom-full mb-2 rounded-xl border border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
+            className="absolute left-3 right-3 bottom-full mb-2 rounded-xl border border-white/10 bg-surface-850/95 backdrop-blur-2xl shadow-2xl overflow-hidden"
           >
             <div className="p-3 border-b border-white/5">
               <div className="flex items-center gap-2.5">
@@ -303,7 +285,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
       <aside
         className={`hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 border-r border-white/5 z-30 transition-all duration-300 ${
           collapsed ? 'lg:w-20' : 'lg:w-64'
-        } bg-[#060a14]/80 backdrop-blur-2xl`}
+        } bg-surface-900/80 backdrop-blur-2xl`}
       >
         {sidebarContent}
       </aside>
@@ -323,7 +305,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-64 z-50 lg:hidden border-r border-white/5 bg-[#060a14]/95 backdrop-blur-2xl"
+              className="fixed inset-y-0 left-0 w-64 z-50 lg:hidden border-r border-white/5 bg-surface-900/95 backdrop-blur-2xl"
             >
               {sidebarContent}
             </motion.aside>

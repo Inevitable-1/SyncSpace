@@ -13,7 +13,7 @@ export default function Spinner({
 
   return (
     <div
-      className={`${sizeClasses[size]} animate-spin rounded-full border-[var(--border-color)] border-t-[var(--accent)] ${className}`}
+      className={`${sizeClasses[size]} animate-spin rounded-full border-[var(--border-strong)] border-t-[var(--primary)] ${className}`}
     />
   );
 }

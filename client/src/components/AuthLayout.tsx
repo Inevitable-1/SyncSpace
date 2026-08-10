@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#030712] flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-surface-900 flex items-center justify-center px-4 relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl" />

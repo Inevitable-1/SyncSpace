@@ -82,7 +82,7 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
     PAGE_TITLES.find((p) => p.pattern.test(location.pathname))?.title || 'Dashboard';
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/5 bg-[#030712]/80 backdrop-blur-2xl">
+    <header className="sticky top-0 z-20 border-b border-white/5 bg-surface-900/80 backdrop-blur-2xl">
       <div className="flex items-center gap-3 h-16 px-4 sm:px-6">
         <button
           onClick={onMenuClick}
@@ -143,7 +143,7 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
             >
               <BellIcon className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#030712]" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-surface-900" />
               )}
             </button>
             <AnimatePresence>
@@ -154,7 +154,7 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                     initial={{ opacity: 0, y: -8, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden"
+                    className="absolute right-0 mt-2 w-80 rounded-2xl border border-white/10 bg-surface-850/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden"
                   >
                     <div className="flex items-center justify-between p-4 border-b border-white/5">
                       <p className="font-bold text-sm">Notifications</p>
@@ -237,7 +237,7 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                     initial={{ opacity: 0, y: -8, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-60 rounded-2xl border border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden"
+                    className="absolute right-0 mt-2 w-60 rounded-2xl border border-white/10 bg-surface-850/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden"
                   >
                     <div className="p-4 border-b border-white/5">
                       <p className="text-sm font-bold">{user?.name}</p>

@@ -112,7 +112,7 @@ export default function Toolbar({
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-1 px-3 py-2 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-lg"
+        className="flex items-center gap-1 px-3 py-2 rounded-2xl bg-glass backdrop-blur-2xl border border-[var(--border-color)] shadow-[var(--shadow-lg)]"
       >
         {tools.map((tool) => (
           <button
@@ -121,7 +121,7 @@ export default function Toolbar({
             title={tool.label}
             className={`relative p-2.5 rounded-xl transition-all duration-150 ${
               activeTool === tool.id
-                ? 'bg-indigo-600 text-white shadow-md'
+                ? 'bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-white shadow-[var(--primary-glow)]'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
             }`}
           >
