@@ -20,10 +20,14 @@ A real-time collaborative platform for teams. Think Excalidraw meets VS Code Liv
 
 ### Dashboard
 
-- **Analytics** — Stat cards, bar charts, donut charts
+- **Analytics** — Stat cards, bar charts, donut charts, weekly activity
 - **Activity Timeline** — Filterable audit log of all actions
 - **Notifications** — Real-time notification center with read/unread tracking
 - **Global Search** — Cmd+K search across workspaces, rooms, members, tasks
+- **Meetings** — Schedule, join, and host meetings with a dedicated meeting room
+- **File Manager** — Upload/download, folders, rename, trash, and image previews
+- **Trash & Shared With Me** — Restore deleted items; see what others shared with you
+- **Insights** — Workspace activity and room distribution overview
 
 ### UI/UX
 
@@ -52,35 +56,36 @@ SyncSpace/
 ├── client/                          # React frontend
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/              # 16+ reusable UI components
+│   │   │   ├── common/              # Reusable UI (EmptyState, Skeleton, Modal, Toast…)
 │   │   │   ├── layout/              # Sidebar, TopNav, DashboardLayout
 │   │   │   ├── whiteboard/          # Canvas, Toolbar, PropertiesPanel, Cursors
 │   │   │   ├── editor/              # CodeIDE, MonacoEditor, FileExplorer, Terminal
 │   │   │   ├── collaboration/       # RoomLayout, Chat, Presence, Members
+│   │   │   ├── meeting/             # MeetingRoom
 │   │   │   ├── tasks/               # KanbanBoard
 │   │   │   ├── files/               # FileExplorer
-│   │   │   └── charts/              # BarChart, DonutChart
-│   │   ├── features/                # 12 Redux slices
+│   │   │   └── intro/               # Animated landing scenes
+│   │   ├── features/                # 12 Redux slices (auth, room, task, …)
 │   │   ├── hooks/                   # useSocket, useCollaborationSocket, useEditorSocket
-│   │   ├── pages/                   # 14 dashboard pages + auth pages
-│   │   ├── services/                # 14 API service files
+│   │   ├── pages/                   # Dashboard pages + auth pages
+│   │   ├── services/                # 15 API service files
 │   │   └── types/                   # Shared TypeScript interfaces
 │   └── vite.config.ts
 ├── server/                          # Express backend
 │   ├── src/
-│   │   ├── models/                  # 16 Mongoose models
-│   │   ├── controllers/             # 12 controllers
-│   │   ├── routes/                  # 12 route files
-│   │   ├── services/                # 3 business logic services
-│   │   ├── repositories/            # 3 repository pattern files
-│   │   ├── dto/                     # 4 DTO files
+│   │   ├── models/                  # 17 Mongoose models
+│   │   ├── controllers/             # 13 controllers
+│   │   ├── routes/                  # 13 route files
+│   │   ├── services/                # Business logic services
+│   │   ├── repositories/            # Repository pattern files
+│   │   ├── dto/                     # DTO files
 │   │   ├── socket/                  # Socket.IO handlers (whiteboard + editor)
 │   │   ├── middleware/              # auth, errorHandler
 │   │   └── utils/                   # tokens, logger, asyncHandler
 │   └── tsconfig.json
 ├── docker/                          # Dockerfiles
 ├── docker-compose.yml               # MongoDB + Redis + Server + Client
-└── docs/                            # Development reports and API reference
+└── docs/                            # Development reports, API reference, changelog
 ```
 
 ## Getting Started
@@ -314,6 +319,24 @@ npm run build
 
 ## Latest Improvements
 
+See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full changelog.
+
+### Day 10 — Dashboard Redesign & Demo Experience
+
+- Redesigned dashboard with a modern productivity workspace theme (new stat cards, activity charts, category insights)
+- Added animated intro/landing scenes (brain, desk, notebook, mind-link) with canvas-based ambient effects
+- Improved whiteboard engine with smooth 60fps drawing, better color picker, and object transformation handling
+- Added demo workspace flow with pre-populated data and guided onboarding (`Try Demo` login)
+- Enhanced file manager with upload/download progress and error recovery
+- Streamlined meeting scheduling flow and fixed participant mapping
+- Added Trash (restore) and Shared With Me pages for workspaces and rooms
+
+### Day 9 — Code Quality & Docs Reorganization
+
+- Reorganized docs into a dedicated `docs/` directory
+- Added `PROJECT_ARCHITECTURE.md`, `PROJECT_PROGRESS.md`, and review guides
+- Removed dead code, cleaned up formatting, and kept the build warning-free
+
 ### Day 8 — Code Cleanup & UI Polish
 
 - Removed dynamic import warning in `InviteModal` by switching to static import
@@ -333,7 +356,6 @@ npm run build
 - [ ] Operational Transform / CRDT for conflict-free editing
 - [ ] Real terminal execution (Docker-in-Docker)
 - [ ] Document collaboration with rich text
-- [ ] User avatars and profiles
 - [ ] Email verification flow
 - [ ] Rate limiting and brute-force protection
 - [ ] CI/CD pipeline with GitHub Actions

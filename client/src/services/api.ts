@@ -59,6 +59,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    if (error.response?.data?.errors && error.response.data.message === 'Validation failed') {
+      const firstError = Object.values(error.response.data.errors)[0] as
+        { msg?: string } | undefined;
+      if (firstError?.msg) {
+        error.response.data = { ...error.response.data, message: firstError.msg };
+      }
+    }
+
     if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error);
     }

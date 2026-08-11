@@ -16,7 +16,12 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 const router = Router();
 
 const registerValidation = [
-  body('name').trim().notEmpty().withMessage('Name is required').isLength({ min: 2, max: 50 }),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Name is required')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Name must be between 2 and 50 characters'),
   body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ];

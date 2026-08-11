@@ -199,7 +199,6 @@ function TaskModal({
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [checklist, setChecklist] = useState<{ text: string; done: boolean }[]>([]);
   const [newCheckItem, setNewCheckItem] = useState('');
-  const [comment, setComment] = useState('');
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -467,34 +466,6 @@ function TaskModal({
                     className="px-3 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Add
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Add Comment
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="flex-1 px-3.5 py-2.5 rounded-xl text-sm border outline-none transition-all focus:ring-2 focus:ring-indigo-500/20"
-                    style={{
-                      background: 'var(--bg-primary)',
-                      borderColor: 'var(--border-color)',
-                      color: 'var(--text-primary)',
-                    }}
-                  />
-                  <button
-                    disabled={!comment.trim()}
-                    className="px-4 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-brand-600 to-purple-600 text-white hover:from-brand-500 hover:to-purple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Post
                   </button>
                 </div>
               </div>

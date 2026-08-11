@@ -62,11 +62,12 @@ export default function RoomDetailPage() {
 
   const isOwner = room && user && (room.owner === user.id || room.owner === user.email);
 
-  const { isConnected, activities, updateActivity } = useCollaborationSocket({
-    roomId: id || '',
-    userName: user?.name || 'Anonymous',
-    enabled: !!id,
-  });
+  const { isConnected, activities, updateActivity, startTyping, stopTyping } =
+    useCollaborationSocket({
+      roomId: id || '',
+      userName: user?.name || 'Anonymous',
+      enabled: !!id,
+    });
 
   useEffect(() => {
     if (rooms.length === 0) dispatch(fetchRooms(undefined));
@@ -189,7 +190,7 @@ export default function RoomDetailPage() {
         return (
           <div className="flex gap-4 h-full" style={{ minHeight: 0 }}>
             <div className="flex-1 min-w-0">
-              <ChatPanel roomId={room._id} />
+              <ChatPanel roomId={room._id} onTypingStart={startTyping} onTypingStop={stopTyping} />
             </div>
             <div className="w-64 flex-shrink-0 hidden lg:flex flex-col gap-4">
               <PresenceSidebar />
@@ -212,11 +213,7 @@ export default function RoomDetailPage() {
             <p className="text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}>
               Draw, sketch, and brainstorm with your team in real-time.
             </p>
-            <button
-              onClick={openWhiteboard}
-              className="px-6 py-3 rounded-xl text-white font-semibold transition-all"
-              style={{ background: '#8b5cf6' }}
-            >
+            <button onClick={openWhiteboard} className="btn-primary">
               Open Whiteboard →
             </button>
           </motion.div>
@@ -469,11 +466,7 @@ export default function RoomDetailPage() {
                 <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
                   Permanently delete this room. This action cannot be undone.
                 </p>
-                <button
-                  onClick={() => setShowDeleteRoom(true)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-all"
-                  style={{ background: '#ef4444' }}
-                >
+                <button onClick={() => setShowDeleteRoom(true)} className="btn-danger">
                   Delete Room
                 </button>
               </div>

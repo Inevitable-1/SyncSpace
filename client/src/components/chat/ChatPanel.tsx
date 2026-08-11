@@ -11,10 +11,11 @@ import type { ChatMessage } from '../../types';
 
 interface ChatPanelProps {
   roomId: string;
-  workspaceId?: string;
+  onTypingStart?: () => void;
+  onTypingStop?: () => void;
 }
 
-export default function ChatPanel({ roomId }: ChatPanelProps) {
+export default function ChatPanel({ roomId, onTypingStart, onTypingStop }: ChatPanelProps) {
   const dispatch = useAppDispatch();
   const { messages, isLoading, typingUsers } = useSelector((state: RootState) => state.chat);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -276,7 +277,11 @@ export default function ChatPanel({ roomId }: ChatPanelProps) {
       )}
 
       {/* Input */}
-      <ChatInput onSend={handleSend} onTypingStart={() => {}} onTypingStop={() => {}} />
+      <ChatInput
+        onSend={handleSend}
+        onTypingStart={onTypingStart ?? (() => {})}
+        onTypingStop={onTypingStop ?? (() => {})}
+      />
     </div>
   );
 }

@@ -16,37 +16,36 @@ export default function ResetPasswordPage() {
   const [token, setToken] = useState(tokenFromUrl);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [localError, setLocalError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{
+    token?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
   const [success, setSuccess] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setLocalError('');
 
-    if (password !== confirmPassword) {
-      setLocalError('Passwords do not match');
-      return;
-    }
-
-    if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters');
-      return;
-    }
-
+    const errors: typeof fieldErrors = {};
     if (!token) {
-      setLocalError('Reset token is required');
-      return;
+      errors.token = 'Reset token is required.';
     }
+    if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters.';
+    }
+    if (confirmPassword !== password) {
+      errors.confirmPassword = 'Passwords do not match.';
+    }
+    setFieldErrors(errors);
+    if (Object.values(errors).some(Boolean)) return;
 
     const result = await dispatch(resetPassword({ token, password }));
     if (resetPassword.fulfilled.match(result)) {
       setSuccess(true);
     }
   }
-
-  const displayError = localError || error;
 
   return (
     <AuthLayout>
@@ -81,19 +80,13 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <>
-            {displayError && (
+            {error && (
               <div className="mb-4">
-                <ErrorMessage
-                  message={displayError}
-                  onDismiss={() => {
-                    setLocalError('');
-                    dispatch(clearError());
-                  }}
-                />
+                <ErrorMessage message={error} onDismiss={() => dispatch(clearError())} />
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               {!tokenFromUrl && (
                 <div>
                   <label
@@ -107,10 +100,23 @@ export default function ResetPasswordPage() {
                     type="text"
                     required
                     value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
+                    onChange={(e) => {
+                      setToken(e.target.value);
+                      setFieldErrors((prev) => ({ ...prev, token: undefined }));
+                    }}
+                    aria-invalid={!!fieldErrors.token}
+                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                      fieldErrors.token
+                        ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                        : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+                    }`}
                     placeholder="Paste your reset token"
                   />
+                  {fieldErrors.token && (
+                    <p className="text-red-400 text-xs mt-1.5" role="alert">
+                      {fieldErrors.token}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -126,10 +132,27 @@ export default function ResetPasswordPage() {
                   type="password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      password: undefined,
+                      confirmPassword: undefined,
+                    }));
+                  }}
+                  aria-invalid={!!fieldErrors.password}
+                  className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                    fieldErrors.password
+                      ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                      : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+                  }`}
                   placeholder="At least 6 characters"
                 />
+                {fieldErrors.password && (
+                  <p className="text-red-400 text-xs mt-1.5" role="alert">
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -144,11 +167,24 @@ export default function ResetPasswordPage() {
                   type="password"
                   required
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                  }}
+                  aria-invalid={!!fieldErrors.confirmPassword}
+                  className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                    fieldErrors.confirmPassword
+                      ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                      : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+                  }`}
                   placeholder="Repeat your password"
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e as unknown as FormEvent)}
                 />
+                {fieldErrors.confirmPassword && (
+                  <p className="text-red-400 text-xs mt-1.5" role="alert">
+                    {fieldErrors.confirmPassword}
+                  </p>
+                )}
               </div>
 
               <button

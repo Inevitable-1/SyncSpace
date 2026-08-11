@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MagnifyingGlassIcon, UserGroupIcon } from '../../components/Icons';
 import EmptyState from '../../components/common/EmptyState';
+import { CardSkeleton } from '../../components/common/Skeleton';
 import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import { fetchRooms } from '../../features/room/roomSlice';
 import type { RootState, AppDispatch } from '../../store';
@@ -12,7 +13,7 @@ export default function SharedWithMePage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { workspaces } = useSelector((state: RootState) => state.workspace);
+  const { workspaces, isLoading } = useSelector((state: RootState) => state.workspace);
   const { rooms } = useSelector((state: RootState) => state.room);
   const [search, setSearch] = useState('');
 
@@ -83,7 +84,13 @@ export default function SharedWithMePage() {
         />
       </div>
 
-      {allItems.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      ) : allItems.length === 0 ? (
         <EmptyState
           icon={<UserGroupIcon className="w-8 h-8" style={{ color: 'var(--text-tertiary)' }} />}
           title={search ? 'No matches found' : 'Nothing shared yet'}

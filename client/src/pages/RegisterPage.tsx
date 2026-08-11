@@ -9,37 +9,57 @@ import AuthLayout from '../components/AuthLayout';
 import ErrorMessage from '../components/common/ErrorMessage';
 import Spinner from '../components/common/Spinner';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface FieldErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [localError, setLocalError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
 
+  function validate(): FieldErrors {
+    const errors: FieldErrors = {};
+    if (name.trim().length < 2) {
+      errors.name = 'Please enter your full name (at least 2 characters).';
+    }
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      errors.email = 'Please enter a valid email address.';
+    }
+    if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters.';
+    }
+    if (confirmPassword !== password) {
+      errors.confirmPassword = 'Passwords do not match.';
+    }
+    return errors;
+  }
+
+  function clearFieldError(field: keyof FieldErrors) {
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setLocalError('');
+    const errors = validate();
+    setFieldErrors(errors);
+    if (Object.values(errors).some(Boolean)) return;
 
-    if (password !== confirmPassword) {
-      setLocalError('Passwords do not match');
-      return;
-    }
-
-    if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters');
-      return;
-    }
-
-    const result = await dispatch(register({ name, email, password }));
+    const result = await dispatch(register({ name: name.trim(), email: email.trim(), password }));
     if (register.fulfilled.match(result)) {
       navigate('/', { replace: true });
     }
   }
-
-  const displayError = localError || error;
 
   return (
     <AuthLayout>
@@ -51,19 +71,13 @@ export default function RegisterPage() {
         <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Create your account</h2>
         <p className="text-gray-400 text-sm mb-6">Start collaborating with your team today</p>
 
-        {displayError && (
+        {error && (
           <div className="mb-4">
-            <ErrorMessage
-              message={displayError}
-              onDismiss={() => {
-                setLocalError('');
-                dispatch(clearError());
-              }}
-            />
+            <ErrorMessage message={error} onDismiss={() => dispatch(clearError())} />
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
             <label
               htmlFor="name"
@@ -76,10 +90,23 @@ export default function RegisterPage() {
               type="text"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
+              onChange={(e) => {
+                setName(e.target.value);
+                clearFieldError('name');
+              }}
+              aria-invalid={!!fieldErrors.name}
+              className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                fieldErrors.name
+                  ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                  : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+              }`}
               placeholder="John Doe"
             />
+            {fieldErrors.name && (
+              <p className="text-red-400 text-xs mt-1.5" role="alert">
+                {fieldErrors.name}
+              </p>
+            )}
           </div>
 
           <div>
@@ -94,10 +121,23 @@ export default function RegisterPage() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearFieldError('email');
+              }}
+              aria-invalid={!!fieldErrors.email}
+              className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                fieldErrors.email
+                  ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                  : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+              }`}
               placeholder="you@example.com"
             />
+            {fieldErrors.email && (
+              <p className="text-red-400 text-xs mt-1.5" role="alert">
+                {fieldErrors.email}
+              </p>
+            )}
           </div>
 
           <div>
@@ -112,10 +152,24 @@ export default function RegisterPage() {
               type="password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearFieldError('password');
+                clearFieldError('confirmPassword');
+              }}
+              aria-invalid={!!fieldErrors.password}
+              className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                fieldErrors.password
+                  ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                  : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+              }`}
               placeholder="At least 6 characters"
             />
+            {fieldErrors.password && (
+              <p className="text-red-400 text-xs mt-1.5" role="alert">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           <div>
@@ -130,10 +184,23 @@ export default function RegisterPage() {
               type="password"
               required
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                clearFieldError('confirmPassword');
+              }}
+              aria-invalid={!!fieldErrors.confirmPassword}
+              className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                fieldErrors.confirmPassword
+                  ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                  : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+              }`}
               placeholder="Repeat your password"
             />
+            {fieldErrors.confirmPassword && (
+              <p className="text-red-400 text-xs mt-1.5" role="alert">
+                {fieldErrors.confirmPassword}
+              </p>
+            )}
           </div>
 
           <button

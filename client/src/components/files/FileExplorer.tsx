@@ -319,7 +319,7 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-brand-600 to-purple-600 rounded-lg hover:from-brand-500 hover:to-purple-500 transition-colors"
+            className="btn-primary flex items-center gap-2"
           >
             <PlusIcon className="w-4 h-4" />
             Upload
@@ -398,7 +398,7 @@ export default function FileExplorer({ workspaceId, roomId }: FileExplorerProps)
             {!searchQuery && (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-brand-600 to-purple-600 rounded-lg hover:from-brand-500 hover:to-purple-500 transition-colors"
+                className="btn-primary flex items-center gap-2"
               >
                 <PlusIcon className="w-4 h-4" />
                 Upload Files

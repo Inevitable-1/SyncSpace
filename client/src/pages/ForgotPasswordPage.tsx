@@ -11,13 +11,19 @@ import Spinner from '../components/common/Spinner';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [sent, setSent] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const result = await dispatch(forgotPassword({ email }));
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+    setEmailError('');
+    const result = await dispatch(forgotPassword({ email: email.trim() }));
     if (forgotPassword.fulfilled.match(result)) {
       setSent(true);
     }
@@ -67,7 +73,7 @@ export default function ForgotPasswordPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <div>
                 <label
                   htmlFor="email"
@@ -80,10 +86,23 @@ export default function ForgotPasswordPage() {
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError('');
+                  }}
+                  aria-invalid={!!emailError}
+                  className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                    emailError
+                      ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                      : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+                  }`}
                   placeholder="you@example.com"
                 />
+                {emailError && (
+                  <p className="text-red-400 text-xs mt-1.5" role="alert">
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               <button
