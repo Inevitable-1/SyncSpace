@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-const features = [
+const collaborationCards = [
   {
+    title: 'Collaborative Whiteboards',
+    description: 'Sketch, draw and brainstorm together on an infinite canvas with live cursors.',
     icon: (
       <svg
         className="w-6 h-6"
@@ -15,15 +17,15 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6"
+          d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"
         />
       </svg>
     ),
-    title: 'Real-Time Collaboration',
-    description:
-      'Work together seamlessly with live cursors, instant sync, and multiplayer editing across whiteboards and code.',
   },
   {
+    title: 'Live Code Editor',
+    description:
+      'Pair program with your team in a shared editor with real-time syntax highlighting.',
     icon: (
       <svg
         className="w-6 h-6"
@@ -35,15 +37,14 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"
+          d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"
         />
       </svg>
     ),
-    title: 'AI-Powered Assistant',
-    description:
-      'Get intelligent suggestions, code generation, meeting summaries, and automated task creation powered by AI.',
   },
   {
+    title: 'Team Chat',
+    description: 'Stay in sync with threaded conversations, mentions and live typing indicators.',
     icon: (
       <svg
         className="w-6 h-6"
@@ -55,15 +56,14 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+          d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
         />
       </svg>
     ),
-    title: 'Enterprise Security',
-    description:
-      'End-to-end encryption, SOC 2 compliance, SSO integration, and role-based access control for your team.',
   },
   {
+    title: 'Shared Workspaces',
+    description: 'Organize rooms, files and tasks in shared spaces everyone can access instantly.',
     icon: (
       <svg
         className="w-6 h-6"
@@ -75,15 +75,14 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+          d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
         />
       </svg>
     ),
-    title: 'Lightning Fast',
-    description:
-      'Built with cutting-edge technology for instant load times, smooth animations, and zero-lag collaboration.',
   },
   {
+    title: 'Real-Time Sync',
+    description: 'Every edit, message and change appears instantly for everyone in the room.',
     icon: (
       <svg
         className="w-6 h-6"
@@ -95,382 +94,462 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"
+          d="M17.364 6.636a9 9 0 010 12.728m-10.728 0a9 9 0 010-12.728m10.728 0L8.636 17.364m10.728-10.728L12 12l-6.364-6.364"
         />
       </svg>
     ),
-    title: 'Unlimited Workspaces',
-    description:
-      'Create unlimited workspaces, rooms, and projects. Organize your team however you want.',
-  },
-  {
-    icon: (
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-        />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    title: 'Live Preview & Share',
-    description:
-      'Share your work instantly with anyone. Live preview, embed codes, and public links built in.',
-  },
-];
-
-const stats = [
-  { value: '50K+', label: 'Active Teams' },
-  { value: '2M+', label: 'Sessions Hosted' },
-  { value: '99.9%', label: 'Uptime' },
-  { value: '<50ms', label: 'Latency' },
-];
-
-const testimonials = [
-  {
-    quote:
-      "SyncSpace transformed how our distributed team collaborates. It's like having a virtual office that actually works.",
-    author: 'Sarah Chen',
-    role: 'CTO, TechFlow',
-    avatar: 'SC',
-  },
-  {
-    quote:
-      'The AI assistant alone saves us hours every week. Meeting notes, code reviews, task creation — all automated.',
-    author: 'Marcus Rodriguez',
-    role: 'Engineering Lead, DataPulse',
-    avatar: 'MR',
-  },
-  {
-    quote:
-      'We switched from 5 different tools to just SyncSpace. The real-time whiteboard and code editor are incredible.',
-    author: 'Aisha Patel',
-    role: 'Product Manager, InnovateCo',
-    avatar: 'AP',
-  },
-];
-
-const pricingPlans = [
-  {
-    name: 'Free',
-    price: '$0',
-    period: 'forever',
-    description: 'Perfect for small teams getting started',
-    features: [
-      '3 Workspaces',
-      'Unlimited Rooms',
-      '5GB Storage',
-      'Real-time Collaboration',
-      'Basic AI Features',
-    ],
-    cta: 'Get Started',
-    highlighted: false,
-  },
-  {
-    name: 'Pro',
-    price: '$12',
-    period: '/user/month',
-    description: 'For growing teams that need more power',
-    features: [
-      'Unlimited Workspaces',
-      'Unlimited Storage',
-      'Advanced AI Assistant',
-      'Priority Support',
-      'Custom Integrations',
-      'Analytics Dashboard',
-    ],
-    cta: 'Start Free Trial',
-    highlighted: true,
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: '',
-    description: 'For organizations with advanced needs',
-    features: [
-      'Everything in Pro',
-      'SSO & SAML',
-      'Audit Logs',
-      'Dedicated Support',
-      'SLA Guarantee',
-      'Custom Deployment',
-    ],
-    cta: 'Contact Sales',
-    highlighted: false,
   },
 ];
 
 const faqs = [
   {
-    q: 'Is SyncSpace really free?',
-    a: 'Yes! Our Free plan includes 3 workspaces, unlimited rooms, and real-time collaboration. No credit card required.',
+    q: 'What is SyncSpace?',
+    a: 'SyncSpace is a real-time collaboration platform that brings your entire team into one shared space — whiteboards, code rooms, chat and files working together seamlessly.',
   },
   {
-    q: 'How does the AI assistant work?',
-    a: 'Our AI assistant uses advanced language models to help with code generation, meeting summaries, task creation, and more. It understands your workspace context.',
+    q: 'Why should I use SyncSpace?',
+    a: 'Instead of juggling five different tools, SyncSpace gives you one premium workspace where you can brainstorm, write code and communicate in real time — like Linear, Notion, Figma and GitHub combined.',
   },
   {
-    q: 'Can I use SyncSpace offline?',
-    a: 'SyncSpace works best online, but we support limited offline mode for the code editor. Changes sync automatically when you reconnect.',
+    q: 'How does collaboration work?',
+    a: 'Everything in a workspace stays in sync live. Open a room, invite your team, and every whiteboard stroke, line of code and message appears instantly for everyone — with presence indicators so you always know who is online.',
   },
   {
-    q: 'Is my data secure?',
-    a: 'Absolutely. We use end-to-end encryption, SOC 2 Type II compliance, and your data is never used for training. You own your data.',
+    q: 'Can I create multiple workspaces?',
+    a: 'Yes. You can create as many workspaces as you need — one per project, client or team — and organize rooms, files and tasks inside each one.',
+  },
+  {
+    q: 'Is SyncSpace suitable for students?',
+    a: 'Absolutely. It is perfect for study groups, hackathons and final year projects — sketch ideas together, share notes, write code side by side and keep everything in one place.',
   },
 ];
 
-function AnimatedCounter({ target, duration = 2 }: { target: string; duration?: number }) {
-  const [count, setCount] = useState('0');
+function Avatar({ initials, color }: { initials: string; color: string }) {
+  return (
+    <div
+      className={`w-6 h-6 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-[9px] font-bold text-white ring-2 ring-[#0F172A]`}
+    >
+      {initials}
+    </div>
+  );
+}
 
-  useEffect(() => {
-    const numericPart = parseInt(target.replace(/[^0-9]/g, ''), 10);
-    const suffix = target.replace(/[0-9]/g, '');
-    const startTime = Date.now();
-    const step = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / (duration * 1000), 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(numericPart * eased).toString() + suffix);
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration]);
-
-  return <span>{count}</span>;
+function WorkspaceLogo({ color, glyph }: { color: string; glyph: string }) {
+  return (
+    <div
+      className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+      style={{ background: color }}
+    >
+      {glyph}
+    </div>
+  );
 }
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // Initialize demo mode for landing page demo button
+  // Initialize demo mode for the Watch Demo button
   useEffect(() => {
-    if (localStorage.getItem('auth')) {
-      const auth = JSON.parse(localStorage.getItem('auth') || '{}');
-      if (!auth?.state?.isDemo) {
-        localStorage.setItem(
-          'auth',
-          JSON.stringify({
-            state: {
-              user: {
-                id: 'demo-user',
-                name: 'Manoj Kumar',
-                email: 'mr.manojmanu05@gmail.com',
-                avatar: 'M',
-                isEmailVerified: true,
-              },
-              accessToken: 'demo-token',
-              isAuthenticated: true,
-              isDemo: true,
-            },
-          }),
-        );
+    const auth = (() => {
+      try {
+        return localStorage.getItem('auth')
+          ? JSON.parse(localStorage.getItem('auth') || '{}')
+          : null;
+      } catch {
+        return null;
       }
-    } else {
-      localStorage.setItem(
-        'auth',
-        JSON.stringify({
-          state: {
-            user: {
-              id: 'demo-user',
-              name: 'Manoj Kumar',
-              email: 'mr.manojmanu05@gmail.com',
-              avatar: 'M',
-              isEmailVerified: true,
-            },
-            accessToken: 'demo-token',
-            isAuthenticated: true,
-            isDemo: true,
+    })();
+    if (auth?.state?.user) return;
+    localStorage.setItem(
+      'auth',
+      JSON.stringify({
+        state: {
+          user: {
+            id: 'demo-user',
+            name: 'Manoj Kumar',
+            email: 'mr.manojmanu05@gmail.com',
+            avatar: 'M',
+            isEmailVerified: true,
           },
-        }),
-      );
-    }
+          accessToken: 'demo-token',
+          isAuthenticated: true,
+          isDemo: true,
+        },
+      }),
+    );
   }, []);
 
+  const navLinks = [
+    { label: 'Features', href: '#features' },
+    { label: 'FAQ', href: '#faq' },
+  ];
+
+  const heroBadges = [
+    'Collaborative Whiteboards',
+    'Live Code Editor',
+    'Team Chat',
+    'Shared Workspaces',
+    'Real-Time Sync',
+  ];
+
   return (
-    <div className="min-h-screen bg-surface-900 text-white overflow-hidden">
-      {/* Animated Background */}
+    <div
+      className="min-h-screen bg-[#0F172A] text-white overflow-hidden"
+      style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' }}
+    >
+      {/* Background */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-600/20 rounded-full blur-3xl animate-float" />
         <div
-          className="absolute top-1/3 right-1/4 w-80 h-80 bg-purple-600/15 rounded-full blur-3xl animate-float"
-          style={{ animationDelay: '-2s' }}
+          className="absolute top-[-10%] left-1/4 w-[600px] h-[600px] rounded-full blur-3xl animate-float"
+          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.15), transparent 60%)' }}
         />
         <div
-          className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-pink-600/10 rounded-full blur-3xl animate-float"
-          style={{ animationDelay: '-4s' }}
+          className="absolute bottom-[-10%] right-1/4 w-[500px] h-[500px] rounded-full blur-3xl animate-float"
+          style={{
+            background: 'radial-gradient(circle, rgba(6,182,212,0.12), transparent 60%)',
+            animationDelay: '-3s',
+          }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full opacity-60"
+          style={{
+            background: 'radial-gradient(circle at center, rgba(30,41,59,0.5), transparent 65%)',
+          }}
         />
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-50 border-b border-white/5">
+      <nav className="relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#06B6D4] flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <svg
+                  className="w-4.5 h-4.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.25 7.125c0-1.036.84-1.875 1.875-1.875h5.25c1.036 0 1.875.84 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875h-5.25a1.875 1.875 0 01-1.875-1.875v-9.75zm10.5 0c0-1.036.84-1.875 1.875-1.875h5.25c1.035 0 1.875.84 1.875 1.875v3.375c0 1.036-.84 1.875-1.875 1.875h-5.25a1.875 1.875 0 01-1.875-1.875V7.125z"
+                  />
+                </svg>
               </div>
-              <span className="text-lg font-bold">SyncSpace</span>
+              <span className="text-lg font-bold tracking-tight">SyncSpace</span>
             </div>
+
             <div className="hidden md:flex items-center gap-8">
-              <a
-                href="#features"
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#pricing"
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                Pricing
-              </a>
-              <a
-                href="#testimonials"
-                className="text-sm text-gray-400 hover:text-white transition-colors"
-              >
-                Testimonials
-              </a>
-              <a href="#faq" className="text-sm text-gray-400 hover:text-white transition-colors">
-                FAQ
-              </a>
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
+
             <div className="flex items-center gap-3">
               <Link
                 to="/login"
-                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
               >
                 Sign in
               </Link>
               <Link
-                to="/register"
-                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-600/25"
+                to="/login"
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#3B82F6] to-[#06B6D4] hover:opacity-90 transition-all shadow-lg shadow-blue-500/25"
               >
-                Get Started Free
+                Start Collaborating
               </Link>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative z-10 pt-20 pb-32 sm:pt-32 sm:pb-40">
+      {/* Hero */}
+      <section className="relative z-10 pt-20 pb-24 sm:pt-32 sm:pb-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-medium text-gray-300">Now in Public Beta</span>
+            <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-8 max-w-2xl">
+              {heroBadges.map((badge) => (
+                <span
+                  key={badge}
+                  className="px-3.5 py-1.5 rounded-full text-xs font-medium border border-white/10 bg-white/[0.04] backdrop-blur-sm text-slate-300"
+                >
+                  {badge}
+                </span>
+              ))}
             </div>
 
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight mb-6">
-              <span className="block">The Future of</span>
-              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-purple-400 to-pink-400">
-                Team Collaboration
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6">
+              <span className="block text-slate-100">One Space.</span>
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-sky-400 to-cyan-400">
+                Infinite Collaboration.
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Real-time whiteboards, code editing, chat, and AI assistance — all in one premium
-              workspace built for modern teams.
+            <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+              Create ideas, sketch on whiteboards, write code together, and build projects with your
+              team in real time.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => {
-                  // Enable demo mode and redirect to dashboard
-                  const demoData = localStorage.getItem('syncspace-demo-user-workspaces');
-                  if (!demoData) {
-                    // If no demo data, store the demo user
-                    localStorage.setItem('syncspace-demo-user-workspaces', JSON.stringify([]));
-                  }
-                  window.location.href = '/dashboard';
-                }}
-                className="group relative px-8 py-4 rounded-2xl text-base font-semibold text-white bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 transition-all shadow-xl shadow-brand-600/30 hover:shadow-brand-500/40 hover:scale-105"
-              >
-                <span className="relative z-10">Live Demo</span>
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-              </button>
               <Link
-                to="/register"
-                className="px-8 py-4 rounded-2xl text-base font-semibold text-gray-300 border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all"
+                to="/login"
+                className="group relative px-8 py-3.5 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-[#3B82F6] to-[#06B6D4] hover:opacity-90 transition-all shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40"
               >
-                Get Started Free
+                Start Collaborating
+              </Link>
+              <Link
+                to="/dashboard"
+                className="px-8 py-3.5 rounded-xl text-base font-semibold text-slate-200 border border-white/10 bg-white/[0.03] backdrop-blur-sm hover:bg-white/[0.07] hover:border-white/20 transition-all"
+              >
+                Watch Demo
               </Link>
             </div>
           </motion.div>
 
-          {/* Hero Visual */}
+          {/* Dashboard Preview */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="mt-20 relative"
           >
-            <div className="relative mx-auto max-w-5xl rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden shadow-2xl shadow-brand-600/10">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+            <div className="relative mx-auto max-w-6xl rounded-2xl border border-white/10 bg-[#1E293B]/60 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/50">
+              {/* Window chrome */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
                 <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-red-500/70" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/70" />
                 </div>
-                <div className="flex-1 text-center text-xs text-gray-500 font-medium">
-                  SyncSpace
+                <div className="flex-1 flex justify-center">
+                  <div className="px-4 py-1 rounded-md text-[10px] text-slate-500 bg-white/[0.04] border border-white/5">
+                    app.syncspace.dev/workspace/project-atlas
+                  </div>
+                </div>
+                <div className="flex items-center -space-x-1.5">
+                  <Avatar initials="MK" color="from-blue-500 to-sky-500" />
+                  <Avatar initials="RA" color="from-cyan-500 to-teal-500" />
+                  <Avatar initials="SP" color="from-indigo-500 to-blue-500" />
+                  <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-slate-300">
+                    +2
+                  </div>
                 </div>
               </div>
-              <div className="p-8 sm:p-12">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2 rounded-xl bg-gradient-to-br from-brand-600/20 to-purple-600/20 border border-brand-500/20 p-6 text-left">
-                    <div className="text-sm font-semibold text-brand-300 mb-3">Whiteboard</div>
-                    <div className="space-y-2">
-                      <div className="h-2 rounded-full bg-brand-500/40 w-3/4" />
-                      <div className="h-2 rounded-full bg-purple-500/30 w-1/2" />
-                      <div className="h-2 rounded-full bg-pink-500/20 w-2/3" />
+
+              <div className="grid grid-cols-12 gap-3 p-3 sm:p-4 text-left">
+                {/* Sidebar */}
+                <div className="hidden md:flex col-span-2 flex-col gap-3 rounded-xl bg-white/[0.02] border border-white/5 p-3">
+                  <div className="flex items-center gap-2 px-1 pb-2 border-b border-white/5">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#06B6D4] flex items-center justify-center text-white text-xs font-bold">
+                      S
                     </div>
-                    <div className="mt-4 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-bold">
+                    <span className="text-xs font-semibold text-slate-300">SyncSpace</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {['Home', 'Rooms', 'Files', 'Meetings', 'Activity'].map((item) => (
+                      <div
+                        key={item}
+                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium ${
+                          item === 'Rooms' ? 'bg-blue-500/15 text-blue-300' : 'text-slate-500'
+                        }`}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-auto space-y-1.5">
+                    {[
+                      { color: 'linear-gradient(135deg,#3B82F6,#06B6D4)', glyph: 'A' },
+                      { color: 'linear-gradient(135deg,#06B6D4,#0d9488)', glyph: 'I' },
+                      { color: 'linear-gradient(135deg,#2563eb,#3B82F6)', glyph: 'F' },
+                    ].map((ws) => (
+                      <WorkspaceLogo key={ws.glyph} color={ws.color} glyph={ws.glyph} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Whiteboard */}
+                <div className="col-span-12 md:col-span-7 rounded-xl bg-white/[0.02] border border-white/5 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-xs font-semibold text-slate-200">Product Design</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500">3 collaborating</span>
+                  </div>
+                  <div className="relative aspect-[16/9] rounded-lg bg-[#0F172A]/80 border border-white/5 overflow-hidden">
+                    {/* canvas shapes */}
+                    <div className="absolute inset-4 rounded-lg border border-dashed border-blue-500/20" />
+                    <div className="absolute left-8 top-8 w-24 h-16 rounded-lg bg-blue-500/15 border border-blue-500/40" />
+                    <div className="absolute left-36 top-6 rounded-xl bg-cyan-500/10 border border-cyan-500/30 px-3 py-2 text-[10px] text-cyan-300">
+                      Brainstorm HQ
+                    </div>
+                    <div className="absolute left-8 top-32 w-20 h-12 rounded-lg bg-slate-600/20 border border-slate-500/30" />
+                    <div className="absolute left-32 top-28 w-16 h-16 rounded-full bg-teal-500/10 border border-teal-500/30" />
+                    <div className="absolute right-8 bottom-6 flex items-center gap-1">
+                      <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-[8px] font-bold text-white">
                         A
                       </div>
-                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold">
-                        B
+                      <div className="px-2 py-1 rounded bg-blue-500/10 text-[9px] text-blue-300">
+                        Drawing...
                       </div>
-                      <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-[10px] font-bold">
-                        C
-                      </div>
-                      <span className="text-[10px] text-gray-400">3 online</span>
+                    </div>
+                    <div className="absolute right-8 top-8 w-4 h-4 rounded-full bg-cyan-500 flex items-center justify-center text-[8px] font-bold text-white">
+                      R
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="rounded-xl bg-emerald-600/10 border border-emerald-500/20 p-4 text-left">
-                      <div className="text-xs font-semibold text-emerald-400 mb-2">
-                        AI Assistant
+                  {/* tool rail */}
+                  <div className="mt-3 flex items-center gap-1.5">
+                    {['✏️', '📏', '⭕', '🔷', '💬', '🧯'].map((tool, i) => (
+                      <div
+                        key={i}
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${
+                          i === 0
+                            ? 'bg-blue-500/20 border border-blue-500/40'
+                            : 'bg-white/[0.03] border border-white/5'
+                        }`}
+                      >
+                        {tool}
                       </div>
-                      <div className="space-y-1">
-                        <div className="h-1.5 rounded-full bg-emerald-500/30 w-full" />
-                        <div className="h-1.5 rounded-full bg-emerald-500/20 w-4/5" />
+                    ))}
+                    <div className="ml-auto text-[10px] text-slate-500">Last saved just now</div>
+                  </div>
+                </div>
+
+                {/* Right column: chat + code */}
+                <div className="col-span-12 md:col-span-3 flex flex-col gap-3">
+                  {/* Team Chat */}
+                  <div className="flex-1 rounded-xl bg-white/[0.02] border border-white/5 p-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg
+                        className="w-4 h-4 text-blue-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
+                        />
+                      </svg>
+                      <span className="text-xs font-semibold text-slate-200">Team Chat</span>
+                    </div>
+                    <div className="space-y-2.5">
+                      <div className="flex items-start gap-2">
+                        <Avatar initials="MK" color="from-blue-500 to-sky-500" />
+                        <div className="flex-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5">
+                          <div className="text-[9px] font-semibold text-slate-300">Manoj</div>
+                          <div className="text-[10px] text-slate-400">
+                            Great work on the layout!
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Avatar initials="RA" color="from-cyan-500 to-teal-500" />
+                        <div className="flex-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5">
+                          <div className="text-[9px] font-semibold text-slate-300">Ravi</div>
+                          <div className="text-[10px] text-slate-400">Pushing the code now 🚀</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 pl-1">
+                        <span className="text-[9px] text-cyan-400 italic">Priya is typing...</span>
+                        <div className="flex gap-0.5">
+                          <span className="w-0.5 h-0.5 rounded-full bg-cyan-400 animate-bounce" />
+                          <span
+                            className="w-0.5 h-0.5 rounded-full bg-cyan-400 animate-bounce"
+                            style={{ animationDelay: '120ms' }}
+                          />
+                          <span
+                            className="w-0.5 h-0.5 rounded-full bg-cyan-400 animate-bounce"
+                            style={{ animationDelay: '240ms' }}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="rounded-xl bg-purple-600/10 border border-purple-500/20 p-4 text-left">
-                      <div className="text-xs font-semibold text-purple-400 mb-2">Code Editor</div>
-                      <div className="font-mono text-[10px] text-purple-300/60">
-                        <div>{'const app = () => {'}</div>
-                        <div className="pl-2">return &lt;Main /&gt;</div>
-                        <div>{'}'}</div>
+                    <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/[0.03] border border-white/5 px-2.5 py-1.5">
+                      <span className="text-[10px] text-slate-500">Message...</span>
+                      <div className="ml-auto flex gap-1">
+                        <span className="w-3.5 h-3.5 rounded bg-white/5 flex items-center justify-center text-[8px] text-slate-400">
+                          📎
+                        </span>
+                        <span className="w-3.5 h-3.5 rounded bg-blue-500/40 flex items-center justify-center text-[8px] text-white">
+                          ➤
+                        </span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom row: Code Room + Workspace Cards */}
+                <div className="col-span-12 grid grid-cols-1 md:grid-cols-12 gap-3">
+                  {/* Code Room */}
+                  <div className="md:col-span-7 rounded-xl bg-white/[0.02] border border-white/5 overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
+                      <span className="text-xs font-semibold text-slate-200">api/server.ts</span>
+                      <span className="text-[10px] text-emerald-400">● Live</span>
+                    </div>
+                    <div className="p-3 font-mono text-[10px] leading-relaxed">
+                      <div className="text-slate-600">{'1 import {createRouter} from "app"'}</div>
+                      <div className="text-slate-600">2</div>
+                      <div className="text-slate-400">
+                        {'3  '}
+                        <span className="text-blue-400">const</span>{' '}
+                        <span className="text-cyan-400">router</span> ={' '}
+                        <span className="text-blue-400">createRouter</span>()
+                      </div>
+                      <div className="text-slate-600">
+                        {'4  '}
+                        router.
+                        <span className="text-purple-400">get</span>(
+                        <span className="text-emerald-400">"/collab"</span>, handler)
+                      </div>
+                      <div className="text-slate-600">
+                        {'5 '}
+                        <span className="text-slate-400">// Ravi is editing this line</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Workspace Cards */}
+                  <div className="md:col-span-5 rounded-xl bg-white/[0.02] border border-white/5 p-3">
+                    <div className="text-xs font-semibold text-slate-200 mb-2.5">Workspaces</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {[
+                        { name: 'Project Atlas', color: '#3B82F6', members: '8', files: '42' },
+                        { name: 'Internship', color: '#06B6D4', members: '5', files: '18' },
+                        { name: 'FYP 2026', color: '#2563eb', members: '4', files: '27' },
+                        { name: 'Hackathon', color: '#0ea5e9', members: '12', files: '63' },
+                      ].map((ws) => (
+                        <div
+                          key={ws.name}
+                          className="rounded-lg bg-[#0F172A]/70 border border-white/5 p-2.5"
+                        >
+                          <div className="flex items-center gap-2">
+                            <WorkspaceLogo color={ws.color} glyph={ws.name.charAt(0)} />
+                            <span className="text-[10px] font-semibold text-slate-200 truncate">
+                              {ws.name}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex items-center gap-2 text-[9px] text-slate-500">
+                            <span>👥 {ws.members}</span>
+                            <span>📄 {ws.files}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -480,30 +559,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="relative z-10 py-20 border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <div className="text-3xl sm:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-purple-400">
-                  <AnimatedCounter target={stat.value} />
-                </div>
-                <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
+      {/* Features */}
       <section id="features" className="relative z-10 py-24 sm:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -512,157 +568,36 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-5xl font-black mb-4">Everything your team needs</h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              A complete collaborative workspace with tools that work together seamlessly.
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight mb-4">
+              Built for modern teamwork
+            </h2>
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+              Everything your team needs to create together — in one focused workspace.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, i) => (
+            {collaborationCards.map((feature, i) => (
               <motion.div
                 key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group relative p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-brand-500/30 transition-all duration-300"
+                className="group relative p-6 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] backdrop-blur-sm hover:border-blue-500/30 hover:-translate-y-0.5 transition-all duration-300"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600/20 to-purple-600/20 border border-brand-500/20 flex items-center justify-center text-brand-400 mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B82F6]/20 to-[#06B6D4]/20 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
+                <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="relative z-10 py-24 sm:py-32 border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl sm:text-5xl font-black mb-4">Loved by teams worldwide</h2>
-            <p className="text-gray-400 text-lg">See what our customers have to say.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.author}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-2xl border border-white/5 bg-white/[0.02]"
-              >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <svg
-                      key={j}
-                      className="w-4 h-4 text-yellow-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-gray-300 text-sm leading-relaxed mb-6">"{t.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-sm font-bold">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold">{t.author}</div>
-                    <div className="text-xs text-gray-500">{t.role}</div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="relative z-10 py-24 sm:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl sm:text-5xl font-black mb-4">Simple, transparent pricing</h2>
-            <p className="text-gray-400 text-lg">Start free. Scale as you grow.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {pricingPlans.map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`relative p-8 rounded-2xl border transition-all ${
-                  plan.highlighted
-                    ? 'border-brand-500/50 bg-gradient-to-b from-brand-600/10 to-transparent shadow-xl shadow-brand-600/10'
-                    : 'border-white/5 bg-white/[0.02]'
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-brand-500 to-purple-500 text-xs font-bold text-white">
-                    Most Popular
-                  </div>
-                )}
-                <div className="mb-6">
-                  <h3 className="text-lg font-bold mb-2">{plan.name}</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black">{plan.price}</span>
-                    {plan.period && <span className="text-sm text-gray-500">{plan.period}</span>}
-                  </div>
-                  <p className="text-sm text-gray-400 mt-2">{plan.description}</p>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-gray-300">
-                      <svg
-                        className="w-4 h-4 text-brand-400 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  to="/register"
-                  className={`block w-full py-3 rounded-xl text-center text-sm font-semibold transition-all ${
-                    plan.highlighted
-                      ? 'bg-gradient-to-r from-brand-600 to-purple-600 text-white shadow-lg shadow-brand-600/25 hover:shadow-brand-500/40'
-                      : 'border border-white/10 text-gray-300 hover:bg-white/5'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
+      {/* FAQ */}
       <section id="faq" className="relative z-10 py-24 sm:py-32 border-t border-white/5">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -671,7 +606,12 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-5xl font-black mb-4">Frequently asked questions</h2>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight mb-4">
+              Frequently asked questions
+            </h2>
+            <p className="text-slate-400 text-lg">
+              Everything you need to know about collaborating.
+            </p>
           </motion.div>
 
           <div className="space-y-3">
@@ -682,7 +622,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden"
+                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden transition-colors hover:border-white/15"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -690,7 +630,7 @@ export default function LandingPage() {
                 >
                   <span className="text-sm font-semibold pr-4">{faq.q}</span>
                   <svg
-                    className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}
+                    className={`w-5 h-5 text-slate-500 shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -704,7 +644,7 @@ export default function LandingPage() {
                   </svg>
                 </button>
                 {openFaq === i && (
-                  <div className="px-5 pb-5 text-sm text-gray-400 leading-relaxed">{faq.a}</div>
+                  <div className="px-5 pb-5 text-sm text-slate-400 leading-relaxed">{faq.a}</div>
                 )}
               </motion.div>
             ))}
@@ -712,28 +652,34 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA */}
       <section className="relative z-10 py-24 sm:py-32">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="p-12 rounded-3xl border border-white/10 bg-gradient-to-b from-brand-600/10 to-transparent relative overflow-hidden"
+            className="p-12 sm:p-16 rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-xl relative overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-600/5 via-transparent to-purple-600/5" />
+            <div
+              className="absolute inset-0 opacity-60"
+              style={{
+                background:
+                  'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.15), transparent 50%), radial-gradient(circle at 80% 80%, rgba(6,182,212,0.15), transparent 50%)',
+              }}
+            />
             <div className="relative">
-              <h2 className="text-3xl sm:text-5xl font-black mb-4">
-                Ready to transform your workflow?
+              <h2 className="text-4xl sm:text-5xl font-black tracking-tight mb-4">
+                Ready to Collaborate?
               </h2>
-              <p className="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
-                Join thousands of teams already using SyncSpace to collaborate smarter.
+              <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto">
+                Bring your ideas together, work with your team, and build something amazing.
               </p>
               <Link
-                to="/register"
-                className="inline-flex px-8 py-4 rounded-2xl text-base font-semibold text-white bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 transition-all shadow-xl shadow-brand-600/30 hover:shadow-brand-500/40 hover:scale-105"
+                to="/login"
+                className="inline-flex px-10 py-4 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-[#3B82F6] to-[#06B6D4] hover:opacity-90 transition-all shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40"
               >
-                Get Started Free
+                Let's Start
               </Link>
             </div>
           </motion.div>
@@ -745,26 +691,26 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#06B6D4] flex items-center justify-center">
                 <span className="text-white font-bold text-xs">S</span>
               </div>
               <span className="text-sm font-bold">SyncSpace</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-gray-500">
-              <a href="#" className="hover:text-white transition-colors">
+            <div className="flex items-center gap-6 text-sm text-slate-500">
+              <a href="#" className="hover:text-slate-200 transition-colors">
                 Privacy
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-slate-200 transition-colors">
                 Terms
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-slate-200 transition-colors">
                 Security
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-slate-200 transition-colors">
                 Status
               </a>
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-slate-600">
               &copy; {new Date().getFullYear()} SyncSpace. All rights reserved.
             </div>
           </div>
