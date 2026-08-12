@@ -61,7 +61,8 @@ export async function getMeeting(req: AuthRequest, res: Response): Promise<void>
 export async function createMeeting(req: AuthRequest, res: Response): Promise<void> {
   const userId = assertUser(req);
 
-  const { name, description, workspace, participants, scheduledAt, duration, agenda } = req.body;
+  const { name, description, workspace, participants, scheduledAt, duration, agenda, notes } =
+    req.body;
 
   if (!name || !workspace || !scheduledAt) {
     throw new AppError('Name, workspace and scheduledAt are required', 400);
@@ -91,15 +92,15 @@ export async function createMeeting(req: AuthRequest, res: Response): Promise<vo
     scheduledAt: new Date(scheduledAt),
     duration: duration || 30,
     agenda: agenda || '',
+    notes: notes || '',
   });
 
   await logActivity({
     userId,
-    action: 'created room',
-    entityType: 'room',
+    action: 'scheduled meeting',
+    entityType: 'meeting',
     entityId: meeting._id.toString(),
     entityName: meeting.name,
-    metadata: { kind: 'meeting' },
   });
 
   for (const pid of participantIds) {
@@ -108,7 +109,7 @@ export async function createMeeting(req: AuthRequest, res: Response): Promise<vo
       title: 'Meeting Scheduled',
       message: `You were invited to "${meeting.name}"`,
       type: 'info',
-      entityType: 'room',
+      entityType: 'meeting',
       entityId: meeting._id.toString(),
     });
   }
@@ -128,13 +129,15 @@ export async function updateMeeting(req: AuthRequest, res: Response): Promise<vo
     throw new AppError('Only the host can update this meeting', 403);
   }
 
-  const { name, description, participants, scheduledAt, duration, agenda, status } = req.body;
+  const { name, description, participants, scheduledAt, duration, agenda, notes, status } =
+    req.body;
 
   if (name !== undefined) meeting.name = name.trim();
   if (description !== undefined) meeting.description = description;
   if (scheduledAt !== undefined) meeting.scheduledAt = new Date(scheduledAt);
   if (duration !== undefined) meeting.duration = duration;
   if (agenda !== undefined) meeting.agenda = agenda;
+  if (notes !== undefined) meeting.notes = notes;
   if (status !== undefined) meeting.status = status;
   if (participants !== undefined) {
     meeting.participants = (participants as string[]).map((p) => new mongoose.Types.ObjectId(p));
@@ -187,11 +190,10 @@ export async function startMeeting(req: AuthRequest, res: Response): Promise<voi
 
   await logActivity({
     userId,
-    action: 'joined room',
-    entityType: 'room',
+    action: 'started meeting',
+    entityType: 'meeting',
     entityId: meeting._id.toString(),
     entityName: meeting.name,
-    metadata: { kind: 'meeting' },
   });
 
   res.json({ success: true, data: { meeting } });
@@ -212,6 +214,14 @@ export async function endMeeting(req: AuthRequest, res: Response): Promise<void>
   meeting.status = 'completed';
   meeting.endedAt = new Date();
   await meeting.save();
+
+  await logActivity({
+    userId,
+    action: 'ended meeting',
+    entityType: 'meeting',
+    entityId: meeting._id.toString(),
+    entityName: meeting.name,
+  });
 
   res.json({ success: true, data: { meeting } });
 }
@@ -234,11 +244,10 @@ export async function joinMeeting(req: AuthRequest, res: Response): Promise<void
 
   await logActivity({
     userId,
-    action: 'joined room',
-    entityType: 'room',
+    action: 'joined meeting',
+    entityType: 'meeting',
     entityId: meeting._id.toString(),
     entityName: meeting.name,
-    metadata: { kind: 'meeting' },
   });
 
   const populated = await meeting.populate('host', 'name email avatar');

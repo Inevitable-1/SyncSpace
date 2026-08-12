@@ -29,6 +29,11 @@ export const meetingService = {
     return addDemoMeeting(data.workspace, data);
   },
 
+  async update(id: string, patch: Partial<Meeting>): Promise<Meeting> {
+    const meeting = updateDemoMeeting(id, patch);
+    return meeting || getDemoMeeting(id) || getAllDemoMeetings()[0];
+  },
+
   async start(id: string): Promise<Meeting> {
     const meeting = updateDemoMeeting(id, { status: 'ongoing' as MeetingStatus });
     return meeting || getDemoMeeting(id) || getAllDemoMeetings()[0];

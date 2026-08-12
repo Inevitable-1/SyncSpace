@@ -92,6 +92,17 @@ export const joinMeeting = createAsyncThunk(
   },
 );
 
+export const updateMeeting = createAsyncThunk(
+  'meeting/update',
+  async (patch: Partial<Meeting>, { rejectWithValue }) => {
+    try {
+      return await meetingService.update(patch._id as string, patch);
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, 'Failed to update meeting'));
+    }
+  },
+);
+
 const upsertMeeting = (list: Meeting[], updated: Meeting): Meeting[] => {
   const idx = list.findIndex((m) => m._id === updated._id);
   if (idx === -1) return [updated, ...list];
@@ -146,6 +157,11 @@ const meetingSlice = createSlice({
         if (state.currentMeeting?._id === updated._id) state.currentMeeting = updated;
       })
       .addCase(joinMeeting.fulfilled, (state, action) => {
+        const updated = action.payload as Meeting;
+        state.meetings = upsertMeeting(state.meetings, updated);
+        if (state.currentMeeting?._id === updated._id) state.currentMeeting = updated;
+      })
+      .addCase(updateMeeting.fulfilled, (state, action) => {
         const updated = action.payload as Meeting;
         state.meetings = upsertMeeting(state.meetings, updated);
         if (state.currentMeeting?._id === updated._id) state.currentMeeting = updated;

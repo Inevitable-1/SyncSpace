@@ -8,8 +8,11 @@ import {
   ShareIcon,
   XIcon,
   LinkIcon,
+  DocumentTextIcon,
 } from '../Icons';
 import { useToast } from '../common/Toast';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { updateMeeting } from '../../features/meeting/meetingSlice';
 import type { Meeting, User } from '../../types';
 
 function getDisplayName(member: User | string): string {
@@ -107,12 +110,28 @@ interface MeetingRoomProps {
 
 export default function MeetingRoom({ meeting, currentUser, onLeave, onEnd }: MeetingRoomProps) {
   const { showToast } = useToast();
+  const dispatch = useAppDispatch();
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [screenSharing, setScreenSharing] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [notes, setNotes] = useState(meeting.notes || '');
+  const [savingNotes, setSavingNotes] = useState(false);
 
   const isHost = currentUser !== null && getMemberId(meeting.host) === currentUser.id;
+
+  const saveNotes = () => {
+    if (notes === (meeting.notes || '')) return;
+    setSavingNotes(true);
+    dispatch(updateMeeting({ _id: meeting._id, notes })).then((action) => {
+      setSavingNotes(false);
+      if (action.meta.requestStatus === 'fulfilled') {
+        showToast('Meeting notes saved', 'success');
+      } else {
+        showToast((action.payload as string) || 'Failed to save notes', 'error');
+      }
+    });
+  };
 
   useEffect(() => {
     const startedAt = new Date(meeting.scheduledAt).getTime();
@@ -241,6 +260,30 @@ export default function MeetingRoom({ meeting, currentUser, onLeave, onEnd }: Me
                 );
               })}
             </div>
+          </div>
+
+          <div className="card p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold flex items-center gap-1.5">
+                <DocumentTextIcon className="w-4 h-4" style={{ color: 'var(--text-tertiary)' }} />
+                Meeting Notes
+              </h3>
+              <button
+                onClick={saveNotes}
+                disabled={savingNotes || notes === (meeting.notes || '')}
+                className="text-[10px] font-bold px-2 py-1 rounded-lg bg-brand-600/10 text-brand-400 hover:bg-brand-600/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {savingNotes ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={5}
+              className="input-base resize-none text-xs leading-relaxed"
+              placeholder="Capture decisions, action items and key takeaways..."
+              style={{ background: 'var(--bg-secondary)' }}
+            />
           </div>
 
           <div className="card p-4 bg-gradient-to-br from-brand-600/10 to-purple-600/10 border-brand-500/20">

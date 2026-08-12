@@ -7,6 +7,7 @@ import {
   ClockIcon,
   CheckIcon,
   ChartBarIcon,
+  DocumentTextIcon,
 } from '../../components/Icons';
 import Modal from '../../components/common/Modal';
 import Spinner from '../../components/common/Spinner';
@@ -249,6 +250,15 @@ function MeetingCard({
           {meeting.description && (
             <p className="text-xs mt-1.5 line-clamp-1" style={{ color: 'var(--text-tertiary)' }}>
               {meeting.description}
+            </p>
+          )}
+          {meeting.notes && (
+            <p
+              className="text-[11px] mt-2 flex items-start gap-1.5 line-clamp-1"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              <DocumentTextIcon className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <span className="italic">{meeting.notes}</span>
             </p>
           )}
         </div>

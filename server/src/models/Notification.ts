@@ -1,7 +1,8 @@
 import mongoose, { type Document, Schema } from 'mongoose';
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';
-export type NotificationEntityType = 'workspace' | 'room' | 'member' | 'invite' | 'activity';
+export type NotificationEntityType =
+  'workspace' | 'room' | 'member' | 'invite' | 'activity' | 'meeting' | 'file';
 
 export interface INotificationDocument extends Document {
   user: mongoose.Types.ObjectId;
@@ -43,7 +44,7 @@ const notificationSchema = new Schema<INotificationDocument>(
     },
     entityType: {
       type: String,
-      enum: ['workspace', 'room', 'member', 'invite', 'activity'],
+      enum: ['workspace', 'room', 'member', 'invite', 'activity', 'meeting', 'file'],
     },
     entityId: {
       type: String,

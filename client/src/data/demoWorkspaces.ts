@@ -209,6 +209,8 @@ export const demoWorkspaces: DemoWorkspace[] = [
         duration: 30,
         status: 'scheduled',
         agenda: 'Sprint goals, blockers, next steps',
+        notes:
+          'Prioritise API rate limiting work. Raj to share updated architecture doc before the meeting.',
         meetingCode: 'MEET-TODAY-01',
         isDeleted: false,
         createdAt: daysAgo(2),
@@ -280,6 +282,15 @@ export const demoWorkspaces: DemoWorkspace[] = [
         entityId: 'meet-1',
         entityName: "Today's Meeting",
         createdAt: hoursAgo(6),
+      },
+      {
+        _id: 'act-11',
+        user: findUser('u-ravi'),
+        action: 'updated whiteboard',
+        entityType: 'whiteboard',
+        entityId: 'room-1',
+        entityName: 'Daily Standup',
+        createdAt: hoursAgo(3),
       },
     ],
   },
@@ -1137,6 +1148,7 @@ export function addDemoMeeting(
     scheduledAt: string;
     duration?: number;
     agenda?: string;
+    notes?: string;
   },
 ): Meeting {
   const nowIso = new Date().toISOString();
@@ -1155,6 +1167,7 @@ export function addDemoMeeting(
     duration: input.duration || 30,
     status: 'scheduled',
     agenda: input.agenda || '',
+    notes: input.notes || '',
     meetingCode: `MEET-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
     isDeleted: false,
     createdAt: nowIso,

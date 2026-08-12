@@ -3,6 +3,7 @@ import { Whiteboard } from '../models/Whiteboard.js';
 import { Room } from '../models/Room.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { AuthRequest } from '../middleware/auth.js';
+import { logActivity } from './activity.js';
 
 export async function getWhiteboard(req: AuthRequest, res: Response): Promise<void> {
   if (!req.user) {
@@ -45,11 +46,25 @@ export async function saveWhiteboard(req: AuthRequest, res: Response): Promise<v
 
   const roomIdParam = req.params.roomId as string;
 
+  const room = await Room.findById(roomIdParam).populate('workspace', 'name');
+  if (!room || room.isDeleted) {
+    throw new AppError('Room not found', 404);
+  }
+
   const whiteboard = await Whiteboard.findOneAndUpdate(
     { roomId: roomIdParam },
     { objects, createdBy: req.user.userId },
     { new: true, upsert: true },
   );
+
+  await logActivity({
+    userId: req.user.userId,
+    action: 'updated whiteboard',
+    entityType: 'whiteboard',
+    entityId: room._id.toString(),
+    entityName: room.name,
+    metadata: { objectCount: objects.length },
+  });
 
   res.json({
     success: true,

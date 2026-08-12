@@ -39,12 +39,26 @@ export type ActivityAction =
   | 'deleted file'
   | 'renamed file'
   | 'added task comment'
+  | 'scheduled meeting'
+  | 'started meeting'
+  | 'ended meeting'
+  | 'joined meeting'
+  | 'updated whiteboard'
   | 'registered';
 
 export interface IActivityDocument extends Document {
   user: mongoose.Types.ObjectId;
   action: ActivityAction;
-  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth' | 'task' | 'file';
+  entityType:
+    | 'workspace'
+    | 'room'
+    | 'member'
+    | 'invite'
+    | 'auth'
+    | 'task'
+    | 'file'
+    | 'meeting'
+    | 'whiteboard';
   entityId?: mongoose.Types.ObjectId;
   entityName?: string;
   metadata?: Record<string, unknown>;
@@ -65,7 +79,17 @@ const activitySchema = new Schema<IActivityDocument>(
     },
     entityType: {
       type: String,
-      enum: ['workspace', 'room', 'member', 'invite', 'auth', 'task', 'file'],
+      enum: [
+        'workspace',
+        'room',
+        'member',
+        'invite',
+        'auth',
+        'task',
+        'file',
+        'meeting',
+        'whiteboard',
+      ],
       required: true,
     },
     entityId: {

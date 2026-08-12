@@ -36,6 +36,7 @@ export default function RoomDetailPage() {
   const { workspaces } = useSelector((state: RootState) => state.workspace);
   const { user } = useSelector((state: RootState) => state.auth);
   const memberCount = useSelector((state: RootState) => state.presence.memberCount);
+  const onlineUsers = useSelector((state: RootState) => state.presence.onlineUsers);
 
   const [activeTab, setActiveTab] = useState<RoomTab>('chat');
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -486,6 +487,7 @@ export default function RoomDetailPage() {
       workspaceColor={wsColor}
       isConnected={isConnected}
       memberCount={memberCount}
+      onlineUsers={onlineUsers}
       onOpenInvite={() => setShowInviteModal(true)}
       activeTab={activeTab}
       onTabChange={setActiveTab}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -24,9 +24,11 @@ import type { Notification } from '../../types';
 const typeIcons: Record<string, typeof BellIcon> = {
   workspace: FolderIcon,
   room: ClockIcon,
+  meeting: ClockIcon,
   member: UserGroupIcon,
   invite: LinkIcon,
   activity: BellIcon,
+  file: FolderIcon,
 };
 
 const typeColors: Record<string, string> = {
@@ -37,6 +39,30 @@ const typeColors: Record<string, string> = {
 };
 
 type FilterTab = 'all' | 'unread' | 'read';
+type CategoryTab =
+  'all' | 'activity' | 'meeting' | 'member' | 'file' | 'workspace' | 'invite' | 'room';
+
+const CATEGORY_LABELS: Record<CategoryTab, string> = {
+  all: 'All',
+  activity: 'Activity',
+  meeting: 'Meetings',
+  member: 'Members',
+  file: 'Files',
+  workspace: 'Workspaces',
+  invite: 'Invites',
+  room: 'Rooms',
+};
+
+const CATEGORY_ICONS: Record<CategoryTab, typeof BellIcon> = {
+  all: BellIcon,
+  activity: BellIcon,
+  meeting: ClockIcon,
+  member: UserGroupIcon,
+  file: FolderIcon,
+  workspace: FolderIcon,
+  invite: LinkIcon,
+  room: ClockIcon,
+};
 
 function timeAgo(date: string): string {
   const now = Date.now();
@@ -58,6 +84,7 @@ export default function NotificationsPage() {
     (state: RootState) => state.notification,
   );
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [category, setCategory] = useState<CategoryTab>('all');
 
   useEffect(() => {
     dispatch(fetchNotifications(50));
@@ -66,10 +93,25 @@ export default function NotificationsPage() {
   const readCount = notifications.length - unreadCount;
 
   const filtered = notifications.filter((n: Notification) => {
-    if (activeTab === 'unread') return !n.isRead;
-    if (activeTab === 'read') return n.isRead;
+    if (activeTab === 'unread' && n.isRead) return false;
+    if (activeTab === 'read' && !n.isRead) return false;
+    if (category !== 'all') {
+      const t = n.entityType || 'activity';
+      if (category === 'meeting') return t === 'meeting' || t === 'room';
+      return t === category;
+    }
     return true;
   });
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<CategoryTab, number>();
+    for (const n of notifications) {
+      const t = (n.entityType || 'activity') as string;
+      const key: CategoryTab = t === 'meeting' || t === 'room' ? 'meeting' : (t as CategoryTab);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+  }, [notifications]);
 
   const handleMarkRead = (id: string) => {
     dispatch(markNotificationRead(id));
@@ -169,6 +211,40 @@ export default function NotificationsPage() {
             </span>
           </button>
         ))}
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.14 }}
+        className="flex gap-1 p-1 rounded-xl overflow-x-auto scrollbar-thin"
+        style={{ background: 'var(--bg-tertiary)' }}
+      >
+        {(Object.keys(CATEGORY_LABELS) as CategoryTab[]).map((cat) => {
+          const Icon = CATEGORY_ICONS[cat];
+          const count = cat === 'all' ? notifications.length : categoryCounts.get(cat) || 0;
+          return (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                category === cat ? 'bg-brand-600 text-white shadow' : ''
+              }`}
+              style={category !== cat ? { color: 'var(--text-secondary)' } : undefined}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {CATEGORY_LABELS[cat]}
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                  category === cat ? 'bg-white/20 text-white' : 'bg-[var(--bg-hover)]'
+                }`}
+                style={category !== cat ? { color: 'var(--text-tertiary)' } : undefined}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </motion.div>
 
       {isLoading ? (

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { PresenceUser } from '../../types';
 
 export type RoomTab =
   'whiteboard' | 'code' | 'files' | 'chat' | 'members' | 'activity' | 'tasks' | 'settings';
@@ -10,6 +11,7 @@ interface RoomLayoutProps {
   workspaceColor: string;
   isConnected: boolean;
   memberCount: number;
+  onlineUsers?: PresenceUser[];
   onOpenInvite: () => void;
   activeTab: RoomTab;
   onTabChange: (tab: RoomTab) => void;
@@ -65,12 +67,24 @@ export default function RoomLayout({
   workspaceColor,
   isConnected,
   memberCount,
+  onlineUsers = [],
   onOpenInvite,
   activeTab,
   onTabChange,
   children,
 }: RoomLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const badgeUsers = onlineUsers.slice(0, 4);
+  const badgeExtra = onlineUsers.length - badgeUsers.length;
+
+  const formatInitials = (name: string): string =>
+    name
+      .split(' ')
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
@@ -219,6 +233,43 @@ export default function RoomLayout({
           </div>
 
           <div className="flex items-center gap-2">
+            {onlineUsers.length > 0 && (
+              <div className="flex items-center -space-x-2 mr-1" title="Live members">
+                {badgeUsers.map((u) => (
+                  <div
+                    key={u.socketId}
+                    className="relative w-7 h-7 rounded-full ring-2 ring-[var(--bg-card)] overflow-hidden"
+                  >
+                    {u.userAvatar ? (
+                      <img
+                        src={u.userAvatar}
+                        alt={u.userName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white">
+                        {formatInitials(u.userName)}
+                      </div>
+                    )}
+                    <span
+                      className={`absolute bottom-0 right-0 w-2 h-2 rounded-full ring-1 ring-[var(--bg-card)] ${
+                        u.status === 'online'
+                          ? 'bg-green-500'
+                          : u.status === 'idle'
+                            ? 'bg-amber-400'
+                            : 'bg-brand-500'
+                      }`}
+                    />
+                  </div>
+                ))}
+                {badgeExtra > 0 && (
+                  <div className="w-7 h-7 rounded-full ring-2 ring-[var(--bg-card)] bg-[var(--bg-tertiary)] flex items-center justify-center text-[9px] font-bold">
+                    +{badgeExtra}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
               style={{ background: 'var(--bg-tertiary)' }}

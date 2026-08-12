@@ -118,7 +118,16 @@ export interface Activity {
   _id: string;
   user: User | string;
   action: string;
-  entityType: 'workspace' | 'room' | 'member' | 'invite' | 'auth' | 'task' | 'file' | 'meeting';
+  entityType:
+    | 'workspace'
+    | 'room'
+    | 'member'
+    | 'invite'
+    | 'auth'
+    | 'task'
+    | 'file'
+    | 'meeting'
+    | 'whiteboard';
   entityId?: string;
   entityName?: string;
   metadata?: Record<string, unknown>;
@@ -183,7 +192,7 @@ export interface Notification {
   title: string;
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
-  entityType?: 'workspace' | 'room' | 'member' | 'invite' | 'activity';
+  entityType?: 'workspace' | 'room' | 'member' | 'invite' | 'activity' | 'meeting' | 'file';
   entityId?: string;
   isRead: boolean;
   createdAt: string;
@@ -377,6 +386,7 @@ export interface Meeting {
   duration: number;
   status: MeetingStatus;
   agenda: string;
+  notes?: string;
   meetingCode: string;
   endedAt?: string;
   isDeleted: boolean;

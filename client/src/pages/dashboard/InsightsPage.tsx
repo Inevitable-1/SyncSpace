@@ -1,64 +1,101 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import { fetchRooms } from '../../features/room/roomSlice';
+import { fetchMeetingStats } from '../../features/meeting/meetingSlice';
+import { fetchActivities } from '../../features/activity/activitySlice';
 import type { RootState, AppDispatch } from '../../store';
+import type { Activity } from '../../types';
 
-const weeklyData = [
-  { day: 'Mon', tasks: 8, messages: 24, hours: 6.5 },
-  { day: 'Tue', tasks: 12, messages: 38, hours: 7.2 },
-  { day: 'Wed', tasks: 6, messages: 18, hours: 5.8 },
-  { day: 'Thu', tasks: 15, messages: 42, hours: 8.1 },
-  { day: 'Fri', tasks: 10, messages: 31, hours: 6.9 },
-  { day: 'Sat', tasks: 3, messages: 8, hours: 2.5 },
-  { day: 'Sun', tasks: 2, messages: 5, hours: 1.8 },
-];
+const DAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const topMembers = [
-  {
-    name: 'Alex Kim',
-    avatar: 'AK',
-    tasks: 42,
-    messages: 156,
-    color: 'from-brand-500 to-purple-500',
-  },
-  {
-    name: 'Jordan Lee',
-    avatar: 'JL',
-    tasks: 38,
-    messages: 203,
-    color: 'from-emerald-500 to-teal-500',
-  },
-  {
-    name: 'Sam Chen',
-    avatar: 'SC',
-    tasks: 35,
-    messages: 178,
-    color: 'from-orange-500 to-pink-500',
-  },
-  {
-    name: 'Taylor Swift',
-    avatar: 'TS',
-    tasks: 28,
-    messages: 145,
-    color: 'from-blue-500 to-indigo-500',
-  },
+function formatInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
+function getUserName(user: Activity['user']): string {
+  return typeof user === 'object' && user !== null ? (user as { name: string }).name : 'Someone';
+}
+
+const AVATAR_COLORS = [
+  'from-brand-500 to-purple-500',
+  'from-emerald-500 to-teal-500',
+  'from-orange-500 to-pink-500',
+  'from-blue-500 to-indigo-500',
+  'from-cyan-500 to-blue-600',
+  'from-rose-500 to-pink-600',
 ];
 
 export default function InsightsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { workspaces } = useSelector((state: RootState) => state.workspace);
   const { rooms } = useSelector((state: RootState) => state.room);
+  const { stats: meetingStats } = useSelector((state: RootState) => state.meeting);
+  const { activities } = useSelector((state: RootState) => state.activity);
   const [period, setPeriod] = useState<'week' | 'month' | 'year'>('week');
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
     dispatch(fetchRooms(undefined));
+    dispatch(fetchMeetingStats());
+    dispatch(fetchActivities());
   }, [dispatch]);
 
-  const maxTasks = Math.max(...weeklyData.map((d) => d.tasks));
-  const maxMessages = Math.max(...weeklyData.map((d) => d.messages));
+  const weeklyActivity = useMemo(() => {
+    const days: { day: string; tasks: number; activities: number; hours: number }[] = DAY_ORDER.map(
+      (day) => ({ day, tasks: 0, activities: 0, hours: 0 }),
+    );
+    const now = Date.now();
+    for (const act of activities) {
+      const created = Date.parse(act.createdAt);
+      if (Number.isNaN(created) || now - created > 7 * 86400000) continue;
+      const d = new Date(created);
+      const idx = d.getDay(); // 0 = Sunday
+      const orderIdx = idx === 0 ? 6 : idx - 1;
+      const target = days[orderIdx];
+      if (act.entityType === 'task') target.tasks += 1;
+      target.activities += 1;
+      target.hours += 0.5;
+    }
+    const maxTasks = Math.max(1, ...days.map((d) => d.tasks));
+    const maxItems = Math.max(1, ...days.map((d) => d.activities));
+    return { days, maxTasks, maxItems };
+  }, [activities]);
+
+  const topMembers = useMemo(() => {
+    const counts = new Map<string, { name: string; tasks: number; activities: number }>();
+    for (const act of activities) {
+      const name = getUserName(act.user);
+      if (!counts.has(name)) counts.set(name, { name, tasks: 0, activities: 0 });
+      const entry = counts.get(name)!;
+      entry.activities += 1;
+      if (act.entityType === 'task') entry.tasks += 1;
+    }
+    return Array.from(counts.values())
+      .sort((a, b) => b.activities - a.activities)
+      .slice(0, 4)
+      .map((m, i) => ({
+        ...m,
+        avatar: formatInitials(m.name),
+        color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+      }));
+  }, [activities]);
+
+  const workspaceActivity = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const act of activities) {
+      const key = act.entityName || act.entityType;
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+  }, [activities]);
 
   return (
     <div className="space-y-6">
@@ -90,30 +127,30 @@ export default function InsightsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {
-            label: 'Total Tasks',
-            value: '56',
-            change: '+12%',
+            label: 'Total Meetings',
+            value: String(meetingStats?.total ?? 0),
+            change: `${meetingStats?.upcoming ?? 0} upcoming`,
+            icon: '🎥',
+            color: 'from-brand-500 to-purple-500',
+          },
+          {
+            label: 'Active Members',
+            value: String(new Set(activities.map((a) => getUserName(a.user))).size),
+            change: 'across workspaces',
+            icon: '👥',
+            color: 'from-blue-500 to-indigo-500',
+          },
+          {
+            label: 'Meetings Completed',
+            value: String(meetingStats?.completed ?? 0),
+            change: `${meetingStats?.ongoing ?? 0} live now`,
             icon: '✅',
             color: 'from-emerald-500 to-teal-500',
           },
           {
-            label: 'Messages Sent',
-            value: '166',
-            change: '+8%',
-            icon: '💬',
-            color: 'from-blue-500 to-indigo-500',
-          },
-          {
-            label: 'Active Hours',
-            value: '38.8h',
-            change: '+5%',
-            icon: '⏱️',
-            color: 'from-purple-500 to-pink-500',
-          },
-          {
-            label: 'Productivity',
-            value: '87%',
-            change: '+3%',
+            label: 'Total Activities',
+            value: String(activities.length),
+            change: 'tracked',
             icon: '📈',
             color: 'from-orange-500 to-amber-500',
           },
@@ -154,7 +191,7 @@ export default function InsightsPage() {
             Weekly Activity
           </h3>
           <div className="flex items-end gap-2 h-48">
-            {weeklyData.map((d, i) => (
+            {weeklyActivity.days.map((d, i) => (
               <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
                 <div
                   className="w-full flex gap-0.5 items-end justify-center"
@@ -162,13 +199,13 @@ export default function InsightsPage() {
                 >
                   <motion.div
                     initial={{ height: 0 }}
-                    animate={{ height: `${(d.tasks / maxTasks) * 100}%` }}
+                    animate={{ height: `${(d.tasks / weeklyActivity.maxTasks) * 100}%` }}
                     transition={{ delay: 0.3 + i * 0.05, duration: 0.5 }}
                     className="w-3 rounded-t bg-gradient-to-t from-brand-600 to-brand-400"
                   />
                   <motion.div
                     initial={{ height: 0 }}
-                    animate={{ height: `${(d.messages / maxMessages) * 100}%` }}
+                    animate={{ height: `${(d.activities / weeklyActivity.maxItems) * 100}%` }}
                     transition={{ delay: 0.35 + i * 0.05, duration: 0.5 }}
                     className="w-3 rounded-t bg-gradient-to-t from-purple-600 to-purple-400"
                   />
@@ -187,7 +224,7 @@ export default function InsightsPage() {
               <span className="w-2 h-2 rounded-full bg-brand-500" /> Tasks
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-purple-500" /> Messages
+              <span className="w-2 h-2 rounded-full bg-purple-500" /> Activities
             </span>
           </div>
         </motion.div>
@@ -217,13 +254,15 @@ export default function InsightsPage() {
                     {m.name}
                   </div>
                   <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                    {m.tasks} tasks · {m.messages} messages
+                    {m.tasks} tasks · {m.activities} activities
                   </div>
                 </div>
                 <div className="w-24 h-2 rounded-full bg-white/5 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-brand-500 to-purple-500"
-                    style={{ width: `${(m.tasks / topMembers[0].tasks) * 100}%` }}
+                    style={{
+                      width: `${(m.activities / Math.max(1, topMembers[0]?.activities)) * 100}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -243,36 +282,46 @@ export default function InsightsPage() {
             Workspace Activity
           </h3>
           <div className="space-y-3">
-            {workspaces.slice(0, 5).map((ws) => (
-              <div key={ws._id} className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: ws.color || '#6366f1' }}
-                >
-                  {ws.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {ws.name}
+            {workspaces.slice(0, 5).map((ws) => {
+              const count = workspaceActivity.get(ws.name) || 0;
+              const pct = Math.max(
+                5,
+                Math.round((count / Math.max(1, Math.max(1, ...workspaceActivity.values()))) * 5),
+              );
+              return (
+                <div key={ws._id} className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                    style={{ background: ws.color || '#6366f1' }}
+                  >
+                    {ws.name.charAt(0).toUpperCase()}
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {ws.name}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 items-end">
+                    {[...Array(5)].map((_, j) => (
+                      <div
+                        key={j}
+                        className="w-2 h-6 rounded"
+                        style={{
+                          background: j < pct ? ws.color || '#6366f1' : 'var(--bg-tertiary)',
+                          opacity: j < pct ? 0.7 : 1,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span
+                    className="text-[10px] w-8 text-right"
+                    style={{ color: 'var(--text-tertiary)' }}
+                  >
+                    {count}
+                  </span>
                 </div>
-                <div className="flex gap-1">
-                  {[...Array(5)].map((_, j) => (
-                    <div
-                      key={j}
-                      className="w-2 h-6 rounded"
-                      style={{
-                        background:
-                          j < Math.floor(Math.random() * 5) + 1
-                            ? ws.color || '#6366f1'
-                            : 'var(--bg-tertiary)',
-                        opacity: j < Math.floor(Math.random() * 5) + 1 ? 0.7 : 1,
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {workspaces.length === 0 && (
               <p className="text-sm text-center py-4" style={{ color: 'var(--text-tertiary)' }}>
                 No workspace data yet
@@ -327,6 +376,35 @@ export default function InsightsPage() {
           </div>
         </motion.div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.55 }}
+        className="card p-6"
+      >
+        <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+          Meeting Statistics
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { label: 'Scheduled', value: meetingStats?.upcoming ?? 0, color: 'text-blue-400' },
+            { label: 'Live now', value: meetingStats?.ongoing ?? 0, color: 'text-emerald-400' },
+            { label: 'Completed', value: meetingStats?.completed ?? 0, color: 'text-gray-400' },
+            { label: 'Total', value: meetingStats?.total ?? 0, color: 'text-brand-400' },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="text-center p-4 rounded-xl bg-white/[0.02] border border-white/5"
+            >
+              <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
+              <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }

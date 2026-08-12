@@ -8,7 +8,7 @@ export async function logNotification(data: {
   title: string;
   message: string;
   type?: 'info' | 'success' | 'warning' | 'error';
-  entityType?: 'workspace' | 'room' | 'member' | 'invite' | 'activity';
+  entityType?: 'workspace' | 'room' | 'member' | 'invite' | 'activity' | 'meeting' | 'file';
   entityId?: string;
 }) {
   try {

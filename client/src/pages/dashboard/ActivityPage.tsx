@@ -18,7 +18,7 @@ import { useToast } from '../../components/common/Toast';
 import type { RootState, AppDispatch } from '../../store';
 import type { Activity } from '../../types';
 
-type EntityFilter = 'all' | 'meeting' | 'room' | 'member' | 'task' | 'file';
+type EntityFilter = 'all' | 'meeting' | 'room' | 'member' | 'task' | 'file' | 'whiteboard';
 
 const FILTERS: { value: EntityFilter; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -27,6 +27,7 @@ const FILTERS: { value: EntityFilter; label: string }[] = [
   { value: 'member', label: 'Members' },
   { value: 'task', label: 'Tasks' },
   { value: 'file', label: 'Files' },
+  { value: 'whiteboard', label: 'Whiteboards' },
 ];
 
 const ENTITY_META: Record<string, { icon: React.ReactNode; gradient: string; label: string }> = {
@@ -59,6 +60,11 @@ const ENTITY_META: Record<string, { icon: React.ReactNode; gradient: string; lab
     icon: <DocumentTextIcon className="w-4 h-4 text-white" />,
     gradient: 'from-rose-500 to-pink-600',
     label: 'Files',
+  },
+  whiteboard: {
+    icon: <ClockIcon className="w-4 h-4 text-white" />,
+    gradient: 'from-violet-500 to-purple-600',
+    label: 'Whiteboards',
   },
   invite: {
     icon: <UserGroupIcon className="w-4 h-4 text-white" />,
@@ -157,7 +163,17 @@ export default function ActivityPage() {
     for (const act of activities) {
       counts.set(act.entityType, (counts.get(act.entityType) || 0) + 1);
     }
-    const order = ['workspace', 'meeting', 'room', 'member', 'task', 'file', 'invite', 'auth'];
+    const order = [
+      'workspace',
+      'meeting',
+      'room',
+      'member',
+      'task',
+      'file',
+      'whiteboard',
+      'invite',
+      'auth',
+    ];
     const max = Math.max(1, ...counts.values());
     return order
       .filter((key) => counts.has(key))

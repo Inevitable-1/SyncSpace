@@ -12,6 +12,7 @@ export interface IMeetingDocument extends Document {
   duration: number;
   status: MeetingStatus;
   agenda: string;
+  notes: string;
   meetingCode: string;
   endedAt?: Date;
   isDeleted: boolean;
@@ -39,6 +40,7 @@ const meetingSchema = new Schema<IMeetingDocument>(
       default: 'scheduled',
     },
     agenda: { type: String, trim: true, maxlength: 500, default: '' },
+    notes: { type: String, trim: true, maxlength: 5000, default: '' },
     meetingCode: {
       type: String,
       unique: true,
