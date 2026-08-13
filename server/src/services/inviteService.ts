@@ -58,10 +58,6 @@ class InviteService {
     return invite;
   }
 
-  async getInvites(workspaceId: string) {
-    return inviteRepository.findByWorkspace(workspaceId);
-  }
-
   async getInvitesWithPagination(
     workspaceId: string,
     query: {

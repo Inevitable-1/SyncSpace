@@ -91,11 +91,6 @@ class MemberService {
     return { message: 'Member removed successfully' };
   }
 
-  async getMembers(workspaceId: string) {
-    const members = await memberRepository.findByWorkspace(workspaceId);
-    return members;
-  }
-
   async getMembersWithPagination(
     workspaceId: string,
     query: {

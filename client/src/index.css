@@ -211,10 +211,6 @@ select:focus-visible {
     -webkit-backdrop-filter: blur(12px);
   }
 
-  .border-glass {
-    border: 1px solid var(--glass-border);
-  }
-
   .card {
     background: var(--bg-card);
     backdrop-filter: blur(16px);
@@ -318,33 +314,6 @@ select:focus-visible {
     outline-offset: 2px;
   }
 
-  .btn-ghost {
-    @apply px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200;
-    color: var(--text-secondary);
-    background: transparent;
-  }
-
-  .btn-ghost:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-  }
-
-  .btn-ghost:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  .btn-accent {
-    @apply px-4 py-2 rounded-xl font-semibold text-sm text-white transition-all duration-200;
-    background: linear-gradient(135deg, #06b6d4, #6366f1);
-    box-shadow: var(--accent-cyan-glow);
-  }
-
-  .btn-accent:hover:not(:disabled) {
-    box-shadow: 0 6px 28px rgba(6, 182, 212, 0.4);
-    transform: translateY(-1px);
-  }
-
   .chip {
     @apply inline-flex items-center gap-1 rounded-full text-xs font-semibold px-2.5 py-1;
     border: 1px solid var(--border-light);
@@ -400,48 +369,6 @@ select:focus-visible {
     pointer-events: none;
   }
 
-  .glow-border {
-    box-shadow:
-      0 0 20px rgba(99, 102, 241, 0.2),
-      inset 0 0 20px rgba(99, 102, 241, 0.06);
-  }
-
-  .animate-in {
-    animation: fadeInUp 0.5s ease-out both;
-  }
-
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .bg-mesh {
-    background-image: var(--surface-gradient);
-  }
-
-  .bg-noise {
-    position: relative;
-  }
-
-  .bg-noise::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    border-radius: inherit;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   @keyframes toast-in {
     from {
       opacity: 0;
@@ -459,6 +386,33 @@ select:focus-visible {
     }
     100% {
       background-position: 200% 0;
+    }
+  }
+
+  @keyframes floatParticle {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 0;
+    }
+    10% {
+      opacity: var(--particle-opacity, 0.5);
+    }
+    85% {
+      opacity: var(--particle-opacity, 0.5);
+    }
+    100% {
+      transform: translate3d(var(--particle-x, 20px), -52vh, 0) scale(0.6);
+      opacity: 0;
+    }
+  }
+
+  @keyframes goldSweep {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
     }
   }
 }
