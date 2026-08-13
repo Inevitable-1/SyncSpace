@@ -1,110 +1,104 @@
-# SyncSpace
+<div align="center">
 
-A real-time collaborative platform for teams. Think Excalidraw meets VS Code Live Share — an enterprise-grade workspace where teams collaborate on whiteboards, code editors, chat, and task boards simultaneously.
+# ✦ SyncSpace
+
+**One workspace for every team — real-time whiteboards, code, chat and project boards.**
+
+White / Gold / Red brand identity · Real-time collaboration · Enterprise-grade
+
+[Features](https://github.com/Inevitable-1/SyncSpace#features) ·
+[Tech Stack](https://github.com/Inevitable-1/SyncSpace#tech-stack) ·
+[Installation](https://github.com/Inevitable-1/SyncSpace#installation) ·
+[Documentation](https://github.com/Inevitable-1/SyncSpace/blob/main/docs/Architecture.md)
+
+</div>
+
+---
+
+## Project Overview
+
+SyncSpace is a real-time collaborative workspace for teams. Think **Excalidraw meets VS Code Live Share** — a single platform where teams brainstorm on an infinite whiteboard, write code side by side, chat, and track work on kanban boards, all simultaneously.
+
+> **Mission:** Making collaboration simple, organized and accessible.
+> **Vision:** One workspace for every team.
+
+Built as a 3-week internship project, SyncSpace went from a blank repository to a complete, runnable SaaS product with a professional brand identity — see [docs/ProjectJourney.md](docs/ProjectJourney.md) for the full story.
 
 ## Features
 
 ### Core Collaboration
 
-- **Real-time Whiteboard** — Drawing tools, shapes, text, undo/redo, multi-user cursors via React Konva
-- **Collaborative Code Editor** — Monaco Editor with live cursors, multi-file tabs, file explorer, themes
-- **Real-time Chat** — Messages, replies, emoji, typing indicators, seen status
-- **Kanban Task Board** — 4-column drag-and-drop with priorities, labels, due dates, checklists
+| Module | Highlights |
+| ------ | ---------- |
+| **Real-time Whiteboard** | Drawing tools, shapes, text, undo/redo, multi-user cursors (React Konva) |
+| **Collaborative Code Editor** | Monaco Editor, live cursors, multi-file tabs, file explorer, themes |
+| **Team Chat** | Replies, emoji, typing indicators, seen status |
+| **Kanban Task Board** | 4-column drag-and-drop, priorities, labels, due dates, checklists |
 
 ### Workspace Management
 
-- **Workspaces** — Create, edit, delete, archive, favorite, search, invite codes
-- **Rooms** — Whiteboard, code, and document room types per workspace
-- **Member Management** — Roles (owner/admin/member), suspend, promote, demote
-- **Invite System** — Email-based invitations with token expiry
+- Create, edit, archive, trash/restore, favorite and search workspaces
+- Rooms for whiteboard, code and document collaboration
+- Roles (owner / admin / member), suspend / promote / demote
+- Email-based invitations with expiring tokens + join-by-invite-code
 
-### Dashboard
+### Platform
 
-- **Analytics** — Stat cards, bar charts, donut charts, weekly activity
-- **Activity Timeline** — Filterable audit log of all actions
-- **Notifications** — Real-time notification center with read/unread tracking
-- **Global Search** — Cmd+K search across workspaces, rooms, members, tasks
-- **Meetings** — Schedule, join, and host meetings with a dedicated meeting room
-- **File Manager** — Upload/download, folders, rename, trash, and image previews
-- **Trash & Shared With Me** — Restore deleted items; see what others shared with you
-- **Insights** — Workspace activity and room distribution overview
+- **Dashboard** — analytics, activity timeline, notifications, global search (Ctrl+K)
+- **Meetings** — schedule, join and host meetings
+- **File Manager** — upload / download, folders, rename, trash, image previews
+- **Insights** — workspace activity and room distribution
+- **Passwordless authentication** — sign in with just name + email
 
-### UI/UX
+### Brand & UX
 
-- **Dark & Light Mode** — Full theme support with CSS variables
-- **Responsive Design** — Collapsible sidebar, mobile-friendly layouts
-- **Animations** — Framer Motion transitions and micro-interactions
-- **Loading States** — Skeleton loaders for all data views
-- **Professional UI** — 16+ reusable components (Button, Card, Badge, Avatar, Modal, etc.)
+- White / Gold / Red brand system with an animated logo (gold "S" + red center dot)
+- Light & dark themes, responsive layouts, skeleton loaders
+- Offline demo mode with realistic fallback data
 
 ## Tech Stack
 
-| Layer     | Technology                                                                   |
-| --------- | ---------------------------------------------------------------------------- |
-| Frontend  | React 18, TypeScript 7, Vite 8, Tailwind CSS 3, Redux Toolkit, Framer Motion |
-| Real-time | Socket.IO 4, React Konva, Monaco Editor                                      |
-| Backend   | Node.js, Express 5, TypeScript 7, Mongoose 9                                 |
-| Database  | MongoDB 7 (Docker)                                                           |
-| Auth      | JWT (access + refresh tokens), bcryptjs, httpOnly cookies                    |
-| Tooling   | npm workspaces, Prettier, Husky, lint-staged                                 |
-| DevOps    | Docker Compose, Redis 7                                                      |
+| Layer | Technology |
+| ----- | ---------- |
+| Frontend | React 18 · TypeScript · Vite · Tailwind CSS · Redux Toolkit · Framer Motion |
+| Real-time | Socket.IO · React Konva · Monaco Editor |
+| Backend | Node.js · Express 5 · TypeScript · Mongoose |
+| Database | MongoDB 7 |
+| Auth | JWT (access + rotating refresh) · httpOnly cookies |
+| Tooling | npm workspaces · Prettier · Docker Compose |
 
-## Architecture
+## Screenshots
 
-```
-SyncSpace/
-├── client/                          # React frontend
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── common/              # Reusable UI (EmptyState, Skeleton, Modal, Toast…)
-│   │   │   ├── layout/              # Sidebar, TopNav, DashboardLayout
-│   │   │   ├── whiteboard/          # Canvas, Toolbar, PropertiesPanel, Cursors
-│   │   │   ├── editor/              # CodeIDE, MonacoEditor, FileExplorer, Terminal
-│   │   │   ├── collaboration/       # RoomLayout, Chat, Presence, Members
-│   │   │   ├── meeting/             # MeetingRoom
-│   │   │   ├── tasks/               # KanbanBoard
-│   │   │   ├── files/               # FileExplorer
-│   │   │   └── intro/               # Animated landing scenes
-│   │   ├── features/                # 12 Redux slices (auth, room, task, …)
-│   │   ├── hooks/                   # useSocket, useCollaborationSocket, useEditorSocket
-│   │   ├── pages/                   # Dashboard pages + auth pages
-│   │   ├── services/                # 15 API service files
-│   │   └── types/                   # Shared TypeScript interfaces
-│   └── vite.config.ts
-├── server/                          # Express backend
-│   ├── src/
-│   │   ├── models/                  # 17 Mongoose models
-│   │   ├── controllers/             # 13 controllers
-│   │   ├── routes/                  # 13 route files
-│   │   ├── services/                # Business logic services
-│   │   ├── repositories/            # Repository pattern files
-│   │   ├── dto/                     # DTO files
-│   │   ├── socket/                  # Socket.IO handlers (whiteboard + editor)
-│   │   ├── middleware/              # auth, errorHandler
-│   │   └── utils/                   # tokens, logger, asyncHandler
-│   └── tsconfig.json
-├── docker/                          # Dockerfiles
-├── docker-compose.yml               # MongoDB + Redis + Server + Client
-└── docs/                            # Development reports, API reference, changelog
-```
+> Screenshots to be added — the app is live at `http://localhost:5173` after setup.
 
-## Getting Started
+| Landing & Hero | Whiteboard | Code Editor |
+| --- | --- | --- |
+| Animated logo, gold hero, CTAs | Infinite canvas + cursors | Monaco with live cursors |
+
+| Kanban Board | Team Chat | Dashboard |
+| --- | --- | --- |
+| Drag-and-drop tasks | Threads + typing | Analytics & activity |
+
+## Installation
 
 ### Prerequisites
 
 - Node.js 20+
 - npm 9+
-- Docker & Docker Compose (optional)
+- Docker & Docker Compose (optional, for MongoDB)
 
-### Installation
+### Setup
 
 ```bash
+# 1. Clone
 git clone https://github.com/Inevitable-1/SyncSpace.git
 cd SyncSpace
+
+# 2. Install dependencies
 npm install
 ```
 
-### Environment Setup
+### Environment
 
 **server/.env**
 
@@ -122,248 +116,108 @@ CORS_ORIGIN=http://localhost:5173
 
 ```
 VITE_API_URL=http://localhost:5000
+VITE_SOCKET_URL=http://localhost:5000
 ```
 
-### Run with Docker
+### Run
+
+**Option A — Docker (MongoDB only) + local dev**
+
+```bash
+docker compose up -d mongo        # start MongoDB (and Redis if configured)
+npm run dev                       # client on :5173, server on :5000
+```
+
+**Option B — Everything via Docker**
 
 ```bash
 docker compose up -d
 ```
 
-### Run Locally
+**Option C — Fully local**
 
-```bash
-npm run dev
+Start a local MongoDB instance, then run `npm run dev`.
+
+### Scripts
+
+| Command | Description |
+| ------- | ----------- |
+| `npm run dev` | Start client + server in development |
+| `npm run build` | Build both workspaces for production |
+| `npm run lint` | Prettier checks across all workspaces |
+| `npm run typecheck` | TypeScript checks for client + server |
+| `npm run format` | Auto-format with Prettier |
+
+## Project Structure
+
+```
+SyncSpace/
+├── client/                        # React frontend
+│   ├── public/                    # logo.svg, favicon.svg
+│   └── src/
+│       ├── components/            # common, layout, whiteboard, editor, chat,
+│       │                          # tasks, collaboration, meeting, files, logo
+│       ├── features/              # 12 Redux slices (auth, room, task, …)
+│       ├── hooks/                 # useSocket, useCollaborationSocket, useEditorSocket
+│       ├── pages/                 # Landing, About, Features, auth + dashboard pages
+│       ├── services/              # API services with demo fallback
+│       └── types/                 # Shared TypeScript interfaces
+├── server/                        # Express backend
+│   └── src/
+│       ├── models/                # 16 Mongoose models
+│       ├── controllers/           # 13 controllers
+│       ├── routes/                # 13 route files
+│       ├── services/              # Business logic
+│       ├── repositories/          # Data access layer
+│       ├── dto/                   # Data transfer objects
+│       ├── socket/                # Socket.IO handlers
+│       ├── middleware/            # auth, errorHandler, upload
+│       └── utils/                 # tokens, logger, asyncHandler
+├── docker/                        # Dockerfiles
+├── docker-compose.yml             # MongoDB + server + client
+└── docs/                          # Weekly reports, architecture, API reference
 ```
 
-Starts both client (http://localhost:5173) and server (http://localhost:5000).
+## Documentation
 
-### Build for Production
-
-```bash
-npm run build
-```
-
-## Available Scripts
-
-| Command          | Description                                 |
-| ---------------- | ------------------------------------------- |
-| `npm run dev`    | Start client and server in development mode |
-| `npm run build`  | Build both client and server for production |
-| `npm run lint`   | Run Prettier checks across all workspaces   |
-| `npm run format` | Auto-format code with Prettier              |
-
-## API Endpoints
-
-### Authentication (7)
-
-| Method | Endpoint                    | Description            |
-| ------ | --------------------------- | ---------------------- |
-| POST   | `/api/auth/register`        | Register new user      |
-| POST   | `/api/auth/login`           | Login                  |
-| POST   | `/api/auth/logout`          | Logout                 |
-| POST   | `/api/auth/refresh-token`   | Refresh access token   |
-| POST   | `/api/auth/forgot-password` | Request password reset |
-| POST   | `/api/auth/reset-password`  | Reset password         |
-| GET    | `/api/auth/me`              | Get current user       |
-
-### Workspaces (16)
-
-| Method | Endpoint                           | Description            |
-| ------ | ---------------------------------- | ---------------------- |
-| POST   | `/api/workspaces`                  | Create workspace       |
-| GET    | `/api/workspaces`                  | List workspaces        |
-| GET    | `/api/workspaces/search`           | Search workspaces      |
-| GET    | `/api/workspaces/trash`            | Get trashed items      |
-| GET    | `/api/workspaces/:id`              | Get workspace          |
-| PUT    | `/api/workspaces/:id`              | Update workspace       |
-| DELETE | `/api/workspaces/:id`              | Delete workspace       |
-| POST   | `/api/workspaces/:id/restore`      | Restore workspace      |
-| POST   | `/api/workspaces/:id/invite-code`  | Regenerate invite code |
-| POST   | `/api/workspaces/join`             | Join by invite code    |
-| POST   | `/api/workspaces/:id/favorite`     | Toggle favorite        |
-| POST   | `/api/workspaces/:id/archive`      | Archive workspace      |
-| POST   | `/api/workspaces/:id/unarchive`    | Unarchive workspace    |
-| GET    | `/api/workspaces/:id/members`      | List members           |
-| POST   | `/api/workspaces/:id/members`      | Add member             |
-| DELETE | `/api/workspaces/:id/members/:mid` | Remove member          |
-
-### Rooms (8)
-
-| Method | Endpoint                 | Description     |
-| ------ | ------------------------ | --------------- |
-| POST   | `/api/rooms`             | Create room     |
-| GET    | `/api/rooms`             | List rooms      |
-| GET    | `/api/rooms/stats`       | Room statistics |
-| GET    | `/api/rooms/:id`         | Get room        |
-| PUT    | `/api/rooms/:id`         | Update room     |
-| DELETE | `/api/rooms/:id`         | Delete room     |
-| POST   | `/api/rooms/:id/restore` | Restore room    |
-| POST   | `/api/rooms/join`        | Join room       |
-
-### Members (7)
-
-| Method | Endpoint                                      | Description       |
-| ------ | --------------------------------------------- | ----------------- |
-| GET    | `/api/workspaces/:id/members`                 | List members      |
-| GET    | `/api/workspaces/:id/members/stats`           | Member stats      |
-| POST   | `/api/workspaces/:id/members`                 | Add member        |
-| PUT    | `/api/workspaces/:id/members/:mid/role`       | Update role       |
-| PUT    | `/api/workspaces/:id/members/:mid/suspend`    | Suspend member    |
-| PUT    | `/api/workspaces/:id/members/:mid/reactivate` | Reactivate member |
-| DELETE | `/api/workspaces/:id/members/:mid`            | Remove member     |
-
-### Invites (7)
-
-| Method | Endpoint                            | Description         |
-| ------ | ----------------------------------- | ------------------- |
-| GET    | `/api/workspaces/:id/invites`       | List invites        |
-| GET    | `/api/workspaces/:id/invites/stats` | Invite stats        |
-| POST   | `/api/workspaces/:id/invites`       | Create invite       |
-| DELETE | `/api/workspaces/:id/invites/:iid`  | Revoke invite       |
-| GET    | `/api/invites/pending`              | Get pending invites |
-| POST   | `/api/invites/:token/accept`        | Accept invite       |
-| POST   | `/api/invites/:token/decline`       | Decline invite      |
-
-### Chat (5)
-
-| Method | Endpoint                 | Description    |
-| ------ | ------------------------ | -------------- |
-| GET    | `/api/chat/:roomId`      | Get messages   |
-| POST   | `/api/chat/:roomId`      | Send message   |
-| PUT    | `/api/chat/:messageId`   | Edit message   |
-| DELETE | `/api/chat/:messageId`   | Delete message |
-| POST   | `/api/chat/:roomId/seen` | Mark seen      |
-
-### Tasks (7)
-
-| Method | Endpoint                            | Description        |
-| ------ | ----------------------------------- | ------------------ |
-| GET    | `/api/tasks`                        | List tasks         |
-| GET    | `/api/tasks/workspace/:workspaceId` | Tasks by workspace |
-| POST   | `/api/tasks`                        | Create task        |
-| PUT    | `/api/tasks/:id`                    | Update task        |
-| DELETE | `/api/tasks/:id`                    | Delete task        |
-| POST   | `/api/tasks/:id/comments`           | Add comment        |
-| GET    | `/api/tasks/:id/comments`           | Get comments       |
-
-### Files (5)
-
-| Method | Endpoint                | Description  |
-| ------ | ----------------------- | ------------ |
-| GET    | `/api/files`            | List files   |
-| GET    | `/api/files/folders`    | List folders |
-| POST   | `/api/files`            | Upload file  |
-| DELETE | `/api/files/:id`        | Delete file  |
-| PUT    | `/api/files/:id/rename` | Rename file  |
-
-### Documents (6)
-
-| Method | Endpoint                      | Description       |
-| ------ | ----------------------------- | ----------------- |
-| GET    | `/api/documents/room/:roomId` | Documents by room |
-| GET    | `/api/documents/:id`          | Get document      |
-| POST   | `/api/documents`              | Create document   |
-| PUT    | `/api/documents/:id`          | Update document   |
-| PUT    | `/api/documents/:id/rename`   | Rename document   |
-| DELETE | `/api/documents/:id`          | Delete document   |
-
-### Whiteboard, Activities, Notifications
-
-| Method | Endpoint                      | Description         |
-| ------ | ----------------------------- | ------------------- |
-| GET    | `/api/whiteboards/:roomId`    | Get whiteboard      |
-| PUT    | `/api/whiteboards/:roomId`    | Save whiteboard     |
-| GET    | `/api/activities`             | List activities     |
-| DELETE | `/api/activities/:id`         | Delete activity     |
-| DELETE | `/api/activities/clear`       | Clear all           |
-| GET    | `/api/notifications`          | List notifications  |
-| PUT    | `/api/notifications/read-all` | Mark all read       |
-| PUT    | `/api/notifications/:id/read` | Mark as read        |
-| DELETE | `/api/notifications/:id`      | Delete notification |
-| DELETE | `/api/notifications/clear`    | Clear all           |
-
-## Socket Events
-
-### Whiteboard
-
-`join-room`, `leave-room`, `draw`, `update-object`, `delete-object`, `cursor-move`, `undo`, `redo`, `clear-canvas`, `save-whiteboard`
-
-### Code Editor
-
-`editor-join`, `editor-leave`, `code-change`, `cursor-update`, `selection-update`, `save-document`, `sync-document`
-
-### Chat & Presence
-
-`send-message`, `edit-message`, `delete-message`, `typing-start`, `typing-stop`, `mark-seen`, `update-activity`
-
-## MongoDB Collections
-
-| Collection      | Description                             |
-| --------------- | --------------------------------------- |
-| `users`         | User accounts with hashed passwords     |
-| `workspaces`    | Workspace configuration and membership  |
-| `rooms`         | Collaboration rooms within workspaces   |
-| `members`       | Role-based workspace membership         |
-| `invites`       | Email-based invitation tracking         |
-| `tasks`         | Kanban tasks with priorities and labels |
-| `taskcomments`  | Comments on tasks                       |
-| `chatmessages`  | In-room chat messages                   |
-| `whiteboards`   | Konva.js whiteboard object storage      |
-| `codedocuments` | Code files with version tracking        |
-| `activities`    | Audit log of all actions                |
-| `notifications` | User notifications                      |
-| `roompresences` | Real-time presence tracking             |
-| `refreshtokens` | JWT refresh token rotation              |
-| `uploadedfiles` | File upload metadata                    |
-
-## Latest Improvements
-
-See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full changelog.
-
-### Day 10 — Dashboard Redesign & Demo Experience
-
-- Redesigned dashboard with a modern productivity workspace theme (new stat cards, activity charts, category insights)
-- Added animated intro/landing scenes (brain, desk, notebook, mind-link) with canvas-based ambient effects
-- Improved whiteboard engine with smooth 60fps drawing, better color picker, and object transformation handling
-- Added demo workspace flow with pre-populated data and guided onboarding (`Try Demo` login)
-- Enhanced file manager with upload/download progress and error recovery
-- Streamlined meeting scheduling flow and fixed participant mapping
-- Added Trash (restore) and Shared With Me pages for workspaces and rooms
-
-### Day 9 — Code Quality & Docs Reorganization
-
-- Reorganized docs into a dedicated `docs/` directory
-- Added `PROJECT_ARCHITECTURE.md`, `PROJECT_PROGRESS.md`, and review guides
-- Removed dead code, cleaned up formatting, and kept the build warning-free
-
-### Day 8 — Code Cleanup & UI Polish
-
-- Removed dynamic import warning in `InviteModal` by switching to static import
-- Eliminated unused `roomId` prop from `InviteModal` interface
-- Removed unused Redux subscription (`workspaces`) from `TopNav`
-- Deleted dead files: `scripts/` directory, `docs/.gitkeep`
-- **UI Polish**:
-  - `Card`: Added subtle `hover:scale` lift effect for interactive cards
-  - `Button`: Added `active:scale-[0.98]` press feedback across all variants
-  - `Tooltip`: Replaced instant show/hide with smooth opacity transition
-  - `Spinner`: Removed unnecessary wrapping flex container for better composability
-  - `EmptyState`: Improved responsive padding with `sm:` breakpoint
-- Build verified clean (no warnings)
+- [Project Journey](docs/ProjectJourney.md) — idea to implementation
+- [Week 1](docs/Week1.md) — foundation & authentication
+- [Week 2](docs/Week2.md) — collaboration platform
+- [Week 3](docs/Week3.md) — branding, redesign & hardening
+- [Architecture](docs/Architecture.md) — system design
+- [Future Roadmap](docs/FutureRoadmap.md) — what's next
+- [API Reference](docs/API_REFERENCE.md) — full endpoint list
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) — production notes
 
 ## Future Scope
 
-- [ ] Operational Transform / CRDT for conflict-free editing
-- [ ] Real terminal execution (Docker-in-Docker)
-- [ ] Document collaboration with rich text
-- [ ] Email verification flow
-- [ ] Rate limiting and brute-force protection
-- [ ] CI/CD pipeline with GitHub Actions
-- [ ] End-to-end testing with Vitest
-- [ ] WebSocket reconnection resilience
-- [ ] File upload to cloud storage (S3)
-- [ ] Elasticsearch for full-text search
+- **Video Meetings** — WebRTC rooms, screen sharing, recording
+- **Workspace Templates** — one-click starter spaces
+- **Team Analytics** — engagement and contribution insights
+- **Notifications** — email digests + preferences
+- **AI Assistant** — workspace-aware assistant (post-login only)
+- **File Sharing** — cloud storage, share links, permissions
+- **Workspace Permissions** — granular role-based matrices
+- Conflict-free editing (OT / CRDT), real terminal execution, mobile apps
 
-## License
+## Contributors
 
-MIT License. See [LICENSE](LICENSE) for details.
+- **Manoj Kumar** — Design & full-stack development · [GitHub](https://github.com/Inevitable-1)
+
+## Internship Timeline
+
+| Week | Focus | Highlights |
+| ---- | ----- | ---------- |
+| **Week 1** | Foundation | Monorepo, auth (JWT + refresh), dashboard shell, MongoDB |
+| **Week 2** | Collaboration | Whiteboard, code editor, chat, kanban, workspaces, presence |
+| **Week 3** | Branding & hardening | White/Gold/Red identity, logo system, hero redesign, cleanup |
+
+---
+
+<div align="center">
+
+**SyncSpace** — *One Workspace. Infinite Collaboration.*
+
+Built with ♥ over 3 weeks.
+
+</div>
