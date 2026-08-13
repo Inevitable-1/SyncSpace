@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import LogoMark from '../components/logo/LogoMark';
+import AnimatedLogo, { LOGO_ANIM_DURATION } from '../components/logo/AnimatedLogo';
 
-const collaborationCards = [
+const featureCards = [
   {
     title: 'Collaborative Whiteboards',
-    description: 'Sketch, draw and brainstorm together on an infinite canvas with live cursors.',
+    description: 'Brainstorm ideas visually in real time.',
+    badge: 'Live cursors',
     icon: (
       <svg
         className="w-6 h-6"
@@ -23,9 +26,9 @@ const collaborationCards = [
     ),
   },
   {
-    title: 'Live Code Editor',
-    description:
-      'Pair program with your team in a shared editor with real-time syntax highlighting.',
+    title: 'Live Code Collaboration',
+    description: 'Write and review code together instantly.',
+    badge: 'Real-time sync',
     icon: (
       <svg
         className="w-6 h-6"
@@ -43,8 +46,9 @@ const collaborationCards = [
     ),
   },
   {
-    title: 'Team Chat',
-    description: 'Stay in sync with threaded conversations, mentions and live typing indicators.',
+    title: 'Team Communication',
+    description: 'Chat and coordinate without leaving your workspace.',
+    badge: 'Instant messages',
     icon: (
       <svg
         className="w-6 h-6"
@@ -62,8 +66,9 @@ const collaborationCards = [
     ),
   },
   {
-    title: 'Shared Workspaces',
-    description: 'Organize rooms, files and tasks in shared spaces everyone can access instantly.',
+    title: 'Shared Project Spaces',
+    description: 'Keep all project assets and discussions organized.',
+    badge: 'One place',
     icon: (
       <svg
         className="w-6 h-6"
@@ -80,189 +85,144 @@ const collaborationCards = [
       </svg>
     ),
   },
-  {
-    title: 'Real-Time Sync',
-    description: 'Every edit, message and change appears instantly for everyone in the room.',
-    icon: (
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M17.364 6.636a9 9 0 010 12.728m-10.728 0a9 9 0 010-12.728m10.728 0L8.636 17.364m10.728-10.728L12 12l-6.364-6.364"
-        />
-      </svg>
-    ),
-  },
 ];
 
 const faqs = [
   {
     q: 'What is SyncSpace?',
-    a: 'SyncSpace is a real-time collaboration platform that brings your entire team into one shared space — whiteboards, code rooms, chat and files working together seamlessly.',
+    a: 'SyncSpace is a premium real-time collaboration platform that brings your entire team into one shared workspace — whiteboards, code rooms, chat and project boards working together seamlessly.',
   },
   {
-    q: 'Why should I use SyncSpace?',
-    a: 'Instead of juggling five different tools, SyncSpace gives you one premium workspace where you can brainstorm, write code and communicate in real time — like Linear, Notion, Figma and GitHub combined.',
+    q: 'Why should teams use SyncSpace?',
+    a: 'Instead of juggling five different tools, SyncSpace gives you one elegant workspace where you can brainstorm, write code and communicate in real time — like Linear, Notion, Figma and GitHub combined.',
   },
   {
-    q: 'How does collaboration work?',
+    q: 'How does real-time collaboration work?',
     a: 'Everything in a workspace stays in sync live. Open a room, invite your team, and every whiteboard stroke, line of code and message appears instantly for everyone — with presence indicators so you always know who is online.',
   },
   {
-    q: 'Can I create multiple workspaces?',
-    a: 'Yes. You can create as many workspaces as you need — one per project, client or team — and organize rooms, files and tasks inside each one.',
+    q: 'Can multiple users edit together?',
+    a: 'Yes. SyncSpace is built for shared editing — multiple teammates can draw, code and write on the same canvas simultaneously, with live cursors showing exactly where everyone is working.',
   },
   {
-    q: 'Is SyncSpace suitable for students?',
-    a: 'Absolutely. It is perfect for study groups, hackathons and final year projects — sketch ideas together, share notes, write code side by side and keep everything in one place.',
+    q: 'Is SyncSpace suitable for students and developers?',
+    a: 'Absolutely. It is perfect for study groups, hackathons, final year projects and development teams — sketch ideas together, share notes, write code side by side and keep everything in one place.',
+  },
+  {
+    q: 'How secure is team data?',
+    a: 'Security is a foundation of SyncSpace. Data is encrypted in transit and at rest, access is role-based, and every workspace is private by default — only invited members can see your work.',
   },
 ];
 
-function Avatar({ initials, color }: { initials: string; color: string }) {
-  return (
-    <div
-      className={`w-6 h-6 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-[9px] font-bold text-white ring-2 ring-[#0F172A]`}
-    >
-      {initials}
-    </div>
-  );
-}
-
-function WorkspaceLogo({ color, glyph }: { color: string; glyph: string }) {
-  return (
-    <div
-      className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-      style={{ background: color }}
-    >
-      {glyph}
-    </div>
-  );
-}
+const particles = Array.from({ length: 22 }, (_, i) => {
+  return {
+    id: i,
+    left: (i * 41 + 7) % 100,
+    size: i % 3 === 0 ? 5 : 2,
+    duration: 12 + (i % 7) * 3,
+    delay: (i % 10) * 1.4,
+    opacity: 0.18 + (i % 4) * 0.08,
+    drift: (i % 2 === 0 ? 1 : -1) * (10 + (i % 5) * 8),
+  };
+});
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // Initialize demo mode for the Watch Demo button
-  useEffect(() => {
-    const auth = (() => {
-      try {
-        return localStorage.getItem('auth')
-          ? JSON.parse(localStorage.getItem('auth') || '{}')
-          : null;
-      } catch {
-        return null;
-      }
-    })();
-    if (auth?.state?.user) return;
-    localStorage.setItem(
-      'auth',
-      JSON.stringify({
-        state: {
-          user: {
-            id: 'demo-user',
-            name: 'Manoj Kumar',
-            email: 'mr.manojmanu05@gmail.com',
-            avatar: 'M',
-            isEmailVerified: true,
-          },
-          accessToken: 'demo-token',
-          isAuthenticated: true,
-          isDemo: true,
-        },
-      }),
-    );
-  }, []);
-
   const navLinks = [
-    { label: 'Features', href: '#features' },
+    { label: 'Features', href: '/features' },
     { label: 'FAQ', href: '#faq' },
-  ];
-
-  const heroBadges = [
-    'Collaborative Whiteboards',
-    'Live Code Editor',
-    'Team Chat',
-    'Shared Workspaces',
-    'Real-Time Sync',
+    { label: 'About', href: '/about' },
   ];
 
   return (
     <div
-      className="min-h-screen bg-[#0F172A] text-white overflow-hidden"
+      className="min-h-screen bg-white text-[#111111] overflow-hidden"
       style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' }}
     >
-      {/* Background */}
-      <div className="fixed inset-0 z-0">
+      {/* Background gradients */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <div
-          className="absolute top-[-10%] left-1/4 w-[600px] h-[600px] rounded-full blur-3xl animate-float"
-          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.15), transparent 60%)' }}
+          className="absolute top-[-15%] right-[-10%] w-[600px] h-[600px] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.14), transparent 60%)' }}
         />
         <div
-          className="absolute bottom-[-10%] right-1/4 w-[500px] h-[500px] rounded-full blur-3xl animate-float"
+          className="absolute top-[30%] left-[-15%] w-[500px] h-[500px] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.1), transparent 60%)' }}
+        />
+        <div
+          className="absolute bottom-[-15%] left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full blur-3xl"
           style={{
-            background: 'radial-gradient(circle, rgba(6,182,212,0.12), transparent 60%)',
-            animationDelay: '-3s',
+            background:
+              'radial-gradient(ellipse at center, rgba(212,175,55,0.08), transparent 60%)',
           }}
         />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full opacity-60"
-          style={{
-            background: 'radial-gradient(circle at center, rgba(30,41,59,0.5), transparent 65%)',
-          }}
-        />
+      </div>
+
+      {/* Floating gold particles */}
+      <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden>
+        {particles.map((p) => (
+          <span
+            key={p.id}
+            className="absolute bottom-[-20px] rounded-full"
+            style={{
+              left: `${p.left}%`,
+              width: p.size,
+              height: p.size,
+              background: '#D4AF37',
+              boxShadow: `0 0 ${p.size * 3}px rgba(212,175,55,0.6)`,
+              ['--particle-x' as string]: `${p.drift}px`,
+              ['--particle-opacity' as string]: p.opacity,
+              animation: `floatParticle ${p.duration}s linear ${p.delay}s infinite`,
+            }}
+          />
+        ))}
       </div>
 
       {/* Navigation */}
       <nav className="relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#06B6D4] flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <svg
-                  className="w-4.5 h-4.5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 7.125c0-1.036.84-1.875 1.875-1.875h5.25c1.036 0 1.875.84 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875h-5.25a1.875 1.875 0 01-1.875-1.875v-9.75zm10.5 0c0-1.036.84-1.875 1.875-1.875h5.25c1.035 0 1.875.84 1.875 1.875v3.375c0 1.036-.84 1.875-1.875 1.875h-5.25a1.875 1.875 0 01-1.875-1.875V7.125z"
-                  />
-                </svg>
-              </div>
-              <span className="text-lg font-bold tracking-tight">SyncSpace</span>
+            <div className="flex items-center gap-2.5">
+              <LogoMark size={32} />
+              <span className="text-lg font-bold tracking-tight text-[#111111]">SyncSpace</span>
+              <span className="hidden sm:inline-flex ml-1 px-2 py-0.5 rounded-full text-[10px] font-semibold text-[#B8860B] bg-amber-50 border border-[#D4AF37]/30">
+                Enterprise
+              </span>
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navLinks.map((link) =>
+                link.href.startsWith('/') ? (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    className="text-sm font-medium text-[#555555] hover:text-[#111111] transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="text-sm font-medium text-[#555555] hover:text-[#111111] transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ),
+              )}
             </div>
 
             <div className="flex items-center gap-3">
               <Link
                 to="/login"
-                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-sm font-medium text-[#555555] hover:text-[#111111] transition-colors"
               >
                 Sign in
               </Link>
               <Link
                 to="/login"
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#3B82F6] to-[#06B6D4] hover:opacity-90 transition-all shadow-lg shadow-blue-500/25"
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-lg shadow-red-500/25"
               >
                 Start Collaborating
               </Link>
@@ -272,295 +232,65 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 pt-20 pb-24 sm:pt-32 sm:pb-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="relative z-10 py-20 sm:py-28">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {/* Animated SyncSpace logo */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="relative flex justify-center"
           >
-            <div className="inline-flex flex-wrap items-center justify-center gap-2 mb-8 max-w-2xl">
-              {heroBadges.map((badge) => (
-                <span
-                  key={badge}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-medium border border-white/10 bg-white/[0.04] backdrop-blur-sm text-slate-300"
-                >
-                  {badge}
-                </span>
-              ))}
-            </div>
+            <div
+              className="absolute inset-0 -top-8 w-[460px] h-[460px] mx-auto rounded-full blur-3xl pointer-events-none"
+              style={{
+                background: 'radial-gradient(circle, rgba(212,175,55,0.22), transparent 65%)',
+              }}
+            />
+            <AnimatedLogo size={220} className="sm:hidden" />
+            <AnimatedLogo size={260} className="hidden sm:inline-flex" />
+          </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: LOGO_ANIM_DURATION + 0.1 }}
+            className="mt-10"
+          >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] mb-6">
-              <span className="block text-slate-100">One Space.</span>
-              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-sky-400 to-cyan-400">
+              <span className="block text-[#111111]">One Workspace.</span>
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-[#D4AF37] via-[#B8860B] to-[#D4AF37] bg-[length:200%_auto] animate-[goldSweep_6s_ease-in-out_infinite]">
                 Infinite Collaboration.
               </span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-              Create ideas, sketch on whiteboards, write code together, and build projects with your
-              team in real time.
+            <p className="text-lg sm:text-xl text-[#555555] max-w-2xl mx-auto mb-10 leading-relaxed">
+              Where teams brainstorm, build, and collaborate together.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to="/login"
-                className="group relative px-8 py-3.5 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-[#3B82F6] to-[#06B6D4] hover:opacity-90 transition-all shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40"
+                className="group relative px-8 py-3.5 rounded-xl text-base font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-xl shadow-red-500/30"
               >
                 Start Collaborating
+                <span className="inline-block ml-2 transition-transform group-hover:translate-x-1">
+                  →
+                </span>
               </Link>
               <Link
-                to="/dashboard"
-                className="px-8 py-3.5 rounded-xl text-base font-semibold text-slate-200 border border-white/10 bg-white/[0.03] backdrop-blur-sm hover:bg-white/[0.07] hover:border-white/20 transition-all"
+                to="/login"
+                className="px-8 py-3.5 rounded-xl text-base font-semibold text-[#111111] border border-[#D4AF37]/60 bg-white hover:bg-[#FFFDF7] hover:border-[#D4AF37] transition-all shadow-sm"
               >
-                Watch Demo
+                Sign In
               </Link>
-            </div>
-          </motion.div>
-
-          {/* Dashboard Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="mt-20 relative"
-          >
-            <div className="relative mx-auto max-w-6xl rounded-2xl border border-white/10 bg-[#1E293B]/60 backdrop-blur-xl overflow-hidden shadow-2xl shadow-black/50">
-              {/* Window chrome */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/70" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/70" />
-                </div>
-                <div className="flex-1 flex justify-center">
-                  <div className="px-4 py-1 rounded-md text-[10px] text-slate-500 bg-white/[0.04] border border-white/5">
-                    app.syncspace.dev/workspace/project-atlas
-                  </div>
-                </div>
-                <div className="flex items-center -space-x-1.5">
-                  <Avatar initials="MK" color="from-blue-500 to-sky-500" />
-                  <Avatar initials="RA" color="from-cyan-500 to-teal-500" />
-                  <Avatar initials="SP" color="from-indigo-500 to-blue-500" />
-                  <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-slate-300">
-                    +2
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-12 gap-3 p-3 sm:p-4 text-left">
-                {/* Sidebar */}
-                <div className="hidden md:flex col-span-2 flex-col gap-3 rounded-xl bg-white/[0.02] border border-white/5 p-3">
-                  <div className="flex items-center gap-2 px-1 pb-2 border-b border-white/5">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#06B6D4] flex items-center justify-center text-white text-xs font-bold">
-                      S
-                    </div>
-                    <span className="text-xs font-semibold text-slate-300">SyncSpace</span>
-                  </div>
-                  <div className="space-y-1.5">
-                    {['Home', 'Rooms', 'Files', 'Meetings', 'Activity'].map((item) => (
-                      <div
-                        key={item}
-                        className={`px-2 py-1.5 rounded-lg text-[10px] font-medium ${
-                          item === 'Rooms' ? 'bg-blue-500/15 text-blue-300' : 'text-slate-500'
-                        }`}
-                      >
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-auto space-y-1.5">
-                    {[
-                      { color: 'linear-gradient(135deg,#3B82F6,#06B6D4)', glyph: 'A' },
-                      { color: 'linear-gradient(135deg,#06B6D4,#0d9488)', glyph: 'I' },
-                      { color: 'linear-gradient(135deg,#2563eb,#3B82F6)', glyph: 'F' },
-                    ].map((ws) => (
-                      <WorkspaceLogo key={ws.glyph} color={ws.color} glyph={ws.glyph} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Whiteboard */}
-                <div className="col-span-12 md:col-span-7 rounded-xl bg-white/[0.02] border border-white/5 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-xs font-semibold text-slate-200">Product Design</span>
-                    </div>
-                    <span className="text-[10px] text-slate-500">3 collaborating</span>
-                  </div>
-                  <div className="relative aspect-[16/9] rounded-lg bg-[#0F172A]/80 border border-white/5 overflow-hidden">
-                    {/* canvas shapes */}
-                    <div className="absolute inset-4 rounded-lg border border-dashed border-blue-500/20" />
-                    <div className="absolute left-8 top-8 w-24 h-16 rounded-lg bg-blue-500/15 border border-blue-500/40" />
-                    <div className="absolute left-36 top-6 rounded-xl bg-cyan-500/10 border border-cyan-500/30 px-3 py-2 text-[10px] text-cyan-300">
-                      Brainstorm HQ
-                    </div>
-                    <div className="absolute left-8 top-32 w-20 h-12 rounded-lg bg-slate-600/20 border border-slate-500/30" />
-                    <div className="absolute left-32 top-28 w-16 h-16 rounded-full bg-teal-500/10 border border-teal-500/30" />
-                    <div className="absolute right-8 bottom-6 flex items-center gap-1">
-                      <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center text-[8px] font-bold text-white">
-                        A
-                      </div>
-                      <div className="px-2 py-1 rounded bg-blue-500/10 text-[9px] text-blue-300">
-                        Drawing...
-                      </div>
-                    </div>
-                    <div className="absolute right-8 top-8 w-4 h-4 rounded-full bg-cyan-500 flex items-center justify-center text-[8px] font-bold text-white">
-                      R
-                    </div>
-                  </div>
-                  {/* tool rail */}
-                  <div className="mt-3 flex items-center gap-1.5">
-                    {['✏️', '📏', '⭕', '🔷', '💬', '🧯'].map((tool, i) => (
-                      <div
-                        key={i}
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${
-                          i === 0
-                            ? 'bg-blue-500/20 border border-blue-500/40'
-                            : 'bg-white/[0.03] border border-white/5'
-                        }`}
-                      >
-                        {tool}
-                      </div>
-                    ))}
-                    <div className="ml-auto text-[10px] text-slate-500">Last saved just now</div>
-                  </div>
-                </div>
-
-                {/* Right column: chat + code */}
-                <div className="col-span-12 md:col-span-3 flex flex-col gap-3">
-                  {/* Team Chat */}
-                  <div className="flex-1 rounded-xl bg-white/[0.02] border border-white/5 p-3">
-                    <div className="flex items-center gap-2 mb-3">
-                      <svg
-                        className="w-4 h-4 text-blue-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={1.5}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
-                        />
-                      </svg>
-                      <span className="text-xs font-semibold text-slate-200">Team Chat</span>
-                    </div>
-                    <div className="space-y-2.5">
-                      <div className="flex items-start gap-2">
-                        <Avatar initials="MK" color="from-blue-500 to-sky-500" />
-                        <div className="flex-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5">
-                          <div className="text-[9px] font-semibold text-slate-300">Manoj</div>
-                          <div className="text-[10px] text-slate-400">
-                            Great work on the layout!
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <Avatar initials="RA" color="from-cyan-500 to-teal-500" />
-                        <div className="flex-1 rounded-lg bg-white/[0.04] px-2.5 py-1.5">
-                          <div className="text-[9px] font-semibold text-slate-300">Ravi</div>
-                          <div className="text-[10px] text-slate-400">Pushing the code now 🚀</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 pl-1">
-                        <span className="text-[9px] text-cyan-400 italic">Priya is typing...</span>
-                        <div className="flex gap-0.5">
-                          <span className="w-0.5 h-0.5 rounded-full bg-cyan-400 animate-bounce" />
-                          <span
-                            className="w-0.5 h-0.5 rounded-full bg-cyan-400 animate-bounce"
-                            style={{ animationDelay: '120ms' }}
-                          />
-                          <span
-                            className="w-0.5 h-0.5 rounded-full bg-cyan-400 animate-bounce"
-                            style={{ animationDelay: '240ms' }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2 rounded-lg bg-white/[0.03] border border-white/5 px-2.5 py-1.5">
-                      <span className="text-[10px] text-slate-500">Message...</span>
-                      <div className="ml-auto flex gap-1">
-                        <span className="w-3.5 h-3.5 rounded bg-white/5 flex items-center justify-center text-[8px] text-slate-400">
-                          📎
-                        </span>
-                        <span className="w-3.5 h-3.5 rounded bg-blue-500/40 flex items-center justify-center text-[8px] text-white">
-                          ➤
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom row: Code Room + Workspace Cards */}
-                <div className="col-span-12 grid grid-cols-1 md:grid-cols-12 gap-3">
-                  {/* Code Room */}
-                  <div className="md:col-span-7 rounded-xl bg-white/[0.02] border border-white/5 overflow-hidden">
-                    <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
-                      <span className="text-xs font-semibold text-slate-200">api/server.ts</span>
-                      <span className="text-[10px] text-emerald-400">● Live</span>
-                    </div>
-                    <div className="p-3 font-mono text-[10px] leading-relaxed">
-                      <div className="text-slate-600">{'1 import {createRouter} from "app"'}</div>
-                      <div className="text-slate-600">2</div>
-                      <div className="text-slate-400">
-                        {'3  '}
-                        <span className="text-blue-400">const</span>{' '}
-                        <span className="text-cyan-400">router</span> ={' '}
-                        <span className="text-blue-400">createRouter</span>()
-                      </div>
-                      <div className="text-slate-600">
-                        {'4  '}
-                        router.
-                        <span className="text-purple-400">get</span>(
-                        <span className="text-emerald-400">"/collab"</span>, handler)
-                      </div>
-                      <div className="text-slate-600">
-                        {'5 '}
-                        <span className="text-slate-400">// Ravi is editing this line</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Workspace Cards */}
-                  <div className="md:col-span-5 rounded-xl bg-white/[0.02] border border-white/5 p-3">
-                    <div className="text-xs font-semibold text-slate-200 mb-2.5">Workspaces</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        { name: 'Project Atlas', color: '#3B82F6', members: '8', files: '42' },
-                        { name: 'Internship', color: '#06B6D4', members: '5', files: '18' },
-                        { name: 'FYP 2026', color: '#2563eb', members: '4', files: '27' },
-                        { name: 'Hackathon', color: '#0ea5e9', members: '12', files: '63' },
-                      ].map((ws) => (
-                        <div
-                          key={ws.name}
-                          className="rounded-lg bg-[#0F172A]/70 border border-white/5 p-2.5"
-                        >
-                          <div className="flex items-center gap-2">
-                            <WorkspaceLogo color={ws.color} glyph={ws.name.charAt(0)} />
-                            <span className="text-[10px] font-semibold text-slate-200 truncate">
-                              {ws.name}
-                            </span>
-                          </div>
-                          <div className="mt-2 flex items-center gap-2 text-[9px] text-slate-500">
-                            <span>👥 {ws.members}</span>
-                            <span>📄 {ws.files}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="relative z-10 py-24 sm:py-32">
+      <section id="features" className="relative z-10 py-24 sm:py-32 bg-[#FFFDF7]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -568,29 +298,43 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight mb-4">
-              Built for modern teamwork
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold text-[#B8860B] bg-amber-50 border border-[#D4AF37]/30 mb-5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse" />
+              Everything in one place
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111111] mb-4">
+              Built to create together
             </h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-              Everything your team needs to create together — in one focused workspace.
+            <p className="text-[#555555] text-lg max-w-2xl mx-auto">
+              Whiteboards, code, chat and project boards — all synced live for your whole team.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {collaborationCards.map((feature, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featureCards.map((feature, i) => (
               <motion.div
                 key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group relative p-6 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] backdrop-blur-sm hover:border-blue-500/30 hover:-translate-y-0.5 transition-all duration-300"
+                className="group relative p-6 rounded-2xl border border-[#EAEAEA] bg-white hover:border-[#D4AF37]/60 hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-[0_20px_40px_-20px_rgba(184,134,11,0.4)]"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3B82F6]/20 to-[#06B6D4]/20 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
+                <div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(212,175,55,0.18), transparent 70%)',
+                  }}
+                />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#D4AF37]/15 to-[#B8860B]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#B8860B] mb-4 group-hover:scale-110 group-hover:border-[#D4AF37]/60 transition-transform">
                   {feature.icon}
                 </div>
-                <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-bold text-[#111111] mb-2">{feature.title}</h3>
+                <p className="text-sm text-[#555555] leading-relaxed mb-4">{feature.description}</p>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#B8860B]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                  {feature.badge}
+                </span>
               </motion.div>
             ))}
           </div>
@@ -598,7 +342,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="relative z-10 py-24 sm:py-32 border-t border-white/5">
+      <section id="faq" className="relative z-10 py-24 sm:py-32 border-t border-[#EAEAEA]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -606,10 +350,10 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight mb-4">
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[#111111] mb-4">
               Frequently asked questions
             </h2>
-            <p className="text-slate-400 text-lg">
+            <p className="text-[#555555] text-lg">
               Everything you need to know about collaborating.
             </p>
           </motion.div>
@@ -622,29 +366,29 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm overflow-hidden transition-colors hover:border-white/15"
+                className={`rounded-2xl border bg-white overflow-hidden transition-colors ${
+                  openFaq === i
+                    ? 'border-[#D4AF37] shadow-[0_12px_32px_-16px_rgba(184,134,11,0.35)]'
+                    : 'border-[#EAEAEA] hover:border-[#D4AF37]/60'
+                }`}
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex items-center justify-between p-5 text-left"
                 >
-                  <span className="text-sm font-semibold pr-4">{faq.q}</span>
-                  <svg
-                    className={`w-5 h-5 text-slate-500 shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
+                  <span className="text-sm font-semibold text-[#111111] pr-4">{faq.q}</span>
+                  <span
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-sm shrink-0 transition-colors ${
+                      openFaq === i
+                        ? 'bg-[#C1121F] text-white'
+                        : 'bg-amber-50 text-[#B8860B] border border-[#D4AF37]/40'
+                    }`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                    />
-                  </svg>
+                    {openFaq === i ? '−' : '+'}
+                  </span>
                 </button>
                 {openFaq === i && (
-                  <div className="px-5 pb-5 text-sm text-slate-400 leading-relaxed">{faq.a}</div>
+                  <div className="px-5 pb-5 text-sm text-[#555555] leading-relaxed">{faq.a}</div>
                 )}
               </motion.div>
             ))}
@@ -652,34 +396,40 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative z-10 py-24 sm:py-32">
+      {/* Final CTA */}
+      <section className="relative z-10 py-24 sm:py-32 bg-[#FFFDF7]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="p-12 sm:p-16 rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-xl relative overflow-hidden"
+            className="relative p-12 sm:p-16 rounded-3xl border border-[#D4AF37]/50 bg-white overflow-hidden shadow-[0_40px_80px_-32px_rgba(17,17,17,0.25)]"
           >
             <div
-              className="absolute inset-0 opacity-60"
+              className="absolute inset-0 opacity-60 pointer-events-none"
               style={{
                 background:
-                  'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.15), transparent 50%), radial-gradient(circle at 80% 80%, rgba(6,182,212,0.15), transparent 50%)',
+                  'radial-gradient(circle at 25% 25%, rgba(212,175,55,0.14), transparent 55%), radial-gradient(circle at 80% 75%, rgba(212,175,55,0.1), transparent 55%)',
               }}
             />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
             <div className="relative">
-              <h2 className="text-4xl sm:text-5xl font-black tracking-tight mb-4">
-                Ready to Collaborate?
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold text-[#C1121F] bg-red-50 border border-[#C1121F]/25 mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C1121F] animate-pulse" />
+                Your team is waiting
+              </span>
+              <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-[#111111] mb-4">
+                Ready to collaborate without limits?
               </h2>
-              <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto">
-                Bring your ideas together, work with your team, and build something amazing.
+              <p className="text-[#555555] text-lg mb-10 max-w-xl mx-auto">
+                Bring your ideas, code, and teamwork together in one powerful workspace.
               </p>
               <Link
                 to="/login"
-                className="inline-flex px-10 py-4 rounded-xl text-base font-semibold text-white bg-gradient-to-r from-[#3B82F6] to-[#06B6D4] hover:opacity-90 transition-all shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40"
+                className="group inline-flex items-center gap-2 px-10 py-4 rounded-xl text-base font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-xl shadow-red-500/30"
               >
-                Let's Start
+                Sign In &amp; Start
+                <span className="transition-transform group-hover:translate-x-1">→</span>
               </Link>
             </div>
           </motion.div>
@@ -687,30 +437,28 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 py-12">
+      <footer className="relative z-10 border-t border-[#EAEAEA] py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#3B82F6] to-[#06B6D4] flex items-center justify-center">
-                <span className="text-white font-bold text-xs">S</span>
-              </div>
-              <span className="text-sm font-bold">SyncSpace</span>
+            <div className="flex items-center gap-2.5">
+              <LogoMark size={28} />
+              <span className="text-sm font-bold text-[#111111]">SyncSpace</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-slate-500">
-              <a href="#" className="hover:text-slate-200 transition-colors">
+            <div className="flex items-center gap-6 text-sm text-[#555555]">
+              <a href="#" className="hover:text-[#111111] transition-colors">
                 Privacy
               </a>
-              <a href="#" className="hover:text-slate-200 transition-colors">
+              <a href="#" className="hover:text-[#111111] transition-colors">
                 Terms
               </a>
-              <a href="#" className="hover:text-slate-200 transition-colors">
+              <a href="#" className="hover:text-[#111111] transition-colors">
                 Security
               </a>
-              <a href="#" className="hover:text-slate-200 transition-colors">
+              <a href="#" className="hover:text-[#111111] transition-colors">
                 Status
               </a>
             </div>
-            <div className="text-xs text-slate-600">
+            <div className="text-xs text-[#888888]">
               &copy; {new Date().getFullYear()} SyncSpace. All rights reserved.
             </div>
           </div>

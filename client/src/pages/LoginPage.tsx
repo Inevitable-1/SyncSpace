@@ -11,7 +11,6 @@ import Spinner from '../components/common/Spinner';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -27,7 +26,7 @@ export default function LoginPage() {
       return;
     }
     setEmailError('');
-    const result = await dispatch(login({ email: email.trim(), password }));
+    const result = await dispatch(login({ email: email.trim() }));
     if (login.fulfilled.match(result)) {
       navigate(from, { replace: true });
     }
@@ -49,7 +48,7 @@ export default function LoginPage() {
         transition={{ duration: 0.4 }}
       >
         <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Welcome back</h2>
-        <p className="text-gray-400 text-sm mb-6">Sign in to your account to continue</p>
+        <p className="text-gray-400 text-sm mb-6">Sign in with your email to continue</p>
 
         {error && (
           <div className="mb-4">
@@ -87,32 +86,6 @@ export default function LoginPage() {
                 {emailError}
               </p>
             )}
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label
-                htmlFor="password"
-                className="text-xs font-semibold text-gray-300 uppercase tracking-wider"
-              >
-                Password
-              </label>
-              <Link
-                to="/forgot-password"
-                className="text-xs text-brand-400 hover:text-brand-300 transition-colors font-medium"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 transition-all text-sm"
-              placeholder="Enter your password"
-            />
           </div>
 
           <button

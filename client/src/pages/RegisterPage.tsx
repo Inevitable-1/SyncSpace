@@ -14,15 +14,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 interface FieldErrors {
   name?: string;
   email?: string;
-  password?: string;
-  confirmPassword?: string;
 }
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -35,12 +31,6 @@ export default function RegisterPage() {
     }
     if (!EMAIL_PATTERN.test(email.trim())) {
       errors.email = 'Please enter a valid email address.';
-    }
-    if (password.length < 6) {
-      errors.password = 'Password must be at least 6 characters.';
-    }
-    if (confirmPassword !== password) {
-      errors.confirmPassword = 'Passwords do not match.';
     }
     return errors;
   }
@@ -55,7 +45,7 @@ export default function RegisterPage() {
     setFieldErrors(errors);
     if (Object.values(errors).some(Boolean)) return;
 
-    const result = await dispatch(register({ name: name.trim(), email: email.trim(), password }));
+    const result = await dispatch(register({ name: name.trim(), email: email.trim() }));
     if (register.fulfilled.match(result)) {
       navigate('/', { replace: true });
     }
@@ -69,7 +59,7 @@ export default function RegisterPage() {
         transition={{ duration: 0.4 }}
       >
         <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Create your account</h2>
-        <p className="text-gray-400 text-sm mb-6">Start collaborating with your team today</p>
+        <p className="text-gray-400 text-sm mb-6">No password needed — just your name and email</p>
 
         {error && (
           <div className="mb-4">
@@ -136,69 +126,6 @@ export default function RegisterPage() {
             {fieldErrors.email && (
               <p className="text-red-400 text-xs mt-1.5" role="alert">
                 {fieldErrors.email}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-xs font-semibold text-gray-300 mb-2 uppercase tracking-wider"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                clearFieldError('password');
-                clearFieldError('confirmPassword');
-              }}
-              aria-invalid={!!fieldErrors.password}
-              className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
-                fieldErrors.password
-                  ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
-                  : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
-              }`}
-              placeholder="At least 6 characters"
-            />
-            {fieldErrors.password && (
-              <p className="text-red-400 text-xs mt-1.5" role="alert">
-                {fieldErrors.password}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="confirmPassword"
-              className="block text-xs font-semibold text-gray-300 mb-2 uppercase tracking-wider"
-            >
-              Confirm password
-            </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                clearFieldError('confirmPassword');
-              }}
-              aria-invalid={!!fieldErrors.confirmPassword}
-              className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
-                fieldErrors.confirmPassword
-                  ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
-                  : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
-              }`}
-              placeholder="Repeat your password"
-            />
-            {fieldErrors.confirmPassword && (
-              <p className="text-red-400 text-xs mt-1.5" role="alert">
-                {fieldErrors.confirmPassword}
               </p>
             )}
           </div>

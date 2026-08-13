@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopNav from './TopNav';
+import AISidebar from '../AISidebar';
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,6 +41,8 @@ export default function DashboardLayout() {
           </div>
         </main>
       </div>
+
+      <AISidebar />
     </div>
   );
 }

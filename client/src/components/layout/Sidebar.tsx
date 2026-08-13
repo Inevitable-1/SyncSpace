@@ -20,6 +20,7 @@ import {
   DocumentTextIcon,
 } from '../Icons';
 import { logout } from '../../features/auth/authSlice';
+import LogoMark from '../logo/LogoMark';
 import type { RootState, AppDispatch } from '../../store';
 
 const mainNavItems = [
@@ -225,17 +226,12 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
       >
         {!collapsed ? (
           <NavLink to="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center shadow-lg shadow-brand-600/30">
-              <span className="text-white font-bold text-sm">S</span>
-            </div>
+            <LogoMark size={32} showGlow={false} />
             <span className="text-lg font-black tracking-tight">SyncSpace</span>
           </NavLink>
         ) : (
-          <NavLink
-            to="/dashboard"
-            className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center shadow-lg shadow-brand-600/30"
-          >
-            <span className="text-white font-bold text-sm">S</span>
+          <NavLink to="/dashboard" className="block">
+            <LogoMark size={32} showGlow={false} />
           </NavLink>
         )}
         <div className="flex items-center gap-1">

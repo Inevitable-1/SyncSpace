@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createWorkspace } from '../../features/workspace/workspaceSlice';
 import { createInvite } from '../../features/collaboration/inviteSlice';
 import { fireConfetti } from '../../utils/confetti';
+import LogoMark from '../logo/LogoMark';
 import type { AppDispatch } from '../../store';
 
 const THEMES = [
@@ -280,12 +281,12 @@ export default function WorkspaceOnboarding({ isOpen, onClose, onCreated }: Prop
               transition={{ delay: 0.1 }}
               className="flex items-center gap-2.5 mb-8"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                <span className="text-white font-bold text-sm">S</span>
+              <div className="flex items-center gap-2.5 mb-8">
+                <LogoMark size={36} showGlow={false} />
+                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                  SyncSpace
+                </span>
               </div>
-              <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                SyncSpace
-              </span>
             </motion.div>
 
             {/* Heading */}

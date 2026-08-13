@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import crypto from 'crypto';
-import { User } from '../models/User.js';
+import { User, type IUserDocument } from '../models/User.js';
 import { RefreshToken } from '../models/RefreshToken.js';
 import { generateTokenPair, hashToken } from '../utils/tokens.js';
 import { AppError } from '../middleware/errorHandler.js';
@@ -33,22 +33,7 @@ function formatUser(user: {
   };
 }
 
-export async function register(req: Request, res: Response): Promise<void> {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    res.status(400).json({ success: false, message: 'Validation failed', errors: errors.mapped() });
-    return;
-  }
-
-  const { name, email, password } = req.body;
-
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new AppError('Email already in use', 409);
-  }
-
-  const user = await User.create({ name, email, password });
-
+async function issueTokens(user: IUserDocument, req: Request, res: Response): Promise<string> {
   const tokenPayload = { userId: user._id.toString(), email: user.email };
   const { accessToken, refreshToken, hashedRefreshToken, refreshExpiresAt } =
     generateTokenPair(tokenPayload);
@@ -62,10 +47,42 @@ export async function register(req: Request, res: Response): Promise<void> {
   });
 
   setRefreshTokenCookie(res, refreshToken, refreshExpiresAt);
+  return accessToken;
+}
 
-  res.status(201).json({
+function randomPassword(): string {
+  return crypto.randomBytes(24).toString('hex');
+}
+
+export async function register(req: Request, res: Response): Promise<void> {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ success: false, message: 'Validation failed', errors: errors.mapped() });
+    return;
+  }
+
+  const { name, email } = req.body;
+  const existingUser = await User.findOne({ email });
+
+  let user;
+  let created = false;
+
+  if (existingUser) {
+    user = existingUser;
+    if (name && name.trim() && user.name !== name.trim()) {
+      user.name = name.trim();
+      await user.save({ validateModifiedOnly: true });
+    }
+  } else {
+    user = await User.create({ name, email, password: randomPassword() });
+    created = true;
+  }
+
+  const accessToken = await issueTokens(user, req, res);
+
+  res.status(created ? 201 : 200).json({
     success: true,
-    message: 'Registration successful',
+    message: created ? 'Registration successful' : 'Signed in successfully',
     data: { user: formatUser(user), accessToken },
   });
 }
@@ -77,31 +94,14 @@ export async function login(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const { email, password } = req.body;
+  const { email } = req.body;
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email });
   if (!user) {
-    throw new AppError('Invalid email or password', 401);
+    throw new AppError('No account found with this email. Please sign up first.', 401);
   }
 
-  const isPasswordValid = await user.comparePassword(password);
-  if (!isPasswordValid) {
-    throw new AppError('Invalid email or password', 401);
-  }
-
-  const tokenPayload = { userId: user._id.toString(), email: user.email };
-  const { accessToken, refreshToken, hashedRefreshToken, refreshExpiresAt } =
-    generateTokenPair(tokenPayload);
-
-  await RefreshToken.create({
-    user: user._id,
-    token: hashedRefreshToken,
-    userAgent: req.headers['user-agent'] || '',
-    ip: req.ip || '',
-    expiresAt: refreshExpiresAt,
-  });
-
-  setRefreshTokenCookie(res, refreshToken, refreshExpiresAt);
+  const accessToken = await issueTokens(user, req, res);
 
   res.json({
     success: true,
@@ -111,34 +111,21 @@ export async function login(req: Request, res: Response): Promise<void> {
 }
 
 export async function demoLogin(req: Request, res: Response): Promise<void> {
-  const DEMO_EMAIL = process.env.DEMO_EMAIL || 'alex@syncspace.demo';
-  const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo1234';
+  const DEMO_EMAIL = process.env.DEMO_EMAIL || 'mr.manojmanu05@gmail.com';
 
   let user = await User.findOne({ email: DEMO_EMAIL });
 
   if (!user) {
     user = await User.create({
-      name: 'Alex Johnson',
+      name: 'Manoj Kumar',
       email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
+      password: randomPassword(),
       avatar: '',
       isEmailVerified: true,
     });
   }
 
-  const tokenPayload = { userId: user._id.toString(), email: user.email };
-  const { accessToken, refreshToken, hashedRefreshToken, refreshExpiresAt } =
-    generateTokenPair(tokenPayload);
-
-  await RefreshToken.create({
-    user: user._id,
-    token: hashedRefreshToken,
-    userAgent: req.headers['user-agent'] || '',
-    ip: req.ip || '',
-    expiresAt: refreshExpiresAt,
-  });
-
-  setRefreshTokenCookie(res, refreshToken, refreshExpiresAt);
+  const accessToken = await issueTokens(user, req, res);
 
   res.json({
     success: true,
