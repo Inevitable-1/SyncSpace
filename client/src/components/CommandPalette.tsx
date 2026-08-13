@@ -266,6 +266,16 @@ export default function CommandPalette() {
                   <kbd className="font-mono border border-white/10 rounded px-1 py-0.5">esc</kbd>{' '}
                   close
                 </span>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    window.dispatchEvent(new Event('syncspace:open-shortcuts'));
+                  }}
+                  className="ml-auto flex items-center gap-1 text-gray-500 hover:text-brand-300 transition-colors"
+                >
+                  <kbd className="font-mono border border-white/10 rounded px-1 py-0.5">?</kbd>{' '}
+                  shortcuts
+                </button>
               </div>
             </motion.div>
           </div>

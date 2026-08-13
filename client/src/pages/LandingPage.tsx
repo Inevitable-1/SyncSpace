@@ -458,8 +458,12 @@ export default function LandingPage() {
                 Status
               </a>
             </div>
-            <div className="text-xs text-[#888888]">
-              &copy; {new Date().getFullYear()} SyncSpace. All rights reserved.
+            <div className="flex flex-col items-center gap-1.5 text-xs text-[#888888]">
+              <span>&copy; {new Date().getFullYear()} SyncSpace. All rights reserved.</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-amber-50 px-3 py-1 text-[10px] font-semibold text-[#B8860B]">
+                <LogoMark size={14} />
+                SyncSpace v1.0 Internship Edition
+              </span>
             </div>
           </div>
         </div>

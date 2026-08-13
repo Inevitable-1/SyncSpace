@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ThemeProvider } from './context/ThemeContext';
@@ -22,7 +22,6 @@ import ActivityPage from './pages/dashboard/ActivityPage';
 import TrashPage from './pages/dashboard/TrashPage';
 import NotificationsPage from './pages/dashboard/NotificationsPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
-import WhiteboardPage from './pages/WhiteboardPage';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import InsightsPage from './pages/dashboard/InsightsPage';
 import FileManagerPage from './pages/dashboard/FileManagerPage';
@@ -30,8 +29,12 @@ import MeetingsPage from './pages/dashboard/MeetingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import CommandPalette from './components/CommandPalette';
+import ShortcutsModal from './components/ShortcutsModal';
 import LogoMark from './components/logo/LogoMark';
 import LoadingScreen from './components/logo/LoadingScreen';
+import Spinner from './components/common/Spinner';
+
+const WhiteboardPage = lazy(() => import('./pages/WhiteboardPage'));
 
 const INTRO_STORAGE_KEY = 'syncspace-intro-played';
 
@@ -192,7 +195,15 @@ function Root() {
             path="/whiteboard/:roomId"
             element={
               <ProtectedRoute>
-                <WhiteboardPage />
+                <Suspense
+                  fallback={
+                    <div className="min-h-screen bg-surface-950 flex items-center justify-center">
+                      <Spinner size="lg" />
+                    </div>
+                  }
+                >
+                  <WhiteboardPage />
+                </Suspense>
               </ProtectedRoute>
             }
           />
@@ -200,6 +211,7 @@ function Root() {
         </Routes>
       </motion.div>
       <CommandPalette />
+      <ShortcutsModal />
       {showIntro && <LoadingScreen onDone={handleIntroDone} />}
     </>
   );

@@ -130,6 +130,17 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
 
         <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
           <button
+            onClick={() => window.dispatchEvent(new Event('syncspace:open-shortcuts'))}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+            title="Keyboard shortcuts (?)"
+            aria-label="Keyboard shortcuts"
+          >
+            <kbd className="text-[10px] font-mono border border-white/10 rounded px-1.5 py-0.5">
+              ?
+            </kbd>
+          </button>
+
+          <button
             onClick={toggleTheme}
             className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
           >
