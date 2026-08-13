@@ -1,9 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/common/Toast';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LandingPage from './pages/LandingPage';
+import FeaturesPage from './pages/FeaturesPage';
+import AboutPage from './pages/AboutPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -26,8 +29,8 @@ import FileManagerPage from './pages/dashboard/FileManagerPage';
 import MeetingsPage from './pages/dashboard/MeetingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import CommandPalette from './components/CommandPalette';
-import AISidebar from './components/AISidebar';
-import IntroScreen from './components/intro/IntroScreen';
+import LogoMark from './components/logo/LogoMark';
+import LoadingScreen from './components/logo/LoadingScreen';
 
 const INTRO_STORAGE_KEY = 'syncspace-intro-played';
 
@@ -39,19 +42,42 @@ function readIntroPlayed(): boolean {
   }
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname]);
+  return null;
+}
+
 function NotFound() {
   return (
-    <div className="min-h-screen bg-surface-900 text-white flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-8xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-purple-400">
-          404
+    <div
+      className="min-h-screen bg-white flex items-center justify-center px-6 overflow-hidden"
+      style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' }}
+    >
+      <div className="fixed inset-0 pointer-events-none">
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.12), transparent 60%)' }}
+        />
+      </div>
+      <div className="relative text-center">
+        <div className="flex justify-center mb-8">
+          <LogoMark size={72} />
+        </div>
+        <h1 className="text-8xl font-black mb-3 text-[#111111] tracking-tight">
+          4<span className="text-[#C1121F]">0</span>4
         </h1>
-        <p className="text-gray-400 text-lg mb-8">Page not found</p>
+        <p className="text-[#555555] text-lg mb-3">This page drifted off the whiteboard.</p>
+        <p className="text-sm text-[#888888] mb-10">
+          The link may be broken, or the page was moved to a different room.
+        </p>
         <a
           href="/"
-          className="px-6 py-3 bg-gradient-to-r from-brand-600 to-purple-600 rounded-xl font-semibold text-sm text-white shadow-lg shadow-brand-600/25 hover:shadow-brand-500/40 transition-all inline-block"
+          className="inline-block px-8 py-3.5 rounded-xl text-sm font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-lg shadow-red-500/25"
         >
-          Go Home
+          Back to SyncSpace
         </a>
       </div>
     </div>
@@ -74,48 +100,57 @@ function Root() {
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<DashboardHome />} />
-          <Route path="workspaces" element={<WorkspacesPage />} />
-          <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
-          <Route path="rooms" element={<RoomsPage />} />
-          <Route path="rooms/:id" element={<RoomDetailPage />} />
-          <Route path="meetings" element={<MeetingsPage />} />
-          <Route path="shared" element={<SharedWithMePage />} />
-          <Route path="activity" element={<ActivityPage />} />
-          <Route path="trash" element={<TrashPage />} />
-          <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="insights" element={<InsightsPage />} />
-          <Route path="files" element={<FileManagerPage />} />
-        </Route>
-        <Route
-          path="/whiteboard/:roomId"
-          element={
-            <ProtectedRoute>
-              <WhiteboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <ScrollToTop />
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+      >
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<DashboardHome />} />
+            <Route path="workspaces" element={<WorkspacesPage />} />
+            <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
+            <Route path="rooms" element={<RoomsPage />} />
+            <Route path="rooms/:id" element={<RoomDetailPage />} />
+            <Route path="meetings" element={<MeetingsPage />} />
+            <Route path="shared" element={<SharedWithMePage />} />
+            <Route path="activity" element={<ActivityPage />} />
+            <Route path="trash" element={<TrashPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="insights" element={<InsightsPage />} />
+            <Route path="files" element={<FileManagerPage />} />
+          </Route>
+          <Route
+            path="/whiteboard/:roomId"
+            element={
+              <ProtectedRoute>
+                <WhiteboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </motion.div>
       <CommandPalette />
-      <AISidebar />
-      {showIntro && <IntroScreen onDone={handleIntroDone} />}
+      {showIntro && <LoadingScreen onDone={handleIntroDone} />}
     </>
   );
 }
