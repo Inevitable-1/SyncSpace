@@ -121,7 +121,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
 
   const handleLogout = async () => {
     await dispatch(logout());
-    navigate('/login');
+    navigate('/');
   };
 
   const workspaceCount = workspaces.length;

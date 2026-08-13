@@ -16,8 +16,8 @@ SyncSpace is a comprehensive collaborative platform with multiple interconnected
 - `server/src/controllers/auth.ts` - Express auth controller
 - `server/src/routes/auth.ts` - Auth route definitions
 - `server/src/models/User.ts` - User model
-- `client/src/pages/Login.tsx` - Login UI
-- `client/src/pages/Register.tsx` - Registration UI
+- `client/src/pages/LoginPage.tsx` - Login UI
+- `client/src/pages/RegisterPage.tsx` - Registration UI
 - `client/src/context/AuthContext.tsx` - Auth context (if exists)
 - `client/src/components/ProtectedRoute.tsx` - Protected route component
 

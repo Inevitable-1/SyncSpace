@@ -28,6 +28,7 @@ import InsightsPage from './pages/dashboard/InsightsPage';
 import FileManagerPage from './pages/dashboard/FileManagerPage';
 import MeetingsPage from './pages/dashboard/MeetingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
 import CommandPalette from './components/CommandPalette';
 import LogoMark from './components/logo/LogoMark';
 import LoadingScreen from './components/logo/LoadingScreen';
@@ -108,13 +109,62 @@ function Root() {
         transition={{ duration: 0.35, ease: 'easeOut' }}
       >
         <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/features" element={<FeaturesPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/"
+            element={
+              <PublicRoute>
+                <LandingPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/features"
+            element={
+              <PublicRoute>
+                <FeaturesPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <PublicRoute>
+                <AboutPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <RegisterPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPasswordPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <PublicRoute>
+                <ResetPasswordPage />
+              </PublicRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={

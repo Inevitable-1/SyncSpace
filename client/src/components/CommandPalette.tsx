@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logout } from '../features/auth/authSlice';
+import type { AppDispatch } from '../store';
 
 interface CommandItem {
   id: string;
@@ -17,6 +20,7 @@ export default function CommandPalette() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const commands: CommandItem[] = [
     {
@@ -115,8 +119,8 @@ export default function CommandPalette() {
       label: 'Sign Out',
       icon: '🚪',
       action: () => {
-        localStorage.clear();
-        navigate('/login');
+        dispatch(logout());
+        navigate('/');
       },
       category: 'Actions',
     },

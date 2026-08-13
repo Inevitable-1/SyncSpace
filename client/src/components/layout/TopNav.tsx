@@ -75,7 +75,7 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
 
   const handleLogout = async () => {
     await dispatch(logout());
-    navigate('/login');
+    navigate('/');
   };
 
   const pageTitle =

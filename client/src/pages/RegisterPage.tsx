@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { register, clearError } from '../features/auth/authSlice';
@@ -22,7 +22,10 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
+
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
 
   function validate(): FieldErrors {
     const errors: FieldErrors = {};
@@ -47,7 +50,7 @@ export default function RegisterPage() {
 
     const result = await dispatch(register({ name: name.trim(), email: email.trim() }));
     if (register.fulfilled.match(result)) {
-      navigate('/', { replace: true });
+      navigate(from, { replace: true });
     }
   }
 

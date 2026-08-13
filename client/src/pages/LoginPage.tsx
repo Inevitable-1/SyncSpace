@@ -17,7 +17,7 @@ export default function LoginPage() {
   const location = useLocation();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

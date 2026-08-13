@@ -180,11 +180,17 @@ SyncSpace/
 
 ## Documentation
 
+- [Project Showcase](PROJECT_SHOWCASE.md) — portfolio overview
+- [Final Audit Report](FINAL_AUDIT_REPORT.md) — full-project consistency audit
 - [Project Journey](docs/ProjectJourney.md) — idea to implementation
 - [Week 1](docs/Week1.md) — foundation & authentication
 - [Week 2](docs/Week2.md) — collaboration platform
 - [Week 3](docs/Week3.md) — branding, redesign & hardening
 - [Architecture](docs/Architecture.md) — system design
+- [Feature Map](docs/FeatureMap.md) — every feature & its status
+- [Data Models](docs/DataModels.md) — all 16 MongoDB models
+- [Routes](docs/Routes.md) — frontend, backend & socket routes
+- [Components](docs/Components.md) — component inventory
 - [Future Roadmap](docs/FutureRoadmap.md) — what's next
 - [API Reference](docs/API_REFERENCE.md) — full endpoint list
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) — production notes
