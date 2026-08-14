@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { login, demoLogin, clearError } from '../features/auth/authSlice';
+import { login, clearError } from '../features/auth/authSlice';
 import type { AppDispatch } from '../store';
 import type { RootState } from '../store';
 import AuthLayout from '../components/AuthLayout';
@@ -12,12 +12,11 @@ import Spinner from '../components/common/Spinner';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const location = useLocation();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
-
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -26,18 +25,15 @@ export default function LoginPage() {
       return;
     }
     setEmailError('');
-    const result = await dispatch(login({ email: email.trim() }));
-    if (login.fulfilled.match(result)) {
-      navigate(from, { replace: true });
+    if (!password) {
+      setPasswordError('Please enter your password.');
+      return;
     }
-  }
-
-  function handleDemoLogin() {
-    dispatch(demoLogin()).then((action) => {
-      if (demoLogin.fulfilled.match(action)) {
-        navigate(from, { replace: true });
-      }
-    });
+    setPasswordError('');
+    const result = await dispatch(login({ email: email.trim(), password }));
+    if (login.fulfilled.match(result)) {
+      navigate('/dashboard', { replace: true });
+    }
   }
 
   return (
@@ -67,7 +63,7 @@ export default function LoginPage() {
             <input
               id="email"
               type="email"
-              required
+              autoComplete="email"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -88,6 +84,45 @@ export default function LoginPage() {
             )}
           </div>
 
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label
+                htmlFor="password"
+                className="block text-xs font-semibold text-gray-300 uppercase tracking-wider"
+              >
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setPasswordError('');
+              }}
+              aria-invalid={!!passwordError}
+              className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
+                passwordError
+                  ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
+                  : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
+              }`}
+              placeholder="Your password"
+            />
+            {passwordError && (
+              <p className="text-red-400 text-xs mt-1.5" role="alert">
+                {passwordError}
+              </p>
+            )}
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}
@@ -98,34 +133,10 @@ export default function LoginPage() {
                 <Spinner size="sm" /> Signing in...
               </>
             ) : (
-              'Sign in'
+              'Sign In'
             )}
           </button>
         </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-white/10" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-surface-900/80 text-gray-500 text-xs font-medium">or</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleDemoLogin}
-          disabled={isLoading}
-          className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white font-semibold rounded-xl transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isLoading ? (
-            <>
-              <Spinner size="sm" /> Signing in as demo user...
-            </>
-          ) : (
-            'Try Demo (Manoj Kumar)'
-          )}
-        </button>
 
         <p className="mt-6 text-center text-gray-400 text-sm">
           Don&apos;t have an account?{' '}

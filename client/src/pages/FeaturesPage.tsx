@@ -147,10 +147,10 @@ export default function FeaturesPage() {
                 About
               </Link>
               <Link
-                to="/login"
+                to="/register"
                 className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-lg shadow-red-500/25"
               >
-                Start Collaborating
+                Get Started
               </Link>
             </div>
             <Link
@@ -261,10 +261,10 @@ export default function FeaturesPage() {
             className="text-center mt-24"
           >
             <Link
-              to="/login"
+              to="/register"
               className="group inline-flex items-center gap-2 px-10 py-4 rounded-xl text-base font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-xl shadow-red-500/30"
             >
-              Start Collaborating
+              Get Started
               <span className="transition-transform group-hover:translate-x-1">→</span>
             </Link>
           </motion.div>

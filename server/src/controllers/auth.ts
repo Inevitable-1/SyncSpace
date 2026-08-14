@@ -61,28 +61,20 @@ export async function register(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const { name, email } = req.body;
+  const { name, email, password } = req.body;
   const existingUser = await User.findOne({ email });
 
-  let user;
-  let created = false;
-
   if (existingUser) {
-    user = existingUser;
-    if (name && name.trim() && user.name !== name.trim()) {
-      user.name = name.trim();
-      await user.save({ validateModifiedOnly: true });
-    }
-  } else {
-    user = await User.create({ name, email, password: randomPassword() });
-    created = true;
+    throw new AppError('An account with this email already exists. Please sign in.', 409);
   }
+
+  const user = await User.create({ name, email, password });
 
   const accessToken = await issueTokens(user, req, res);
 
-  res.status(created ? 201 : 200).json({
+  res.status(201).json({
     success: true,
-    message: created ? 'Registration successful' : 'Signed in successfully',
+    message: 'Registration successful',
     data: { user: formatUser(user), accessToken },
   });
 }
@@ -94,11 +86,11 @@ export async function login(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const { email } = req.body;
+  const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw new AppError('No account found with this email. Please sign up first.', 401);
+  const user = await User.findOne({ email }).select('+password');
+  if (!user || !(await user.comparePassword(password))) {
+    throw new AppError('Invalid email or password', 401);
   }
 
   const accessToken = await issueTokens(user, req, res);

@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import LogoMark from '../components/logo/LogoMark';
 import AnimatedLogo, { LOGO_ANIM_DURATION } from '../components/logo/AnimatedLogo';
+import { demoLogin } from '../features/auth/authSlice';
+import type { AppDispatch } from '../store';
 
 const featureCards = [
   {
@@ -128,6 +131,20 @@ const particles = Array.from({ length: 22 }, (_, i) => {
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+
+  const handleDemoExplore = async () => {
+    if (demoLoading) return;
+    setDemoLoading(true);
+    const action = await dispatch(demoLogin());
+    if (demoLogin.fulfilled.match(action)) {
+      navigate('/dashboard', { replace: true });
+    } else {
+      setDemoLoading(false);
+    }
+  };
 
   const navLinks = [
     { label: 'Features', href: '/features' },
@@ -221,10 +238,10 @@ export default function LandingPage() {
                 Sign in
               </Link>
               <Link
-                to="/login"
+                to="/register"
                 className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-lg shadow-red-500/25"
               >
-                Start Collaborating
+                Get Started
               </Link>
             </div>
           </div>
@@ -270,10 +287,10 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                to="/login"
+                to="/register"
                 className="group relative px-8 py-3.5 rounded-xl text-base font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-xl shadow-red-500/30"
               >
-                Start Collaborating
+                Get Started
                 <span className="inline-block ml-2 transition-transform group-hover:translate-x-1">
                   →
                 </span>
@@ -425,10 +442,10 @@ export default function LandingPage() {
                 Bring your ideas, code, and teamwork together in one powerful workspace.
               </p>
               <Link
-                to="/login"
+                to="/register"
                 className="group inline-flex items-center gap-2 px-10 py-4 rounded-xl text-base font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-xl shadow-red-500/30"
               >
-                Sign In &amp; Start
+                Get Started
                 <span className="transition-transform group-hover:translate-x-1">→</span>
               </Link>
             </div>
@@ -458,6 +475,27 @@ export default function LandingPage() {
                 Status
               </a>
             </div>
+            <button
+              type="button"
+              onClick={handleDemoExplore}
+              disabled={demoLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-[#B8860B] bg-amber-50 border border-[#D4AF37]/40 hover:bg-amber-100 hover:border-[#D4AF37] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m0 0a2.246 2.246 0 00-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0121 12v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6c0-.98.626-1.813 1.5-2.122"
+                />
+              </svg>
+              {demoLoading ? 'Loading demo...' : 'Explore Demo Workspace'}
+            </button>
             <div className="flex flex-col items-center gap-1.5 text-xs text-[#888888]">
               <span>&copy; {new Date().getFullYear()} SyncSpace. All rights reserved.</span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-amber-50 px-3 py-1 text-[10px] font-semibold text-[#B8860B]">

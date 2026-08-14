@@ -27,6 +27,7 @@ const registerValidation = [
     gmail_remove_dots: false,
     gmail_remove_subaddress: false,
   }),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ];
 
 const loginValidation = [
@@ -35,6 +36,7 @@ const loginValidation = [
     gmail_remove_dots: false,
     gmail_remove_subaddress: false,
   }),
+  body('password').notEmpty().withMessage('Password is required'),
 ];
 
 const forgotPasswordValidation = [
