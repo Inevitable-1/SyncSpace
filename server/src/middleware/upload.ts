@@ -1,10 +1,14 @@
 import multer from 'multer';
+import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
+const uploadsDir = path.resolve('uploads');
+fs.mkdirSync(uploadsDir, { recursive: true });
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, path.resolve('uploads'));
+    cb(null, uploadsDir);
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = crypto.randomBytes(8).toString('hex');

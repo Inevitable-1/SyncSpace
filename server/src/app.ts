@@ -25,17 +25,43 @@ import meetingRoutes from './routes/meeting.js';
 const app = express();
 const httpServer = createServer(app);
 
+const CONFIGURED_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
+// Allows any http://localhost:PORT (or 127.0.0.1) origin in development so a
+// Vite port shift (e.g. 5173 -> 5174 when the default is busy) can never break
+// CORS and take down registration/login. Production is locked to CORS_ORIGIN.
+function corsOrigin(
+  requestOrigin: string | undefined,
+  callback: (err: Error | null, allow?: boolean) => void,
+): void {
+  if (!requestOrigin) {
+    callback(null, true);
+    return;
+  }
+  if (IS_DEV) {
+    try {
+      const { hostname } = new URL(requestOrigin);
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        callback(null, true);
+        return;
+      }
+    } catch {
+      // fall through to the configured origin below
+    }
+  }
+  callback(null, requestOrigin === CONFIGURED_ORIGIN);
+}
+
+const corsOptions: cors.CorsOptions = { origin: corsOrigin, credentials: true };
+
 export const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
+  cors: corsOptions,
 });
 
 app.use(helmet());
 app.use(compression());
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173', credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
