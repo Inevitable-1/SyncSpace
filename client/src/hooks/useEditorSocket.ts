@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
+import { isDemoSession } from '../services/demo';
 import type { CodeEditorUser, EditorCursor } from '../types';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
@@ -29,13 +30,13 @@ export function useEditorSocket({ roomId, userName, enabled = true }: UseEditorS
   }, []);
 
   useEffect(() => {
-    if (!enabled || !roomId) return;
+    if (!enabled || !roomId || isDemoSession()) return;
 
     const token = getToken();
     if (!token) return;
 
     const socket = io(SOCKET_URL, {
-      auth: { token },
+      auth: (cb) => cb({ token: getToken() }),
       transports: ['websocket', 'polling'],
     });
 
@@ -46,6 +47,7 @@ export function useEditorSocket({ roomId, userName, enabled = true }: UseEditorS
       socket.emit('editor-join', { roomId, userName });
     });
 
+    socket.on('connect_error', () => setIsConnected(false));
     socket.on('disconnect', () => setIsConnected(false));
 
     socket.on(

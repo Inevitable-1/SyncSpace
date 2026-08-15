@@ -45,7 +45,7 @@ export function useSocket({
     if (!token) return;
 
     const socket = io(SOCKET_URL, {
-      auth: { token },
+      auth: (cb) => cb({ token: getToken() }),
       transports: ['websocket', 'polling'],
     });
 
@@ -54,6 +54,14 @@ export function useSocket({
     socket.on('connect', () => {
       setIsConnected(true);
       socket.emit('join-room', { roomId, userName });
+    });
+
+    // Rejected handshake (e.g. the access token expired while the page was
+    // open). socket.io auto-reconnects and, because `auth` is a function, each
+    // new handshake re-reads the token from localStorage — so a freshly
+    // refreshed token is used instead of failing repeatedly with a stale one.
+    socket.on('connect_error', () => {
+      setIsConnected(false);
     });
 
     socket.on('disconnect', () => {
