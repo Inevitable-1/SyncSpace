@@ -1,4 +1,4 @@
-import { useState, useCallback, createContext, useContext, type ReactNode } from 'react';
+import { useState, useRef, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckIcon, XIcon, InformationCircleIcon } from '../Icons';
 
@@ -77,13 +77,22 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const activeMessages = useRef<Set<string>>(new Set());
 
   const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => {
+      const toast = prev.find((t) => t.id === id);
+      if (toast) {
+        activeMessages.current.delete(toast.message);
+      }
+      return prev.filter((t) => t.id !== id);
+    });
   }, []);
 
   const showToast = useCallback(
     (message: string, type: ToastType = 'info') => {
+      if (activeMessages.current.has(message)) return;
+      activeMessages.current.add(message);
       const id = Math.random().toString(36).slice(2);
       setToasts((prev) => [...prev, { id, message, type }]);
       setTimeout(() => removeToast(id), 4000);
