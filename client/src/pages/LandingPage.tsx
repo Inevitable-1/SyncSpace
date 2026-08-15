@@ -232,7 +232,7 @@ export default function LandingPage() {
 
             <div className="flex items-center gap-3">
               <Link
-                to="/login"
+                to="/signin"
                 className="px-4 py-2 text-sm font-medium text-[#555555] hover:text-[#111111] transition-colors"
               >
                 Sign in
@@ -296,7 +296,7 @@ export default function LandingPage() {
                 </span>
               </Link>
               <Link
-                to="/login"
+                to="/signin"
                 className="px-8 py-3.5 rounded-xl text-base font-semibold text-[#111111] border border-[#D4AF37]/60 bg-white hover:bg-[#FFFDF7] hover:border-[#D4AF37] transition-all shadow-sm"
               >
                 Sign In
@@ -494,7 +494,7 @@ export default function LandingPage() {
                   d="M6 6.878V6a2.25 2.25 0 012.25-2.25h7.5A2.25 2.25 0 0118 6v.878m-12 0c.235-.083.487-.128.75-.128h10.5c.263 0 .515.045.75.128m-12 0A2.25 2.25 0 004.5 9v.878m13.5-3A2.25 2.25 0 0119.5 9v.878m0 0a2.246 2.246 0 00-.75-.128H5.25c-.263 0-.515.045-.75.128m15 0A2.25 2.25 0 0121 12v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6c0-.98.626-1.813 1.5-2.122"
                 />
               </svg>
-              {demoLoading ? 'Loading demo...' : 'Explore Demo Workspace'}
+              {demoLoading ? 'Loading demo...' : 'Try Demo'}
             </button>
             <div className="flex flex-col items-center gap-1.5 text-xs text-[#888888]">
               <span>&copy; {new Date().getFullYear()} SyncSpace. All rights reserved.</span>

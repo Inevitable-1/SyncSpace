@@ -72,7 +72,7 @@ export default function ResetPasswordPage() {
             </div>
             <p className="text-gray-300 text-sm mb-4">Password has been reset successfully.</p>
             <Link
-              to="/login"
+              to="/signin"
               className="text-brand-400 hover:text-brand-300 text-sm font-semibold transition-colors"
             >
               Sign in with new password
@@ -206,7 +206,7 @@ export default function ResetPasswordPage() {
 
         <p className="mt-6 text-center text-gray-400 text-sm">
           <Link
-            to="/login"
+            to="/signin"
             className="text-brand-400 hover:text-brand-300 font-semibold transition-colors"
           >
             Back to sign in

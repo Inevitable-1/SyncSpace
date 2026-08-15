@@ -1,22 +1,31 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { login, clearError } from '../features/auth/authSlice';
+import { authService } from '../services/authService';
 import type { AppDispatch } from '../store';
 import type { RootState } from '../store';
 import AuthLayout from '../components/AuthLayout';
 import ErrorMessage from '../components/common/ErrorMessage';
 import Spinner from '../components/common/Spinner';
+import { CheckIcon } from '../components/Icons';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
+
+  const justRegistered = searchParams.get('registered') === '1';
+  const needsVerification = !!error && error.toLowerCase().includes('verify');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -32,7 +41,21 @@ export default function LoginPage() {
     setPasswordError('');
     const result = await dispatch(login({ email: email.trim(), password }));
     if (login.fulfilled.match(result)) {
-      navigate('/dashboard', { replace: true });
+      // Return to the page the user was trying to reach before being asked to
+      // sign in (set by ProtectedRoute), otherwise go to the dashboard.
+      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
+      navigate(from || '/dashboard', { replace: true });
+    }
+  }
+
+  async function handleResend() {
+    if (!email.trim()) return;
+    setResending(true);
+    try {
+      await authService.resendVerification(email.trim());
+      setResent(true);
+    } finally {
+      setResending(false);
     }
   }
 
@@ -46,9 +69,34 @@ export default function LoginPage() {
         <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Welcome back</h2>
         <p className="text-gray-400 text-sm mb-6">Sign in with your email to continue</p>
 
+        {justRegistered && (
+          <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-300">
+            <CheckIcon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>Account created successfully! Sign in to continue.</span>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4">
             <ErrorMessage message={error} onDismiss={() => dispatch(clearError())} />
+            {needsVerification && (
+              <div className="mt-2">
+                {resent ? (
+                  <p className="text-xs text-emerald-400">
+                    A new verification email has been sent.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resending}
+                    className="text-xs font-semibold text-brand-400 hover:text-brand-300 transition-colors disabled:opacity-60"
+                  >
+                    {resending ? 'Sending...' : 'Resend verification email'}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 

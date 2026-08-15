@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useDispatch } from 'react-redux';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/common/Toast';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { initializeAuth } from './features/auth/authSlice';
+import type { AppDispatch } from './store';
 import LandingPage from './pages/LandingPage';
 import FeaturesPage from './pages/FeaturesPage';
 import AboutPage from './pages/AboutPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import PasswordSetupPage from './pages/PasswordSetupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardLayout from './components/layout/DashboardLayout';
@@ -28,6 +32,7 @@ import FileManagerPage from './pages/dashboard/FileManagerPage';
 import MeetingsPage from './pages/dashboard/MeetingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
+import SessionExpiredListener from './components/SessionExpiredListener';
 import CommandPalette from './components/CommandPalette';
 import ShortcutsModal from './components/ShortcutsModal';
 import LogoMark from './components/logo/LogoMark';
@@ -90,8 +95,16 @@ function NotFound() {
 
 function Root() {
   const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
   const [introDone, setIntroDone] = useState(readIntroPlayed);
   const showIntro = location.pathname === '/' && !introDone;
+
+  // Re-validate any persisted session (access/refresh token) when the app loads
+  // so a page refresh keeps the user signed in — or cleanly redirects to the
+  // sign-in page when the session can no longer be restored.
+  useEffect(() => {
+    dispatch(initializeAuth());
+  }, [dispatch]);
 
   const handleIntroDone = useCallback(() => {
     try {
@@ -105,6 +118,7 @@ function Root() {
   return (
     <>
       <ScrollToTop />
+      <SessionExpiredListener />
       <motion.div
         key={location.pathname}
         initial={{ opacity: 0 }}
@@ -137,6 +151,14 @@ function Root() {
             }
           />
           <Route
+            path="/signin"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
+          <Route
             path="/login"
             element={
               <PublicRoute>
@@ -149,6 +171,14 @@ function Root() {
             element={
               <PublicRoute>
                 <RegisterPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/verify-email"
+            element={
+              <PublicRoute>
+                <PasswordSetupPage />
               </PublicRoute>
             }
           />

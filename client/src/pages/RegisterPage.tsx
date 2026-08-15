@@ -1,52 +1,41 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { register, clearError } from '../features/auth/authSlice';
+import { authService } from '../services/authService';
 import type { AppDispatch } from '../store';
 import type { RootState } from '../store';
 import AuthLayout from '../components/AuthLayout';
 import ErrorMessage from '../components/common/ErrorMessage';
 import Spinner from '../components/common/Spinner';
+import { CheckIcon } from '../components/Icons';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-type Step = 1 | 2;
 
 interface FieldErrors {
   name?: string;
   email?: string;
-  password?: string;
-  confirmPassword?: string;
 }
 
 export default function RegisterPage() {
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [devToken, setDevToken] = useState<string | undefined>(undefined);
+  const [resent, setResent] = useState(false);
+  const [resending, setResending] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
 
-  function validateStep(currentStep: Step): FieldErrors {
+  function validateStep(): FieldErrors {
     const errors: FieldErrors = {};
-    if (currentStep === 1) {
-      if (name.trim().length < 2) {
-        errors.name = 'Please enter your full name (at least 2 characters).';
-      }
-      if (!EMAIL_PATTERN.test(email.trim())) {
-        errors.email = 'Please enter a valid email address.';
-      }
-    } else {
-      if (password.length < 6) {
-        errors.password = 'Password must be at least 6 characters.';
-      }
-      if (confirmPassword !== password) {
-        errors.confirmPassword = 'Passwords do not match.';
-      }
+    if (name.trim().length < 2) {
+      errors.name = 'Please enter your full name (at least 2 characters).';
+    }
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      errors.email = 'Please enter a valid email address.';
     }
     return errors;
   }
@@ -55,23 +44,36 @@ export default function RegisterPage() {
     setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
-  function handleContinue(e: FormEvent) {
-    e.preventDefault();
-    const errors = validateStep(1);
-    setFieldErrors(errors);
-    if (Object.values(errors).some(Boolean)) return;
-    setStep(2);
+  function handleFieldChange(field: keyof FieldErrors, value: string, setter: (v: string) => void) {
+    setter(value);
+    clearFieldError(field);
+    if (error) dispatch(clearError());
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleContinue(e: FormEvent) {
     e.preventDefault();
-    const errors = validateStep(2);
+    const errors = validateStep();
     setFieldErrors(errors);
     if (Object.values(errors).some(Boolean)) return;
 
-    const result = await dispatch(register({ name: name.trim(), email: email.trim(), password }));
+    const result = await dispatch(register({ name: name.trim(), email: email.trim() }));
     if (register.fulfilled.match(result)) {
-      navigate('/dashboard', { replace: true });
+      setDevToken(result.payload.devToken);
+      setResent(false);
+      setStep(2);
+    }
+  }
+
+  async function handleResend() {
+    setResending(true);
+    try {
+      const res = await authService.resendVerification(email.trim());
+      setDevToken(res.devToken);
+      setResent(true);
+    } catch {
+      setResent(true);
+    } finally {
+      setResending(false);
     }
   }
 
@@ -82,9 +84,13 @@ export default function RegisterPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Create your account</h2>
+        <h2 className="text-2xl font-black text-white mb-1 tracking-tight">
+          {step === 1 ? 'Create your account' : 'Verify your email'}
+        </h2>
         <p className="text-gray-400 text-sm mb-6">
-          {step === 1 ? 'Tell us about yourself to get started' : 'Choose a secure password'}
+          {step === 1
+            ? 'Tell us about yourself to get started'
+            : `We sent a verification link to ${email}`}
         </p>
 
         {error && (
@@ -130,10 +136,7 @@ export default function RegisterPage() {
                   type="text"
                   autoComplete="name"
                   value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    clearFieldError('name');
-                  }}
+                  onChange={(e) => handleFieldChange('name', e.target.value, setName)}
                   aria-invalid={!!fieldErrors.name}
                   className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
                     fieldErrors.name
@@ -161,10 +164,7 @@ export default function RegisterPage() {
                   type="email"
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    clearFieldError('email');
-                  }}
+                  onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
                   aria-invalid={!!fieldErrors.email}
                   className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
                     fieldErrors.email
@@ -182,84 +182,70 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-600/25 text-sm"
+                disabled={isLoading}
+                className="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 disabled:from-brand-800 disabled:to-purple-800 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-600/25 text-sm"
               >
-                Continue
-                <span className="inline-block transition-transform">→</span>
+                {isLoading ? (
+                  <>
+                    <Spinner size="sm" /> Sending...
+                  </>
+                ) : (
+                  <>
+                    Continue <span className="inline-block transition-transform">→</span>
+                  </>
+                )}
               </button>
             </motion.form>
           ) : (
-            <motion.form
+            <motion.div
               key="step-2"
               initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -12 }}
               transition={{ duration: 0.2 }}
-              onSubmit={handleSubmit}
-              noValidate
               className="space-y-4"
             >
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-xs font-semibold text-gray-300 mb-2 uppercase tracking-wider"
-                >
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    clearFieldError('password');
-                  }}
-                  aria-invalid={!!fieldErrors.password}
-                  className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
-                    fieldErrors.password
-                      ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
-                      : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
-                  }`}
-                  placeholder="At least 6 characters"
-                />
-                {fieldErrors.password && (
-                  <p className="text-red-400 text-xs mt-1.5" role="alert">
-                    {fieldErrors.password}
-                  </p>
-                )}
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <CheckIcon className="w-6 h-6 text-emerald-400" />
+                </div>
+                <p className="text-sm text-gray-300 leading-relaxed">
+                  Click <span className="font-semibold text-white">Verify Email</span> in the email
+                  we just sent to <span className="font-semibold text-brand-400">{email}</span> to
+                  set up your password.
+                </p>
               </div>
 
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-xs font-semibold text-gray-300 mb-2 uppercase tracking-wider"
-                >
-                  Confirm password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    clearFieldError('confirmPassword');
-                  }}
-                  aria-invalid={!!fieldErrors.confirmPassword}
-                  className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all text-sm ${
-                    fieldErrors.confirmPassword
-                      ? 'border-red-500/60 focus:ring-red-500/40 focus:border-red-500/60'
-                      : 'border-white/10 focus:ring-brand-500/50 focus:border-brand-500/50'
-                  }`}
-                  placeholder="Repeat your password"
-                />
-                {fieldErrors.confirmPassword && (
-                  <p className="text-red-400 text-xs mt-1.5" role="alert">
-                    {fieldErrors.confirmPassword}
+              {devToken && (
+                <div className="rounded-xl border border-dashed border-brand-500/40 bg-brand-500/[0.05] p-4">
+                  <p className="text-[11px] uppercase tracking-wider font-bold text-brand-300 mb-1.5">
+                    Development link
                   </p>
-                )}
-              </div>
+                  <p className="text-xs text-gray-300 mb-2">
+                    No mail server is configured, so here is the verification link:
+                  </p>
+                  <Link
+                    to={`/verify-email?token=${encodeURIComponent(devToken)}`}
+                    className="block w-full text-center py-2.5 rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-sm font-semibold transition-all"
+                  >
+                    Verify Email
+                  </Link>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="w-full py-3 px-4 rounded-xl text-sm font-semibold text-gray-300 border border-white/10 hover:bg-white/5 disabled:opacity-60 transition-all"
+              >
+                {resending ? 'Sending...' : 'Resend email'}
+              </button>
+              {resent && (
+                <p className="text-center text-xs text-emerald-400">
+                  A new verification email has been sent.
+                </p>
+              )}
 
               <div className="flex gap-3 pt-1">
                 <button
@@ -269,28 +255,15 @@ export default function RegisterPage() {
                 >
                   Back
                 </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 disabled:from-brand-800 disabled:to-purple-800 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-600/25 text-sm"
-                >
-                  {isLoading ? (
-                    <>
-                      <Spinner size="sm" /> Creating account...
-                    </>
-                  ) : (
-                    'Create Account'
-                  )}
-                </button>
               </div>
-            </motion.form>
+            </motion.div>
           )}
         </AnimatePresence>
 
         <p className="mt-6 text-center text-gray-400 text-sm">
           Already have an account?{' '}
           <Link
-            to="/login"
+            to="/signin"
             className="text-brand-400 hover:text-brand-300 font-semibold transition-colors"
           >
             Sign in

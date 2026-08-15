@@ -23,7 +23,32 @@ export interface LoginRequest {
 export interface RegisterRequest {
   name: string;
   email: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface SetPasswordRequest {
+  token: string;
   password: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  email: string;
+  devToken?: string;
+}
+
+export interface VerifyEmailResponse {
+  name: string;
+  email: string;
+}
+
+export interface ResendVerificationResponse {
+  message: string;
+  email: string;
+  devToken?: string;
 }
 
 export interface ForgotPasswordRequest {

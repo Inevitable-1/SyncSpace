@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
               we&apos;ve sent a reset link.
             </p>
             <Link
-              to="/login"
+              to="/signin"
               className="text-brand-400 hover:text-brand-300 text-sm font-semibold transition-colors"
             >
               Back to sign in
@@ -123,7 +123,7 @@ export default function ForgotPasswordPage() {
             <p className="mt-6 text-center text-gray-400 text-sm">
               Remember your password?{' '}
               <Link
-                to="/login"
+                to="/signin"
                 className="text-brand-400 hover:text-brand-300 font-semibold transition-colors"
               >
                 Sign in

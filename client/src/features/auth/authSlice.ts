@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { authService } from '../../services/authService';
+import { resetAuthSessionState, getErrorMessage } from '../../services/api';
 import type {
   AuthState,
   User,
@@ -23,16 +24,12 @@ export const register = createAsyncThunk(
   async (data: RegisterRequest, { rejectWithValue }) => {
     try {
       const result = await authService.register(data);
-      localStorage.setItem(
-        'auth',
-        JSON.stringify({
-          state: { user: result.user, accessToken: result.accessToken, isAuthenticated: true },
-        }),
-      );
+      // Registration no longer signs the user in. Drop any stale persisted
+      // session so the unauthenticated sign-up/sign-in flow stays clean.
+      localStorage.removeItem('auth');
       return result;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      return rejectWithValue(getErrorMessage(err, 'Registration failed'));
     }
   },
 );
@@ -50,8 +47,7 @@ export const login = createAsyncThunk(
       );
       return result;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      return rejectWithValue(getErrorMessage(err, 'Login failed'));
     }
   },
 );
@@ -72,19 +68,50 @@ export const demoLogin = createAsyncThunk('auth/demoLogin', async (_, { rejectWi
     );
     return result;
   } catch (err: unknown) {
-    const error = err as { response?: { data?: { message?: string } } };
-    return rejectWithValue(error.response?.data?.message || 'Demo login failed');
+    return rejectWithValue(getErrorMessage(err, 'Demo login failed'));
   }
 });
+
+export const initializeAuth = createAsyncThunk(
+  'auth/initialize',
+  async (_, { rejectWithValue }) => {
+    try {
+      const stored = localStorage.getItem('auth');
+      if (!stored) return undefined;
+      const parsed = JSON.parse(stored);
+      const state = parsed?.state;
+      if (!state?.user || !state?.accessToken) return undefined;
+
+      // Demo sessions are client-only and never validated against the API.
+      if (state.isDemo === true) {
+        return {
+          user: state.user as User,
+          accessToken: state.accessToken as string,
+          isDemo: true,
+        };
+      }
+
+      // Validate the persisted session. On success the freshest user record is
+      // returned; on 401 the axios interceptor transparently refreshes the token,
+      // and if that fails it emits the session-expired event which logs the user
+      // out and redirects to /signin.
+      const user = await authService.getMe();
+      return { user, accessToken: state.accessToken as string, isDemo: false };
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, 'Session validation failed'));
+    }
+  },
+);
 
 export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
   try {
     await authService.logout();
     localStorage.removeItem('auth');
   } catch (err: unknown) {
+    // Even if the logout request fails (e.g. server unreachable), the local
+    // session must still be dropped so the user is not left "authenticated".
     localStorage.removeItem('auth');
-    const error = err as { response?: { data?: { message?: string } } };
-    return rejectWithValue(error.response?.data?.message || 'Logout failed');
+    return rejectWithValue(getErrorMessage(err, 'Logout failed'));
   }
 });
 
@@ -94,8 +121,7 @@ export const forgotPassword = createAsyncThunk(
     try {
       await authService.forgotPassword(data);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || 'Failed to send reset email');
+      return rejectWithValue(getErrorMessage(err, 'Failed to send reset email'));
     }
   },
 );
@@ -106,8 +132,7 @@ export const resetPassword = createAsyncThunk(
     try {
       await authService.resetPassword(data);
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      return rejectWithValue(error.response?.data?.message || 'Password reset failed');
+      return rejectWithValue(getErrorMessage(err, 'Password reset failed'));
     }
   },
 );
@@ -155,6 +180,14 @@ const authSlice = createSlice({
     setUser(state, action: PayloadAction<User>) {
       state.user = action.payload;
     },
+    resetAuth(state) {
+      state.user = null;
+      state.accessToken = null;
+      state.isAuthenticated = false;
+      state.isDemo = false;
+      state.isLoading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -162,12 +195,13 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(register.fulfilled, (state, action) => {
+      .addCase(register.fulfilled, (state) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.isAuthenticated = true;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.accessToken = null;
         state.isDemo = false;
+        resetAuthSessionState();
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
@@ -183,6 +217,7 @@ const authSlice = createSlice({
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
         state.isDemo = false;
+        resetAuthSessionState();
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -198,16 +233,70 @@ const authSlice = createSlice({
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
         state.isDemo = true;
+        resetAuthSessionState();
       })
       .addCase(demoLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(initializeAuth.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(initializeAuth.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const session = action.payload;
+        if (!session) {
+          state.user = null;
+          state.accessToken = null;
+          state.isAuthenticated = false;
+          state.isDemo = false;
+          return;
+        }
+        state.user = session.user;
+        state.accessToken = session.accessToken;
+        state.isAuthenticated = true;
+        state.isDemo = session.isDemo;
+        // Persist the freshest user record alongside the existing session. The
+        // stored access token may already have been replaced by the axios
+        // interceptor during getMe(), so read it back fresh from localStorage.
+        try {
+          const stored = localStorage.getItem('auth');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            parsed.state.user = session.user;
+            localStorage.setItem('auth', JSON.stringify(parsed));
+            state.accessToken = parsed.state.accessToken ?? null;
+          }
+        } catch {
+          // ignore
+        }
+        resetAuthSessionState();
+      })
+      .addCase(initializeAuth.rejected, (state) => {
+        // The axios interceptor has already cleared the stored session and
+        // emitted the session-expired event when the refresh fails, so this just
+        // falls back to the unauthenticated state without spamming an error.
+        state.isLoading = false;
+        state.user = null;
+        state.accessToken = null;
+        state.isAuthenticated = false;
+        state.isDemo = false;
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
         state.isDemo = false;
+        resetAuthSessionState();
+      })
+      .addCase(logout.rejected, (state) => {
+        // Local session was already cleared by the thunk; make sure the in-memory
+        // auth state matches so ProtectedRoute does not keep the user "in".
+        state.user = null;
+        state.accessToken = null;
+        state.isAuthenticated = false;
+        state.isDemo = false;
+        resetAuthSessionState();
       })
       .addCase(forgotPassword.pending, (state) => {
         state.isLoading = true;
@@ -234,5 +323,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, setUser } = authSlice.actions;
+export const { clearError, setUser, resetAuth } = authSlice.actions;
 export default authSlice.reducer;

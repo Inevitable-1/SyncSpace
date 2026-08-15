@@ -154,7 +154,7 @@ export default function FeaturesPage() {
               </Link>
             </div>
             <Link
-              to="/login"
+              to="/signin"
               className="sm:hidden px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#C1121F] hover:bg-[#9e0e19] transition-all shadow-lg shadow-red-500/25"
             >
               Sign in
