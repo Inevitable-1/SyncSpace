@@ -43,7 +43,7 @@ export default function LoadingScreen({ onDone }: LoadingScreenProps) {
       <div className="relative z-10 h-full flex flex-col items-center justify-center gap-12 px-6">
         <AnimatedLogo size={220} />
 
-        {/* wordmark fades in once the S is formed */}
+        {/* wordmark fades in once the network is formed */}
         <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 14 }}

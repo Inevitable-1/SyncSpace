@@ -1,9 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" fill="none">
   <defs>
-    <radialGradient id="ss-halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#D4AF37" stop-opacity="0.55" />
-      <stop offset="100%" stop-color="#D4AF37" stop-opacity="0" />
-    </radialGradient>
     <linearGradient id="ss-gold" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#D4AF37" />
       <stop offset="100%" stop-color="#B8860B" />
@@ -13,22 +9,37 @@
   <!-- Mark tile -->
   <rect x="3" y="3" width="58" height="58" rx="16" fill="#FFFFFF" stroke="#D4AF37" stroke-opacity="0.45" />
 
-  <!-- Soft gold halo -->
-  <circle cx="32" cy="32" r="26" fill="url(#ss-halo)" />
-
-  <!-- Abstract geometric "S" -->
+  <!-- Network ring: outer nodes connected to their neighbors -->
   <path
-    d="M43 13 C43 6,21 6,21 13 C21 20,43 22,43 32 C43 42,21 44,21 51 C21 58,43 58,43 51"
+    d="M32 53 L50.2 42.5 L50.2 21.5 L32 11 L13.8 21.5 L13.8 42.5 Z"
     stroke="url(#ss-gold)"
-    stroke-width="4.5"
+    stroke-width="2.6"
     stroke-linecap="round"
     stroke-linejoin="round"
-    style="filter: drop-shadow(0 0 5px rgba(212,175,55,0.5))"
+    fill="none"
+    opacity="0.95"
   />
 
-  <!-- Red center hub -->
-  <circle cx="32" cy="32" r="6.5" fill="#C1121F" opacity="0.15" />
-  <circle cx="32" cy="32" r="4.2" fill="#C1121F" style="filter: drop-shadow(0 0 4px rgba(193,18,31,0.55))" />
+  <!-- Network spokes: every outer node connected to the center -->
+  <path
+    d="M32 32 L32 53 M32 32 L50.2 42.5 M32 32 L50.2 21.5 M32 32 L32 11 M32 32 L13.8 21.5 M32 32 L13.8 42.5"
+    stroke="url(#ss-gold)"
+    stroke-width="2.6"
+    stroke-linecap="round"
+    fill="none"
+    opacity="0.95"
+  />
+
+  <!-- Outer nodes -->
+  <circle cx="32" cy="53" r="3.1" fill="#D4AF37" />
+  <circle cx="50.2" cy="42.5" r="3.1" fill="#D4AF37" />
+  <circle cx="50.2" cy="21.5" r="3.1" fill="#D4AF37" />
+  <circle cx="32" cy="11" r="3.1" fill="#D4AF37" />
+  <circle cx="13.8" cy="21.5" r="3.1" fill="#D4AF37" />
+  <circle cx="13.8" cy="42.5" r="3.1" fill="#D4AF37" />
+
+  <!-- Central hub -->
+  <circle cx="32" cy="32" r="4.6" fill="#DC143C" />
 
   <!-- Wordmark -->
   <text

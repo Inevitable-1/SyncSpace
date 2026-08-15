@@ -1,20 +1,30 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { GOLD, BRAND_RED, S_PATH } from './LogoMark';
+import {
+  GOLD,
+  ACCENT_RED,
+  OUTER_NODES,
+  HEXAGON_PATH,
+  SPOKES_PATH,
+  CENTER,
+  LINE_WIDTH,
+  NODE_RADIUS,
+  CENTER_RADIUS,
+} from './Logo';
 
 export const LOGO_ANIM_DURATION = 3.4;
 
 let idCounter = 0;
 
-const PARTICLES = Array.from({ length: 16 }, (_, i) => {
-  const angle = (i / 16) * Math.PI * 2 + i * 0.37;
-  const radius = 19 + (i % 5) * 7;
+const PARTICLES = Array.from({ length: 12 }, (_, i) => {
+  const angle = (i / 12) * Math.PI * 2 + i * 0.4;
+  const radius = 24 + (i % 4) * 6;
   return {
     id: i,
-    x0: 32 + Math.cos(angle) * radius,
-    y0: 32 + Math.sin(angle) * radius,
-    size: 1.3 + (i % 3) * 0.75,
-    delay: 0.05 + (i % 8) * 0.08,
+    x0: CENTER.x + Math.cos(angle) * radius,
+    y0: CENTER.y + Math.sin(angle) * radius,
+    size: 1.3 + (i % 3) * 0.7,
+    delay: 0.05 + (i % 6) * 0.07,
   };
 });
 
@@ -31,7 +41,7 @@ export default function AnimatedLogo({
   play = true,
   onComplete,
 }: AnimatedLogoProps) {
-  const gradientId = `ss-anim-glow-${++idCounter}`;
+  const gradientId = `ss-net-halo-${++idCounter}`;
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
@@ -55,7 +65,7 @@ export default function AnimatedLogo({
         className="absolute inset-0 rounded-full pointer-events-none"
         initial={{ opacity: 0 }}
         animate={{ opacity: running ? 1 : 0 }}
-        transition={{ delay: 1.7, duration: 1.2, ease: 'easeOut' }}
+        transition={{ delay: 1.4, duration: 1.2, ease: 'easeOut' }}
         style={{
           background: 'radial-gradient(circle, rgba(212,175,55,0.35), transparent 65%)',
         }}
@@ -68,77 +78,106 @@ export default function AnimatedLogo({
           </radialGradient>
         </defs>
 
-        {/* soft gold halo behind the mark */}
+        {/* soft gold halo behind the network */}
         <motion.circle
-          cx="32"
-          cy="32"
-          r="26"
+          cx={CENTER.x}
+          cy={CENTER.y}
+          r="27"
           fill={`url(#${gradientId})`}
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: running ? 1 : 0, scale: running ? 1 : 0.85 }}
-          transition={{ delay: 1.55, duration: 1.4, ease: 'easeOut' }}
+          transition={{ delay: 1.3, duration: 1.4, ease: 'easeOut' }}
         />
 
         {/* small gold particles converge toward the center hub */}
         {PARTICLES.map((p) => (
           <motion.circle
             key={p.id}
-            cx="32"
-            cy="32"
+            cx={CENTER.x}
+            cy={CENTER.y}
             r={p.size}
             fill={GOLD}
-            initial={{ x: p.x0 - 32, y: p.y0 - 32, opacity: 0, scale: 0 }}
+            initial={{ x: p.x0 - CENTER.x, y: p.y0 - CENTER.y, opacity: 0, scale: 0 }}
             animate={
               running
                 ? {
-                    x: [p.x0 - 32, p.x0 - 32, 0],
-                    y: [p.y0 - 32, p.y0 - 32, 0],
+                    x: [p.x0 - CENTER.x, p.x0 - CENTER.x, 0],
+                    y: [p.y0 - CENTER.y, p.y0 - CENTER.y, 0],
                     opacity: [0, 1, 0],
-                    scale: [0, 1.4, 0],
+                    scale: [0, 1.3, 0],
                   }
                 : {}
             }
             transition={{
               delay: p.delay,
-              duration: 1.25,
+              duration: 1.15,
               times: [0, 0.35, 1],
               ease: 'easeInOut',
             }}
           />
         ))}
 
-        {/* red center dot appears first */}
-        <motion.circle
-          cx="32"
-          cy="32"
-          r="6.5"
-          fill={BRAND_RED}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: running ? 0.15 : 0, scale: running ? 1 : 0 }}
-          transition={{ delay: 0.8, duration: 0.4, ease: 'easeOut' }}
-        />
-        <motion.circle
-          cx="32"
-          cy="32"
-          r="4.2"
-          fill={BRAND_RED}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: running ? 1 : 0, scale: running ? 1 : 0 }}
-          transition={{ delay: 0.8, duration: 0.4, ease: 'easeOut' }}
-          style={{ filter: 'drop-shadow(0 0 5px rgba(193,18,31,0.65))' }}
-        />
-
-        {/* gold lines draw themselves around the red dot */}
+        {/* gold spokes draw from the hub toward each outer node */}
         <motion.path
-          d={S_PATH}
+          d={SPOKES_PATH}
           stroke={GOLD}
-          strokeWidth="4.5"
+          strokeWidth={LINE_WIDTH}
           strokeLinecap="round"
           strokeLinejoin="round"
+          fill="none"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: running ? 1 : 0, opacity: running ? 1 : 0 }}
-          transition={{ delay: 1.0, duration: 1.2, ease: 'easeInOut' }}
-          style={{ filter: 'drop-shadow(0 0 5px rgba(212,175,55,0.5))' }}
+          transition={{ delay: 0.4, duration: 0.8, ease: 'easeInOut' }}
+        />
+
+        {/* outer hexagon ring draws */}
+        <motion.path
+          d={HEXAGON_PATH}
+          stroke={GOLD}
+          strokeWidth={LINE_WIDTH}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: running ? 1 : 0, opacity: running ? 1 : 0 }}
+          transition={{ delay: 0.9, duration: 0.8, ease: 'easeInOut' }}
+        />
+
+        {/* outer nodes pop in with a subtle stagger */}
+        {OUTER_NODES.map((n, i) => (
+          <motion.circle
+            key={`${n.x}-${n.y}`}
+            cx={n.x}
+            cy={n.y}
+            r={NODE_RADIUS}
+            fill={GOLD}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: running ? 1 : 0, opacity: running ? 1 : 0 }}
+            transition={{ delay: 1.35 + i * 0.06, duration: 0.3, ease: 'backOut' }}
+          />
+        ))}
+
+        {/* red center hub pops in and keeps a gentle pulse */}
+        <motion.circle
+          cx={CENTER.x}
+          cy={CENTER.y}
+          r={CENTER_RADIUS}
+          fill={ACCENT_RED}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: running ? 1 : 0, opacity: running ? 1 : 0 }}
+          transition={{ delay: 1.6, duration: 0.35, ease: 'backOut' }}
+          style={{ filter: 'drop-shadow(0 0 5px rgba(220,20,60,0.65))' }}
+        />
+        <motion.circle
+          cx={CENTER.x}
+          cy={CENTER.y}
+          r={CENTER_RADIUS}
+          fill="none"
+          stroke={ACCENT_RED}
+          strokeWidth="1.4"
+          initial={{ opacity: 0, scale: 1 }}
+          animate={running ? { opacity: [0, 0.5, 0], scale: [1, 1.7] } : {}}
+          transition={{ delay: 1.7, duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
         />
       </svg>
     </div>
