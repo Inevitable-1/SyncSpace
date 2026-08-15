@@ -4,17 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../common/Toast';
-import {
-  Bars3Icon,
-  SunIcon,
-  MoonIcon,
-  BellIcon,
-  ChevronDownIcon,
-  Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
-  UserIcon,
-} from '../Icons';
-import { logout } from '../../features/auth/authSlice';
+import { Bars3Icon, SunIcon, MoonIcon, BellIcon } from '../Icons';
 import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import {
   fetchNotifications,
@@ -25,6 +15,7 @@ import type { RootState, AppDispatch } from '../../store';
 
 interface TopNavProps {
   onMenuClick: () => void;
+  onOpenAI: () => void;
 }
 
 const PAGE_TITLES: Array<{ pattern: RegExp; title: string }> = [
@@ -44,17 +35,15 @@ const PAGE_TITLES: Array<{ pattern: RegExp; title: string }> = [
   { pattern: /^\/dashboard$/, title: 'Dashboard' },
 ];
 
-export default function TopNav({ onMenuClick }: TopNavProps) {
+export default function TopNav({ onMenuClick, onOpenAI }: TopNavProps) {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
-  const { user, isDemo } = useSelector((state: RootState) => state.auth);
+  const { isDemo } = useSelector((state: RootState) => state.auth);
   const { notifications, unreadCount } = useSelector((state: RootState) => state.notification);
-  const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,19 +53,12 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node))
-        setShowProfile(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node))
         setShowNotifications(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleLogout = async () => {
-    await dispatch(logout());
-    navigate('/');
-  };
 
   const pageTitle =
     PAGE_TITLES.find((p) => p.pattern.test(location.pathname))?.title || 'Dashboard';
@@ -153,6 +135,27 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
             className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
           >
             {theme === 'dark' ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+          </button>
+
+          <button
+            onClick={onOpenAI}
+            title="AI Assistant (Ctrl+Shift+A)"
+            aria-label="AI Assistant"
+            className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-105 transition-all"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"
+              />
+            </svg>
           </button>
 
           <div className="relative" ref={notifRef}>
@@ -232,87 +235,6 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                         </button>
                       </div>
                     )}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div className="relative" ref={profileRef}>
-            <button
-              onClick={() => setShowProfile(!showProfile)}
-              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition-all"
-            >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
-              </div>
-              <ChevronDownIcon className="w-4 h-4 text-gray-400 hidden sm:block" />
-            </button>
-            <AnimatePresence>
-              {showProfile && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    className="absolute right-0 mt-2 w-60 rounded-2xl border border-white/10 bg-surface-850/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden"
-                  >
-                    <div className="p-4 border-b border-white/5">
-                      <p className="text-sm font-bold">{user?.name}</p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
-                    </div>
-                    <div className="p-2">
-                      {[
-                        {
-                          icon: UserIcon,
-                          label: 'Profile',
-                          action: () => navigate('/dashboard/profile'),
-                        },
-                        {
-                          icon: Cog6ToothIcon,
-                          label: 'Settings',
-                          action: () => navigate('/dashboard/settings'),
-                        },
-                        {
-                          icon: BellIcon,
-                          label: 'Notifications',
-                          action: () => navigate('/dashboard/notifications'),
-                        },
-                      ].map((item) => (
-                        <button
-                          key={item.label}
-                          onClick={() => {
-                            item.action();
-                            setShowProfile(false);
-                          }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-                        >
-                          <item.icon className="w-4 h-4" /> {item.label}
-                        </button>
-                      ))}
-                      <div className="my-1 border-t border-white/5" />
-                      <button
-                        onClick={() => {
-                          toggleTheme();
-                          setShowProfile(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-                      >
-                        {theme === 'dark' ? (
-                          <SunIcon className="w-4 h-4" />
-                        ) : (
-                          <MoonIcon className="w-4 h-4" />
-                        )}
-                        {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all"
-                      >
-                        <ArrowRightOnRectangleIcon className="w-4 h-4" /> Logout
-                      </button>
-                    </div>
                   </motion.div>
                 </>
               )}

@@ -7,6 +7,7 @@ import AISidebar from '../AISidebar';
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
   const toggleCollapse = useCallback(() => {
     setSidebarCollapsed((prev) => !prev);
@@ -33,7 +34,7 @@ export default function DashboardLayout() {
       <div
         className={`relative z-10 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}
       >
-        <TopNav onMenuClick={openSidebar} />
+        <TopNav onMenuClick={openSidebar} onOpenAI={() => setAiOpen(true)} />
 
         <main className="p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto animate-fade-in">
@@ -42,7 +43,7 @@ export default function DashboardLayout() {
         </main>
       </div>
 
-      <AISidebar />
+      <AISidebar isOpen={aiOpen} onOpen={() => setAiOpen(true)} onClose={() => setAiOpen(false)} />
     </div>
   );
 }
