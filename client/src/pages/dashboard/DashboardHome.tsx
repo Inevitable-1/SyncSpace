@@ -434,7 +434,7 @@ function ActivityFeed({ activities }: { activities: Activity[] }) {
       >
         <BellIcon className="w-8 h-8 mb-2 opacity-30" style={{ color: 'var(--text-tertiary)' }} />
         <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-          No activity yet
+          No recent activity
         </p>
       </div>
     );
@@ -526,6 +526,16 @@ function TodaysWork({
   });
   const openTasks = pending.length;
 
+  const showHeader = tasks.length > 0;
+  if (
+    tasks.length === 0 &&
+    meetings.length === 0 &&
+    files.length === 0 &&
+    activities.length === 0
+  ) {
+    return null;
+  }
+
   return (
     <section>
       <motion.div
@@ -537,107 +547,119 @@ function TodaysWork({
         <div className="absolute -top-20 right-0 w-72 h-72 bg-brand-600/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 left-1/4 w-72 h-72 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-          <div>
-            <h1
-              className="text-2xl font-black tracking-tight flex items-center gap-2.5"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Today&apos;s Work
-              <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-            </h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
-              {dateLabel} · {openTasks} open task{openTasks !== 1 ? 's' : ''}
-              {upcoming?.dueDate && (
-                <>
-                  {' '}
-                  · Next deadline{' '}
-                  <span className="font-semibold text-brand-400">
-                    {formatShortDate(upcoming.dueDate)}
-                  </span>
-                </>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-xl font-black" style={{ color: 'var(--text-primary)' }}>
-                {pct}%
-              </p>
-              <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-                complete
+        {showHeader && (
+          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <h1
+                className="text-2xl font-black tracking-tight flex items-center gap-2.5"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Today&apos;s Work
+                <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+              </h1>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                {dateLabel} · {openTasks} open task{openTasks !== 1 ? 's' : ''}
+                {upcoming?.dueDate && (
+                  <>
+                    {' '}
+                    · Next deadline{' '}
+                    <span className="font-semibold text-brand-400">
+                      {formatShortDate(upcoming.dueDate)}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center shadow-lg shadow-brand-600/25">
-              <CheckIcon className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-xl font-black" style={{ color: 'var(--text-primary)' }}>
+                  {pct}%
+                </p>
+                <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                  complete
+                </p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center shadow-lg shadow-brand-600/25">
+                <CheckIcon className="w-5 h-5 text-white" />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="relative mb-6">
-          <div
-            className="flex items-center justify-between text-[11px] mb-1.5"
-            style={{ color: 'var(--text-tertiary)' }}
-          >
-            <span className="font-semibold">Daily progress</span>
-            <span className="font-semibold">
-              {completed}/{tasks.length} tasks
-            </span>
+        {tasks.length > 0 && (
+          <div className="relative mb-6">
+            <div
+              className="flex items-center justify-between text-[11px] mb-1.5"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              <span className="font-semibold">Daily progress</span>
+              <span className="font-semibold">
+                {completed}/{tasks.length} tasks
+              </span>
+            </div>
+            <div className="h-2.5 rounded-full overflow-hidden bg-white/5 border border-white/5">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 1.1, ease: 'easeOut', delay: 0.3 }}
+                className="h-full rounded-full bg-gradient-to-r from-brand-500 via-purple-500 to-pink-500 shadow-lg shadow-brand-500/30"
+              />
+            </div>
           </div>
-          <div className="h-2.5 rounded-full overflow-hidden bg-white/5 border border-white/5">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${pct}%` }}
-              transition={{ duration: 1.1, ease: 'easeOut', delay: 0.3 }}
-              className="h-full rounded-full bg-gradient-to-r from-brand-500 via-purple-500 to-pink-500 shadow-lg shadow-brand-500/30"
-            />
-          </div>
-        </div>
+        )}
 
         <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-          <WidgetCard
-            title="Upcoming Meetings"
-            subtitle="Your schedule today"
-            action={<ViewAllLink to="/dashboard/meetings" />}
-          >
-            <MeetingTimeline meetings={meetings} onJoin={onJoinMeeting} />
-          </WidgetCard>
+          {meetings.length > 0 && (
+            <WidgetCard
+              title="Upcoming Meetings"
+              subtitle="Your schedule today"
+              action={<ViewAllLink to="/dashboard/meetings" />}
+            >
+              <MeetingTimeline meetings={meetings} onJoin={onJoinMeeting} />
+            </WidgetCard>
+          )}
 
-          <WidgetCard
-            title="Assigned Tasks"
-            subtitle={`${openTasks} pending · ${completed} done`}
-            action={<ViewAllLink to="/dashboard/workspaces" label="My tasks" />}
-          >
-            <div className="max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
-              <div className="space-y-1">
-                {tasks.slice(0, 6).map((t) => (
-                  <TaskRow key={t._id} task={t} />
-                ))}
+          {tasks.length > 0 && (
+            <WidgetCard
+              title="Assigned Tasks"
+              subtitle={`${openTasks} pending · ${completed} done`}
+              action={<ViewAllLink to="/dashboard/workspaces" label="My tasks" />}
+            >
+              <div className="max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
+                <div className="space-y-1">
+                  {tasks.slice(0, 6).map((t) => (
+                    <TaskRow key={t._id} task={t} />
+                  ))}
+                </div>
               </div>
-            </div>
-          </WidgetCard>
+            </WidgetCard>
+          )}
 
-          <WidgetCard
-            title="Recent Files"
-            subtitle="Latest uploads"
-            action={<ViewAllLink to="/dashboard/files" />}
-          >
-            <div className="max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
-              <div className="space-y-1">
-                {files.slice(0, 6).map((f) => (
-                  <FileRow key={f._id} file={f} />
-                ))}
+          {files.length > 0 && (
+            <WidgetCard
+              title="Recent Files"
+              subtitle="Latest uploads"
+              action={<ViewAllLink to="/dashboard/files" />}
+            >
+              <div className="max-h-[300px] overflow-y-auto scrollbar-thin pr-1">
+                <div className="space-y-1">
+                  {files.slice(0, 6).map((f) => (
+                    <FileRow key={f._id} file={f} />
+                  ))}
+                </div>
               </div>
-            </div>
-          </WidgetCard>
+            </WidgetCard>
+          )}
 
-          <WidgetCard
-            title="Recent Activity"
-            subtitle="Live team updates"
-            action={<ViewAllLink to="/dashboard/activity" />}
-          >
-            <ActivityFeed activities={activities} />
-          </WidgetCard>
+          {activities.length > 0 && (
+            <WidgetCard
+              title="Recent Activity"
+              subtitle="Live team updates"
+              action={<ViewAllLink to="/dashboard/activity" />}
+            >
+              <ActivityFeed activities={activities} />
+            </WidgetCard>
+          )}
         </div>
       </motion.div>
     </section>
@@ -774,6 +796,117 @@ function QuickActions({
         </div>
       </motion.div>
     </div>
+  );
+}
+
+function WelcomeSection({
+  onCreateWorkspace,
+  onCreateRoom,
+  onCreateMeeting,
+  onUploadFile,
+}: {
+  onCreateWorkspace: () => void;
+  onCreateRoom: () => void;
+  onCreateMeeting: () => void;
+  onUploadFile: () => void;
+}) {
+  const actions = [
+    {
+      label: 'Create Workspace',
+      desc: 'Spin up a space for your team',
+      icon: <FolderIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-brand-500 to-purple-600',
+      onClick: onCreateWorkspace,
+    },
+    {
+      label: 'Create Room',
+      desc: 'Start a whiteboard, doc or code session',
+      icon: <PaintBrushIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-purple-500 to-pink-600',
+      onClick: onCreateRoom,
+    },
+    {
+      label: 'Create Meeting',
+      desc: 'Schedule a video call with your team',
+      icon: <VideoCameraIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-amber-500 to-orange-600',
+      onClick: onCreateMeeting,
+    },
+    {
+      label: 'Upload File',
+      desc: 'Drop a file into your workspace',
+      icon: <DocumentTextIcon className="w-6 h-6 text-white" />,
+      gradient: 'from-cyan-500 to-blue-600',
+      onClick: onUploadFile,
+    },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45 }}
+      className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-2xl px-6 py-14 sm:py-20 text-center"
+    >
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 right-10 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="relative w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center shadow-xl shadow-brand-600/30"
+      >
+        <FolderIcon className="w-8 h-8 text-white" />
+      </motion.div>
+
+      <h1
+        className="relative text-3xl sm:text-4xl font-black tracking-tight mb-2"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        Welcome to SyncSpace
+      </h1>
+      <p
+        className="relative text-sm sm:text-base max-w-md mx-auto mb-10"
+        style={{ color: 'var(--text-tertiary)' }}
+      >
+        Create your first workspace to start collaborating. Your dashboard will grow as you add
+        content.
+      </p>
+
+      <div className="relative grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
+        {actions.map((a, i) => (
+          <motion.button
+            key={a.label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 + i * 0.07, duration: 0.35 }}
+            whileHover={{ y: -4 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={a.onClick}
+            className="group relative p-px rounded-2xl bg-gradient-to-br transition-all duration-300"
+            style={{ backgroundImage: `linear-gradient(135deg, ${a.gradient})` }}
+          >
+            <div
+              className="relative rounded-[calc(1rem-1px)] p-5 flex flex-col items-center text-center h-full overflow-hidden"
+              style={{ background: 'var(--bg-card)' }}
+            >
+              <div
+                className={`w-12 h-12 mb-3 rounded-xl bg-gradient-to-br ${a.gradient} flex items-center justify-center shadow-lg flex-shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}
+              >
+                {a.icon}
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {a.label}
+              </p>
+              <p className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                {a.desc}
+              </p>
+            </div>
+          </motion.button>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
@@ -934,7 +1067,6 @@ function NotificationRow({
 function LowerSections({
   workspaces,
   rooms,
-  files,
   meetings,
   notifications,
   loading,
@@ -948,7 +1080,6 @@ function LowerSections({
     updatedAt: string;
   }[];
   rooms: Room[];
-  files: UploadedFile[];
   meetings: Meeting[];
   notifications: {
     _id: string;
@@ -962,6 +1093,67 @@ function LowerSections({
   return (
     <section className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+        {workspaces.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+          >
+            <SectionTitle
+              title="Recent Workspaces"
+              action={<ViewAllLink to="/dashboard/workspaces" />}
+            />
+            <div className="space-y-1">
+              {loading
+                ? [1, 2, 3].map((i) => <CardSkeleton key={i} />)
+                : workspaces
+                    .slice(0, 4)
+                    .map((ws) => <WorkspaceMiniRow key={ws._id} workspace={ws} />)}
+            </div>
+          </motion.div>
+        )}
+
+        {rooms.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.05 }}
+            className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+          >
+            <SectionTitle title="Recent Rooms" action={<ViewAllLink to="/dashboard/rooms" />} />
+            <div className="space-y-1">
+              {loading
+                ? [1, 2, 3].map((i) => <CardSkeleton key={i} />)
+                : rooms.slice(0, 4).map((r) => <RoomRow key={r._id} room={r} />)}
+            </div>
+          </motion.div>
+        )}
+
+        {meetings.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.15 }}
+            className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+          >
+            <SectionTitle
+              title="Recent Meetings"
+              action={<ViewAllLink to="/dashboard/meetings" />}
+            />
+            <div className="space-y-1">
+              {meetings.slice(0, 4).map((m) => (
+                <MeetingRow key={m._id} meeting={m} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {notifications.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -970,82 +1162,17 @@ function LowerSections({
           className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
         >
           <SectionTitle
-            title="Recent Workspaces"
-            action={<ViewAllLink to="/dashboard/workspaces" />}
+            title="Recent Notifications"
+            subtitle="Latest updates across your workspace"
+            action={<ViewAllLink to="/dashboard/notifications" />}
           />
-          <div className="space-y-1">
-            {loading
-              ? [1, 2, 3].map((i) => <CardSkeleton key={i} />)
-              : workspaces
-                  .slice(0, 4)
-                  .map((ws) => <WorkspaceMiniRow key={ws._id} workspace={ws} />)}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.05 }}
-          className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
-        >
-          <SectionTitle title="Recent Rooms" action={<ViewAllLink to="/dashboard/rooms" />} />
-          <div className="space-y-1">
-            {loading
-              ? [1, 2, 3].map((i) => <CardSkeleton key={i} />)
-              : rooms.slice(0, 4).map((r) => <RoomRow key={r._id} room={r} />)}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
-        >
-          <SectionTitle title="Recent Files" action={<ViewAllLink to="/dashboard/files" />} />
-          <div className="space-y-1">
-            {files.slice(0, 4).map((f) => (
-              <FileRow key={f._id} file={f} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
+            {notifications.slice(0, 6).map((n) => (
+              <NotificationRow key={n._id} notification={n} />
             ))}
           </div>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
-        >
-          <SectionTitle title="Recent Meetings" action={<ViewAllLink to="/dashboard/meetings" />} />
-          <div className="space-y-1">
-            {meetings.slice(0, 4).map((m) => (
-              <MeetingRow key={m._id} meeting={m} />
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4 }}
-        className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
-      >
-        <SectionTitle
-          title="Recent Notifications"
-          subtitle="Latest updates across your workspace"
-          action={<ViewAllLink to="/dashboard/notifications" />}
-        />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
-          {notifications.slice(0, 6).map((n) => (
-            <NotificationRow key={n._id} notification={n} />
-          ))}
-        </div>
-      </motion.div>
+      )}
     </section>
   );
 }
@@ -1343,9 +1470,10 @@ export default function DashboardHome() {
     }
   };
 
-  const totalMembers = workspaces.reduce((sum, ws) => sum + (ws.memberCount || 0), 0);
   const activeRooms = rooms.filter((r) => r.isActive).length;
   const liveMeetings = meetings.filter((m) => m.status === 'ongoing').length;
+  const myTasks = tasks.filter((t) => getTaskAssigneeId(t) === user?.id);
+  const todaysTasks = myTasks.length > 0 ? myTasks : tasks;
 
   const stats: StatDef[] = [
     {
@@ -1376,13 +1504,31 @@ export default function DashboardHome() {
       borderGradient: 'from-amber-500/60 via-orange-500/40 to-rose-500/50',
     },
     {
-      label: 'Total Members',
-      value: totalMembers,
-      icon: UserGroupIcon,
-      trend: '+8 this month',
+      label: 'Total Files',
+      value: files.length,
+      icon: DocumentTextIcon,
+      trend: 'shared across your workspaces',
+      trendUp: true,
+      iconGradient: 'from-blue-500 to-indigo-600',
+      borderGradient: 'from-blue-500/60 via-indigo-500/40 to-violet-500/50',
+    },
+    {
+      label: 'My Tasks',
+      value: myTasks.length,
+      icon: CheckIcon,
+      trend: `${todaysTasks.filter((t) => t.status === 'completed').length} done`,
       trendUp: true,
       iconGradient: 'from-pink-500 to-rose-600',
       borderGradient: 'from-pink-500/60 via-rose-500/40 to-red-500/50',
+    },
+    {
+      label: 'Recent Activity',
+      value: activities.length,
+      icon: BellIcon,
+      trend: activities.length > 0 ? `${activities.slice(0, 8).length} shown` : 'nothing yet',
+      trendUp: activities.length > 0,
+      iconGradient: 'from-cyan-500 to-blue-600',
+      borderGradient: 'from-cyan-500/60 via-blue-500/40 to-indigo-500/50',
     },
   ];
 
@@ -1403,44 +1549,71 @@ export default function DashboardHome() {
     .sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime())
     .slice(0, 4);
 
-  const myTasks = tasks.filter((t) => getTaskAssigneeId(t) === user?.id);
-  const todaysTasks = myTasks.length > 0 ? myTasks : tasks;
-
   const loading = wsLoading || meetingLoading;
+
+  const hasAnyData =
+    workspaces.length > 0 ||
+    rooms.length > 0 ||
+    meetings.length > 0 ||
+    files.length > 0 ||
+    tasks.length > 0 ||
+    activities.length > 0;
+
+  const emptyDashboard = !loading && !hasAnyData;
+  const visibleStats = stats.filter((s) => s.value > 0);
+
+  const requireWorkspace = (next?: () => void) => {
+    if (workspaces.length === 0) {
+      showToast('Create a workspace first', 'error');
+      setShowCreateWsModal(true);
+      return;
+    }
+    next?.();
+  };
 
   return (
     <div className="space-y-6 pb-16">
-      <StatCards stats={stats} />
+      {emptyDashboard ? (
+        <WelcomeSection
+          onCreateWorkspace={() => setShowCreateWsModal(true)}
+          onCreateRoom={() => requireWorkspace(() => setShowCreateRoomModal(true))}
+          onCreateMeeting={() => requireWorkspace(() => setShowScheduleModal(true))}
+          onUploadFile={() => requireWorkspace(() => fileInputRef.current?.click())}
+        />
+      ) : (
+        <>
+          {visibleStats.length > 0 && <StatCards stats={visibleStats} />}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 lg:gap-6 items-start">
-        <div className="lg:col-span-3">
-          <TodaysWork
-            meetings={upcomingMeetings}
-            tasks={todaysTasks}
-            files={recentFiles}
-            activities={activities}
-            onJoinMeeting={handleJoinMeeting}
-          />
-        </div>
-        <div className="lg:col-span-1">
-          <QuickActions
-            onCreateWorkspace={() => setShowCreateWsModal(true)}
-            onCreateRoom={() => setShowCreateRoomModal(true)}
-            onCreateMeeting={() => setShowScheduleModal(true)}
-            onInviteMember={() => setShowInviteModal(true)}
-            onUploadFile={() => fileInputRef.current?.click()}
-          />
-        </div>
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 lg:gap-6 items-start">
+            <div className="lg:col-span-3">
+              <TodaysWork
+                meetings={upcomingMeetings}
+                tasks={todaysTasks}
+                files={recentFiles}
+                activities={activities}
+                onJoinMeeting={handleJoinMeeting}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <QuickActions
+                onCreateWorkspace={() => setShowCreateWsModal(true)}
+                onCreateRoom={() => setShowCreateRoomModal(true)}
+                onCreateMeeting={() => setShowScheduleModal(true)}
+                onInviteMember={() => setShowInviteModal(true)}
+                onUploadFile={() => fileInputRef.current?.click()}
+              />
+            </div>
+          </div>
 
-      <LowerSections
-        workspaces={recentWorkspaces}
-        rooms={recentRooms}
-        files={recentFiles}
-        meetings={recentMeetings}
-        notifications={notifications}
-        loading={loading}
-      />
+          <LowerSections
+            workspaces={recentWorkspaces}
+            rooms={recentRooms}
+            meetings={recentMeetings}
+            notifications={notifications}
+            loading={loading}
+          />
+        </>
+      )}
 
       <input
         ref={fileInputRef}
