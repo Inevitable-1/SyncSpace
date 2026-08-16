@@ -21,6 +21,8 @@ import { initializeSocketHandlers } from './socket/whiteboardHandler.js';
 import { initializeEditorHandlers } from './socket/editorHandler.js';
 import codeDocumentRoutes from './routes/codeDocument.js';
 import meetingRoutes from './routes/meeting.js';
+import profileRoutes from './routes/profile.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -70,6 +72,8 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/activities', activityRoutes);
