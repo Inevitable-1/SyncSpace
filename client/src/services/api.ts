@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { isDemoSession } from './demo';
 import { clearStoredSession, notifySessionExpired, SESSION_EXPIRED_MESSAGE } from './session';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -95,9 +94,6 @@ export function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 api.interceptors.request.use((config) => {
-  if (isDemoSession()) {
-    return config;
-  }
   const token = getStoredToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -147,7 +143,7 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const isPublicAuthUrl = PUBLIC_AUTH_URLS.some((u) => originalRequest?.url?.includes(u));
 
-    if (status !== 401 || isPublicAuthUrl || isDemoSession()) {
+    if (status !== 401 || isPublicAuthUrl) {
       return Promise.reject(error);
     }
 

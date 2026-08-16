@@ -1,5 +1,4 @@
 import api from './api';
-import { demo, noop, demoAuth } from './demo';
 import type {
   LoginRequest,
   RegisterRequest,
@@ -14,8 +13,7 @@ import type {
 
 export const authService = {
   // Step 1 of sign-up: name + email. Sends a verification email; the account is
-  // only completed once the password is set from the emailed link. Real API only
-  // (never falls back to demo data).
+  // only completed once the password is set from the emailed link.
   async register(data: RegisterRequest): Promise<RegisterResponse> {
     return api.post('/auth/register', data).then((response) => response.data.data);
   },
@@ -37,34 +35,28 @@ export const authService = {
   },
 
   // Validates an existing session on page load and returns the freshest user
-  // record. Never falls back to demo data — used only for real accounts.
+  // record.
   async getMe(): Promise<AuthResponse['user']> {
     return api.get('/auth/me').then((response) => response.data.data.user);
   },
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    return demo(
-      () => api.post('/auth/login', data).then((response) => response.data.data),
-      () => demoAuth(),
-    );
+    return api.post('/auth/login', data).then((response) => response.data.data);
   },
 
   async demoLogin(): Promise<AuthResponse> {
-    return Promise.resolve(demoAuth());
+    return api.post('/auth/demo').then((response) => response.data.data);
   },
 
   async logout(): Promise<void> {
-    await noop(() => api.post('/auth/logout'));
+    await api.post('/auth/logout');
   },
 
   async forgotPassword(data: ForgotPasswordRequest): Promise<{ resetToken: string }> {
-    return demo(
-      () => api.post('/auth/forgot-password', data).then((response) => response.data.data),
-      () => ({ resetToken: 'demo-reset-token' }),
-    );
+    return api.post('/auth/forgot-password', data).then((response) => response.data.data);
   },
 
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
-    await noop(() => api.post('/auth/reset-password', data));
+    await api.post('/auth/reset-password', data);
   },
 };

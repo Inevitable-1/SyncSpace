@@ -36,6 +36,30 @@ export async function getMeetings(req: AuthRequest, res: Response): Promise<void
   res.json({ success: true, data: { meetings } });
 }
 
+export async function getWorkspaceMeetings(req: AuthRequest, res: Response): Promise<void> {
+  const userId = assertUser(req);
+  const workspaceId = req.params.id as string;
+
+  const ws = await Workspace.findById(workspaceId);
+  if (!ws || ws.isDeleted) {
+    throw new AppError('Workspace not found', 404);
+  }
+
+  const isMember =
+    ws.owner.toString() === userId || ws.members.some((m) => m.toString() === userId);
+  if (!isMember) {
+    throw new AppError('Not authorized', 403);
+  }
+
+  const meetings = await Meeting.find({ workspace: workspaceId, isDeleted: { $ne: true } })
+    .populate('host', 'name email avatar')
+    .populate('participants', 'name email avatar')
+    .populate('workspace', 'name color')
+    .sort({ scheduledAt: 1 });
+
+  res.json({ success: true, data: { meetings } });
+}
+
 export async function getMeeting(req: AuthRequest, res: Response): Promise<void> {
   const userId = assertUser(req);
   const meeting = await Meeting.findById(req.params.id)

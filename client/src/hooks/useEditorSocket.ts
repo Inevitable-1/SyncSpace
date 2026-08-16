@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { isDemoSession } from '../services/demo';
 import type { CodeEditorUser, EditorCursor } from '../types';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
@@ -30,7 +29,7 @@ export function useEditorSocket({ roomId, userName, enabled = true }: UseEditorS
   }, []);
 
   useEffect(() => {
-    if (!enabled || !roomId || isDemoSession()) return;
+    if (!enabled || !roomId) return;
 
     const token = getToken();
     if (!token) return;

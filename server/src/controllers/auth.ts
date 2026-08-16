@@ -53,10 +53,6 @@ async function issueTokens(user: IUserDocument, req: Request, res: Response): Pr
   return accessToken;
 }
 
-function randomPassword(): string {
-  return crypto.randomBytes(24).toString('hex');
-}
-
 function issueVerificationToken(): { raw: string; hashed: string; expiresAt: Date } {
   const raw = crypto.randomBytes(32).toString('hex');
   const hashed = crypto.createHash('sha256').update(raw).digest('hex');
@@ -238,15 +234,16 @@ export async function login(req: Request, res: Response): Promise<void> {
 }
 
 export async function demoLogin(req: Request, res: Response): Promise<void> {
-  const DEMO_EMAIL = process.env.DEMO_EMAIL || 'mr.manojmanu05@gmail.com';
+  const DEMO_EMAIL = process.env.DEMO_EMAIL || 'demo@syncspace.dev';
+  const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo123';
 
   let user = await User.findOne({ email: DEMO_EMAIL });
 
   if (!user) {
     user = await User.create({
-      name: 'Manoj Kumar',
+      name: 'Demo User',
       email: DEMO_EMAIL,
-      password: randomPassword(),
+      password: DEMO_PASSWORD,
       avatar: '',
       isEmailVerified: true,
     });

@@ -16,7 +16,6 @@ const initialState: AuthState = {
   isAuthenticated: false,
   isLoading: false,
   error: null,
-  isDemo: false,
 };
 
 export const register = createAsyncThunk(
@@ -62,7 +61,6 @@ export const demoLogin = createAsyncThunk('auth/demoLogin', async (_, { rejectWi
           user: result.user,
           accessToken: result.accessToken,
           isAuthenticated: true,
-          isDemo: true,
         },
       }),
     );
@@ -82,21 +80,12 @@ export const initializeAuth = createAsyncThunk(
       const state = parsed?.state;
       if (!state?.user || !state?.accessToken) return undefined;
 
-      // Demo sessions are client-only and never validated against the API.
-      if (state.isDemo === true) {
-        return {
-          user: state.user as User,
-          accessToken: state.accessToken as string,
-          isDemo: true,
-        };
-      }
-
       // Validate the persisted session. On success the freshest user record is
       // returned; on 401 the axios interceptor transparently refreshes the token,
       // and if that fails it emits the session-expired event which logs the user
       // out and redirects to /signin.
       const user = await authService.getMe();
-      return { user, accessToken: state.accessToken as string, isDemo: false };
+      return { user, accessToken: state.accessToken as string };
     } catch (err: unknown) {
       return rejectWithValue(getErrorMessage(err, 'Session validation failed'));
     }
@@ -141,7 +130,6 @@ function loadInitialAuth(): {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
-  isDemo: boolean;
 } {
   try {
     const stored = localStorage.getItem('auth');
@@ -152,14 +140,13 @@ function loadInitialAuth(): {
           user: parsed.state.user,
           accessToken: parsed.state.accessToken,
           isAuthenticated: true,
-          isDemo: parsed.state.isDemo ?? false,
         };
       }
     }
   } catch {
     localStorage.removeItem('auth');
   }
-  return { user: null, accessToken: null, isAuthenticated: false, isDemo: false };
+  return { user: null, accessToken: null, isAuthenticated: false };
 }
 
 const savedAuth = loadInitialAuth();
@@ -171,7 +158,6 @@ const authSlice = createSlice({
     user: savedAuth.user,
     accessToken: savedAuth.accessToken,
     isAuthenticated: savedAuth.isAuthenticated,
-    isDemo: savedAuth.isDemo,
   },
   reducers: {
     clearError(state) {
@@ -184,7 +170,6 @@ const authSlice = createSlice({
       state.user = null;
       state.accessToken = null;
       state.isAuthenticated = false;
-      state.isDemo = false;
       state.isLoading = false;
       state.error = null;
     },
@@ -200,7 +185,6 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.accessToken = null;
-        state.isDemo = false;
         resetAuthSessionState();
       })
       .addCase(register.rejected, (state, action) => {
@@ -216,7 +200,6 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
-        state.isDemo = false;
         resetAuthSessionState();
       })
       .addCase(login.rejected, (state, action) => {
@@ -232,7 +215,6 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.accessToken = action.payload.accessToken;
         state.isAuthenticated = true;
-        state.isDemo = true;
         resetAuthSessionState();
       })
       .addCase(demoLogin.rejected, (state, action) => {
@@ -249,13 +231,11 @@ const authSlice = createSlice({
           state.user = null;
           state.accessToken = null;
           state.isAuthenticated = false;
-          state.isDemo = false;
           return;
         }
         state.user = session.user;
         state.accessToken = session.accessToken;
         state.isAuthenticated = true;
-        state.isDemo = session.isDemo;
         // Persist the freshest user record alongside the existing session. The
         // stored access token may already have been replaced by the axios
         // interceptor during getMe(), so read it back fresh from localStorage.
@@ -280,13 +260,11 @@ const authSlice = createSlice({
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
-        state.isDemo = false;
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
-        state.isDemo = false;
         resetAuthSessionState();
       })
       .addCase(logout.rejected, (state) => {
@@ -295,7 +273,6 @@ const authSlice = createSlice({
         state.user = null;
         state.accessToken = null;
         state.isAuthenticated = false;
-        state.isDemo = false;
         resetAuthSessionState();
       })
       .addCase(forgotPassword.pending, (state) => {

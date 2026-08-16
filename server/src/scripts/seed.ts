@@ -20,8 +20,8 @@ import { Meeting } from '../models/Meeting.js';
 import { RefreshToken } from '../models/RefreshToken.js';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/syncspace';
-const DEMO_EMAIL = process.env.DEMO_EMAIL || 'alex@syncspace.demo';
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo1234';
+const DEMO_EMAIL = process.env.DEMO_EMAIL || 'demo@syncspace.dev';
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'demo123';
 
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;
@@ -920,7 +920,7 @@ export async function fetchMetrics() {
   > = {
     'frontend:UI Wireframe': [
       {
-        sender: 'alex@syncspace.demo',
+        sender: DEMO_EMAIL,
         content: 'Morning team 👋 I pushed the updated wireframe for the login flow.',
         minutes: 148,
       },
@@ -940,7 +940,7 @@ export async function fetchMetrics() {
         minutes: 95,
       },
       {
-        sender: 'alex@syncspace.demo',
+        sender: DEMO_EMAIL,
         content: 'Good catch — reset flow is mocked on the right side, take a look 🔍',
         minutes: 80,
       },
@@ -964,7 +964,7 @@ export async function fetchMetrics() {
         minutes: 175,
       },
       {
-        sender: 'alex@syncspace.demo',
+        sender: DEMO_EMAIL,
         content: 'Can we include the new size variants for buttons too?',
         minutes: 120,
       },
@@ -977,7 +977,7 @@ export async function fetchMetrics() {
         minutes: 260,
       },
       {
-        sender: 'alex@syncspace.demo',
+        sender: DEMO_EMAIL,
         content: 'Solid progress. What is blocking 0.72?',
         minutes: 230,
       },
@@ -1004,7 +1004,7 @@ export async function fetchMetrics() {
         minutes: 320,
       },
       {
-        sender: 'alex@syncspace.demo',
+        sender: DEMO_EMAIL,
         content: 'Great. Can you also add rate limiting to the /api/rooms routes?',
         minutes: 290,
       },
@@ -1031,7 +1031,7 @@ export async function fetchMetrics() {
         minutes: 150,
       },
       {
-        sender: 'alex@syncspace.demo',
+        sender: DEMO_EMAIL,
         content: 'Love it. Let’s target 15k signups for the quarter.',
         minutes: 90,
       },
@@ -1075,7 +1075,7 @@ export async function fetchMetrics() {
         minutes: 320,
       },
       {
-        sender: 'alex@syncspace.demo',
+        sender: DEMO_EMAIL,
         content: 'I’ll handle the simulation experiments then.',
         minutes: 280,
       },
@@ -1087,7 +1087,7 @@ export async function fetchMetrics() {
         minutes: 210,
       },
       {
-        sender: 'alex@syncspace.demo',
+        sender: DEMO_EMAIL,
         content: 'Contrast ratios all pass AA on the new scale?',
         minutes: 185,
       },
@@ -1368,7 +1368,7 @@ export async function fetchMetrics() {
         priority: 'high',
         labels: ['experiment'],
         dueIn: 7,
-        assignee: 'alex@syncspace.demo',
+        assignee: DEMO_EMAIL,
       },
       {
         title: 'Collect citations for related work',
@@ -1408,7 +1408,7 @@ export async function fetchMetrics() {
   const commentDefs: { title: string; by: string; content: string; minutes: number }[] = [
     {
       title: 'Fix sidebar collapse on mobile',
-      by: 'alex@syncspace.demo',
+      by: DEMO_EMAIL,
       content: 'Sofia has the mockup — ping her if the breakpoint is unclear.',
       minutes: 200,
     },
@@ -1486,7 +1486,7 @@ export async function fetchMetrics() {
       mimeType: 'application/pdf',
       size: 890_000,
       folder: '/docs',
-      by: 'alex@syncspace.demo',
+      by: DEMO_EMAIL,
       minutes: 60 * 22,
     },
     {
@@ -1540,7 +1540,7 @@ export async function fetchMetrics() {
       mimeType: 'image/png',
       size: 1_400_000,
       folder: '/',
-      by: 'alex@syncspace.demo',
+      by: DEMO_EMAIL,
       minutes: 60 * 55,
     },
     {
@@ -1684,7 +1684,7 @@ export async function fetchMetrics() {
       mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       size: 310_000,
       folder: '/simulation',
-      by: 'alex@syncspace.demo',
+      by: DEMO_EMAIL,
       minutes: 60 * 3,
     },
   ];
@@ -2058,7 +2058,7 @@ export async function fetchMetrics() {
   }
 
   console.log('Seeding complete!');
-  console.log('Demo account: alex@syncspace.demo / demo1234 (use "Try Demo" on the login page)');
+  console.log(`Demo account: ${DEMO_EMAIL} / ${DEMO_PASSWORD} (use "Try Demo" on the login page)`);
   await mongoose.disconnect();
 }
 

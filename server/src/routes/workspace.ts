@@ -15,6 +15,9 @@ import {
   archiveWorkspace,
   unarchiveWorkspace,
 } from '../controllers/workspace.js';
+import { getWorkspaceRooms } from '../controllers/room.js';
+import { getWorkspaceMeetings } from '../controllers/meeting.js';
+import { createInvite } from '../controllers/invite.js';
 import { authenticate } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
@@ -45,8 +48,15 @@ router.get('/trash', asyncHandler(getTrash));
 router.get('/:id', asyncHandler(getWorkspace));
 router.put('/:id', updateValidation, asyncHandler(updateWorkspace));
 router.delete('/:id', asyncHandler(deleteWorkspace));
+router.get('/:id/rooms', asyncHandler(getWorkspaceRooms));
+router.get('/:id/meetings', asyncHandler(getWorkspaceMeetings));
 router.post('/:id/restore', asyncHandler(restoreWorkspace));
 router.post('/:id/invite-code', asyncHandler(regenerateInviteCode));
+router.post(
+  '/:id/invite',
+  [body('email').isEmail().withMessage('Valid email is required')],
+  createInvite,
+);
 router.post('/join', asyncHandler(joinByInviteCode));
 router.post('/:id/favorite', asyncHandler(toggleFavorite));
 router.post('/:id/archive', asyncHandler(archiveWorkspace));

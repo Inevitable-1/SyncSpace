@@ -103,12 +103,42 @@ export async function getRooms(req: AuthRequest, res: Response): Promise<void> {
   });
 }
 
+export async function getWorkspaceRooms(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
+
+  const userId = req.user.userId;
+  const workspaceId = req.params.id as string;
+
+  const workspace = await Workspace.findById(workspaceId);
+  if (!workspace || workspace.isDeleted) {
+    throw new AppError('Workspace not found', 404);
+  }
+
+  const isMember =
+    workspace.owner.toString() === userId || workspace.members.some((m) => m.toString() === userId);
+  if (!isMember) {
+    throw new AppError('Not authorized', 403);
+  }
+
+  const rooms = await Room.find({ workspace: workspaceId, isDeleted: { $ne: true } })
+    .populate('workspace', 'name color')
+    .sort({ updatedAt: -1 });
+
+  res.json({
+    success: true,
+    data: { rooms },
+  });
+}
+
 export async function getRoom(req: AuthRequest, res: Response): Promise<void> {
   if (!req.user) {
     throw new AppError('Not authenticated', 401);
   }
 
   const userId = req.user.userId;
+
   const room = await Room.findById(req.params.id).populate('workspace', 'name color');
 
   if (!room) {

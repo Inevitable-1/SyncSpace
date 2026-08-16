@@ -6,6 +6,7 @@ export interface IUserDocument extends Document {
   email: string;
   password: string;
   avatar?: string;
+  bio?: string;
   isEmailVerified: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
@@ -40,6 +41,11 @@ const userSchema = new Schema<IUserDocument>(
     avatar: {
       type: String,
       default: '',
+    },
+    bio: {
+      type: String,
+      default: '',
+      maxlength: [300, 'Bio must be at most 300 characters'],
     },
     isEmailVerified: {
       type: Boolean,
