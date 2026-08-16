@@ -61,3 +61,17 @@ uploads/
 *.tgz
 .cache/
 server/uploads/
+start.sh
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+
+# OS generated
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes

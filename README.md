@@ -1,15 +1,15 @@
 <div align="center">
 
-# ✦ SyncSpace
+# SyncSpace
 
 **One workspace for every team — real-time whiteboards, code, chat and project boards.**
 
-White / Gold / Red brand identity · Real-time collaboration · Enterprise-grade
+Real-time collaboration · Full-stack TypeScript · Enterprise-grade architecture
 
-[Features](https://github.com/Inevitable-1/SyncSpace#features) ·
-[Tech Stack](https://github.com/Inevitable-1/SyncSpace#tech-stack) ·
-[Installation](https://github.com/Inevitable-1/SyncSpace#installation) ·
-[Documentation](https://github.com/Inevitable-1/SyncSpace/blob/main/docs/Architecture.md)
+[Features](#features) ·
+[Tech Stack](#tech-stack) ·
+[Installation](#installation) ·
+[API Reference](docs/API_REFERENCE.md)
 
 </div>
 
@@ -21,8 +21,6 @@ SyncSpace is a real-time collaborative workspace for teams. Think **Excalidraw m
 
 > **Mission:** Making collaboration simple, organized and accessible.
 > **Vision:** One workspace for every team.
-
-Built as a 3-week internship project, SyncSpace went from a blank repository to a complete, runnable SaaS product with a professional brand identity — see [docs/ProjectJourney.md](docs/ProjectJourney.md) for the full story.
 
 ## Features
 
@@ -45,16 +43,10 @@ Built as a 3-week internship project, SyncSpace went from a blank repository to 
 ### Platform
 
 - **Dashboard** — analytics, activity timeline, notifications, global search (Ctrl+K)
-- **Meetings** — schedule, join and host meetings
+- **Meetings** — schedule, join and host meetings with real-time status
 - **File Manager** — upload / download, folders, rename, trash, image previews
 - **Insights** — workspace activity and room distribution
-- **Passwordless authentication** — sign in with just name + email
-
-### Brand & UX
-
-- White / Gold / Red brand system with an animated logo (gold "S" + red center dot)
-- Light & dark themes, responsive layouts, skeleton loaders
-- Offline demo mode with realistic fallback data
+- **JWT Authentication** — multi-step registration with email verification, password hashing (bcrypt), refresh token rotation
 
 ## Tech Stack
 
@@ -64,20 +56,20 @@ Built as a 3-week internship project, SyncSpace went from a blank repository to 
 | Real-time | Socket.IO · React Konva · Monaco Editor |
 | Backend | Node.js · Express 5 · TypeScript · Mongoose |
 | Database | MongoDB 7 |
-| Auth | JWT (access + rotating refresh) · httpOnly cookies |
+| Auth | JWT (access + rotating refresh) · bcrypt · httpOnly cookies |
 | Tooling | npm workspaces · Prettier · Docker Compose |
 
 ## Screenshots
 
-> Screenshots to be added — the app is live at `http://localhost:5173` after setup.
+> Screenshots coming soon — the app runs at `http://localhost:5173` after setup.
 
 | Landing & Hero | Whiteboard | Code Editor |
 | --- | --- | --- |
-| Animated logo, gold hero, CTAs | Infinite canvas + cursors | Monaco with live cursors |
+| Animated logo, brand identity | Infinite canvas + cursors | Monaco with live cursors |
 
 | Kanban Board | Team Chat | Dashboard |
 | --- | --- | --- |
-| Drag-and-drop tasks | Threads + typing | Analytics & activity |
+| Drag-and-drop tasks | Threads + typing indicators | Analytics & activity feed |
 
 ## Installation
 
@@ -85,9 +77,9 @@ Built as a 3-week internship project, SyncSpace went from a blank repository to 
 
 - Node.js 20+
 - npm 9+
-- Docker & Docker Compose (optional, for MongoDB)
+- Docker & Docker Compose (for MongoDB)
 
-### Setup
+### Quick Start
 
 ```bash
 # 1. Clone
@@ -96,23 +88,43 @@ cd SyncSpace
 
 # 2. Install dependencies
 npm install
+
+# 3. Start MongoDB
+docker start syncspace-mongo
+# or: docker compose up -d mongo
+
+# 4. Seed demo account and test data
+npx tsx server/src/scripts/seed.ts
+
+# 5. Build and start
+npm run build -w server
+npm run dev
 ```
+
+### Demo Account
+
+After seeding, use these credentials:
+
+- **Email:** `demo@syncspace.dev`
+- **Password:** `demo123`
+
+Or click **"Try Demo"** on the login page for instant access.
 
 ### Environment
 
-**server/.env**
+**server/.env** (pre-configured for local development)
 
 ```
 PORT=5000
 NODE_ENV=development
 MONGODB_URI=mongodb://localhost:27017/syncspace
 CLIENT_URL=http://localhost:5173
-JWT_SECRET=your-secret-key
+JWT_SECRET=dev-secret-change-in-production
 JWT_EXPIRES_IN=7d
 CORS_ORIGIN=http://localhost:5173
 ```
 
-**client/.env**
+**client/.env** (pre-configured)
 
 ```
 VITE_API_URL=http://localhost:5000
@@ -124,8 +136,8 @@ VITE_SOCKET_URL=http://localhost:5000
 **Option A — Docker (MongoDB only) + local dev**
 
 ```bash
-docker compose up -d mongo        # start MongoDB (and Redis if configured)
-npm run dev                       # client on :5173, server on :5000
+docker compose up -d mongo
+npm run dev
 ```
 
 **Option B — Everything via Docker**
@@ -133,10 +145,6 @@ npm run dev                       # client on :5173, server on :5000
 ```bash
 docker compose up -d
 ```
-
-**Option C — Fully local**
-
-Start a local MongoDB instance, then run `npm run dev`.
 
 ### Scripts
 
@@ -157,73 +165,74 @@ SyncSpace/
 │   └── src/
 │       ├── components/            # common, layout, whiteboard, editor, chat,
 │       │                          # tasks, collaboration, meeting, files, logo
-│       ├── features/              # 12 Redux slices (auth, room, task, …)
+│       ├── features/              # 12 Redux slices (auth, room, task, ...)
 │       ├── hooks/                 # useSocket, useCollaborationSocket, useEditorSocket
 │       ├── pages/                 # Landing, About, Features, auth + dashboard pages
-│       ├── services/              # API services with demo fallback
+│       ├── services/              # API services (auth, workspace, room, meeting, ...)
 │       └── types/                 # Shared TypeScript interfaces
 ├── server/                        # Express backend
 │   └── src/
 │       ├── models/                # 16 Mongoose models
-│       ├── controllers/           # 13 controllers
-│       ├── routes/                # 13 route files
+│       ├── controllers/           # 15 controllers
+│       ├── routes/                # 15 route files
 │       ├── services/              # Business logic
 │       ├── repositories/          # Data access layer
 │       ├── dto/                   # Data transfer objects
-│       ├── socket/                # Socket.IO handlers
+│       ├── socket/                # Socket.IO handlers (whiteboard, editor)
 │       ├── middleware/            # auth, errorHandler, upload
+│       ├── scripts/               # Database seeder
 │       └── utils/                 # tokens, logger, asyncHandler
 ├── docker/                        # Dockerfiles
 ├── docker-compose.yml             # MongoDB + server + client
-└── docs/                          # Weekly reports, architecture, API reference
+├── docs/                          # Architecture, API reference, weekly reports
+├── start.sh                       # One-command startup script
+└── package.json                   # npm workspaces root
 ```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register (name + email) |
+| POST | `/api/auth/login` | Login with email + password |
+| POST | `/api/auth/demo` | Instant demo login |
+| GET | `/api/auth/me` | Get current user |
+| GET | `/api/profile` | Get profile |
+| PUT | `/api/profile` | Update profile |
+| POST | `/api/workspaces` | Create workspace |
+| GET | `/api/workspaces` | List workspaces |
+| GET | `/api/workspaces/:id` | Get workspace detail |
+| DELETE | `/api/workspaces/:id` | Delete workspace |
+| POST | `/api/rooms` | Create room |
+| GET | `/api/workspaces/:id/rooms` | List workspace rooms |
+| POST | `/api/meetings` | Schedule meeting |
+| GET | `/api/meetings` | List meetings |
+| GET | `/api/dashboard` | Dashboard stats |
+| GET | `/api/activities` | Activity feed |
+| GET | `/api/notifications` | Notifications |
+
+Full API reference: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
 
 ## Documentation
 
-- [Project Showcase](PROJECT_SHOWCASE.md) — portfolio overview
-- [Final Audit Report](FINAL_AUDIT_REPORT.md) — full-project consistency audit
-- [Project Journey](docs/ProjectJourney.md) — idea to implementation
-- [Week 1](docs/Week1.md) — foundation & authentication
-- [Week 2](docs/Week2.md) — collaboration platform
-- [Week 3](docs/Week3.md) — branding, redesign & hardening
 - [Architecture](docs/Architecture.md) — system design
-- [Feature Map](docs/FeatureMap.md) — every feature & its status
+- [Feature Map](docs/FeatureMap.md) — every feature and its status
 - [Data Models](docs/DataModels.md) — all 16 MongoDB models
-- [Routes](docs/Routes.md) — frontend, backend & socket routes
+- [Routes](docs/Routes.md) — frontend, backend and socket routes
 - [Components](docs/Components.md) — component inventory
-- [Future Roadmap](docs/FutureRoadmap.md) — what's next
 - [API Reference](docs/API_REFERENCE.md) — full endpoint list
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) — production notes
+- [Project Journey](docs/ProjectJourney.md) — idea to implementation
+- [Future Roadmap](docs/FutureRoadmap.md) — what's next
 
-## Future Scope
+## License
 
-- **Video Meetings** — WebRTC rooms, screen sharing, recording
-- **Workspace Templates** — one-click starter spaces
-- **Team Analytics** — engagement and contribution insights
-- **Notifications** — email digests + preferences
-- **AI Assistant** — workspace-aware assistant (post-login only)
-- **File Sharing** — cloud storage, share links, permissions
-- **Workspace Permissions** — granular role-based matrices
-- Conflict-free editing (OT / CRDT), real terminal execution, mobile apps
-
-## Contributors
-
-- **Manoj Kumar** — Design & full-stack development · [GitHub](https://github.com/Inevitable-1)
-
-## Internship Timeline
-
-| Week | Focus | Highlights |
-| ---- | ----- | ---------- |
-| **Week 1** | Foundation | Monorepo, auth (JWT + refresh), dashboard shell, MongoDB |
-| **Week 2** | Collaboration | Whiteboard, code editor, chat, kanban, workspaces, presence |
-| **Week 3** | Branding & hardening | White/Gold/Red identity, logo system, hero redesign, cleanup |
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
 
 **SyncSpace** — *One Workspace. Infinite Collaboration.*
-
-Built with ♥ over 3 weeks.
 
 </div>
