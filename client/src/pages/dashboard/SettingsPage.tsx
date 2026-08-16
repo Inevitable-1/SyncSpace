@@ -256,7 +256,7 @@ export default function SettingsPage() {
               </span>
               <button
                 onClick={() => {
-                  showToast('Account deletion is disabled in demo mode', 'info');
+                  showToast('Account deletion is not available right now', 'info');
                   setShowDeleteConfirm(false);
                 }}
                 className="btn-danger text-xs px-3 py-1.5"

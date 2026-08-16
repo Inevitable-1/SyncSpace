@@ -19,8 +19,10 @@ import { useToast } from '../../components/common/Toast';
 import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import { fetchRooms } from '../../features/room/roomSlice';
 import { fetchMeetings } from '../../features/meeting/meetingSlice';
+import { setUser } from '../../features/auth/authSlice';
 import { activityService } from '../../services/activityService';
 import { fileService } from '../../services/fileService';
+import { profileService } from '../../services/profileService';
 import type { RootState, AppDispatch } from '../../store';
 import type { Activity, UploadedFile, Workspace, User } from '../../types';
 
@@ -161,7 +163,7 @@ export default function ProfilePage() {
       );
       setFiles(lists.flat());
     } catch {
-      // ignore demo fallback errors
+      // ignore non-critical errors while loading files
     }
   }, [workspaces]);
 
@@ -236,16 +238,35 @@ export default function ProfilePage() {
     showToast('Profile link copied to clipboard!', 'success');
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim() || !editEmail.trim()) return;
-    setProfileOverride({
-      name: editName.trim(),
-      email: editEmail.trim(),
-      bio: editBio.trim(),
-    });
-    setShowEdit(false);
-    showToast('Profile updated successfully!', 'success');
+    try {
+      const profile = await profileService.updateProfile({
+        name: editName.trim(),
+        bio: editBio.trim(),
+      });
+      setProfileOverride({
+        name: profile.name,
+        email: profile.email,
+        bio: profile.bio,
+      });
+      dispatch(setUser(profile));
+      try {
+        const stored = localStorage.getItem('auth');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.state.user = profile;
+          localStorage.setItem('auth', JSON.stringify(parsed));
+        }
+      } catch {
+        // ignore localStorage write errors
+      }
+      setShowEdit(false);
+      showToast('Profile updated successfully!', 'success');
+    } catch {
+      showToast('Failed to update profile', 'error');
+    }
   };
 
   return (
@@ -684,9 +705,13 @@ export default function ProfilePage() {
                     type="email"
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
-                    className="input-base"
+                    className="input-base opacity-60"
                     required
+                    readOnly
                   />
+                  <p className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                    Email cannot be changed.
+                  </p>
                 </div>
                 <div>
                   <label

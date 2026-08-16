@@ -691,7 +691,7 @@ export default function FileManagerPage() {
                   >
                     <div className="text-6xl mb-3">{getFileIcon(previewFile.mimeType)}</div>
                     <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                      Preview unavailable — file is stored in demo mode.
+                      Preview unavailable for this file type.
                     </p>
                   </div>
                 )}

@@ -41,7 +41,6 @@ export default function TopNav({ onMenuClick, onOpenAI }: TopNavProps) {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
-  const { isDemo } = useSelector((state: RootState) => state.auth);
   const { notifications, unreadCount } = useSelector((state: RootState) => state.notification);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -77,17 +76,9 @@ export default function TopNav({ onMenuClick, onOpenAI }: TopNavProps) {
           <h1 className="text-base sm:text-lg font-bold tracking-tight text-white truncate">
             {pageTitle}
           </h1>
-          <span
-            className={`hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-              isDemo
-                ? 'bg-amber-500/20 border-amber-500/30 text-amber-300'
-                : 'bg-gradient-to-r from-brand-600/20 to-purple-600/20 border-brand-500/20 text-brand-300'
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${isDemo ? 'bg-amber-400' : 'bg-brand-400'}`}
-            />
-            {isDemo ? 'Demo Mode' : 'Overview'}
+          <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-gradient-to-r from-brand-600/20 to-purple-600/20 border-brand-500/20 text-brand-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
+            Overview
           </span>
         </div>
 

@@ -12,7 +12,6 @@ export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  isDemo: boolean;
 }
 
 export interface LoginRequest {

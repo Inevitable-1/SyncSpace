@@ -33,8 +33,6 @@ import {
 } from '../../features/collaboration/memberSlice';
 import { createInvite } from '../../features/collaboration/inviteSlice';
 import { fetchActivities } from '../../features/activity/activitySlice';
-import { getDemoWorkspace, toWorkspaceShape } from '../../data/demoWorkspaces';
-import { isDemoSession } from '../../services/demo';
 import type { RootState, AppDispatch } from '../../store';
 import type { Member } from '../../types';
 
@@ -125,10 +123,7 @@ export default function WorkspaceDetailPage() {
   const [memberActionId, setMemberActionId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const demoWorkspace = id && isDemoSession() ? getDemoWorkspace(id) : undefined;
-  const workspace =
-    workspaces.find((w) => w._id === id) ||
-    (demoWorkspace ? toWorkspaceShape(demoWorkspace) : undefined);
+  const workspace = workspaces.find((w) => w._id === id);
   const wsRooms = rooms.filter(
     (r) => (typeof r.workspace === 'object' ? r.workspace._id : r.workspace) === id,
   );
