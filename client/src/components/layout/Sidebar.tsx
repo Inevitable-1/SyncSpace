@@ -277,7 +277,7 @@ export default function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }
           <div className="mt-2 flex justify-center">
             <span className="inline-flex items-center gap-1 rounded-full border border-brand-500/25 bg-brand-600/10 px-2.5 py-1 text-[10px] font-semibold text-brand-300">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
-              v1.0 Internship Edition
+              v1.0
             </span>
           </div>
         )}

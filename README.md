@@ -184,7 +184,7 @@ SyncSpace/
 │       └── utils/                 # tokens, logger, asyncHandler
 ├── docker/                        # Dockerfiles
 ├── docker-compose.yml             # MongoDB + server + client
-├── docs/                          # Architecture, API reference, weekly reports
+├── docs/                          # Architecture, API reference, feature guide
 ├── start.sh                       # One-command startup script
 └── package.json                   # npm workspaces root
 ```
@@ -222,7 +222,7 @@ Full API reference: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
 - [Components](docs/Components.md) — component inventory
 - [API Reference](docs/API_REFERENCE.md) — full endpoint list
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) — production notes
-- [Project Journey](docs/ProjectJourney.md) — idea to implementation
+- [Feature Guide](docs/FEATURE_GUIDE.md) — feature walkthrough
 - [Future Roadmap](docs/FutureRoadmap.md) — what's next
 
 ## License

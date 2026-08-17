@@ -123,9 +123,7 @@ export default function ShortcutsModal() {
                 <span className="text-[11px] text-gray-500">
                   Press <Kbd>?</Kbd> anytime to reopen
                 </span>
-                <span className="text-[10px] font-medium text-brand-400/80">
-                  SyncSpace v1.0 Internship Edition
-                </span>
+                <span className="text-[10px] font-medium text-brand-400/80">SyncSpace v1.0</span>
               </div>
             </motion.div>
           </div>
