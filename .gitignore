@@ -56,12 +56,11 @@ redis-data/
 
 # User uploads
 uploads/
+server/uploads/
 
 # Misc
 *.tgz
 .cache/
-server/uploads/
-start.sh
 
 # Temp files
 *.tmp
@@ -73,5 +72,3 @@ start.sh
 # OS generated
 Thumbs.db
 Desktop.ini
-.Spotlight-V100
-.Trashes
