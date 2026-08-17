@@ -5,6 +5,9 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
 import authRoutes from './routes/auth.js';
 import workspaceRoutes from './routes/workspace.js';
 import roomRoutes from './routes/room.js';
@@ -27,6 +30,9 @@ import dashboardRoutes from './routes/dashboard.js';
 
 const app = express();
 const httpServer = createServer(app);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const CONFIGURED_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 const IS_DEV = process.env.NODE_ENV !== 'production';
@@ -70,6 +76,35 @@ app.use(cookieParser());
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+const openApiSpec = JSON.parse(readFileSync(join(__dirname, 'configs', 'openapi.json'), 'utf-8'));
+
+app.get('/api/docs/openapi.json', (_req, res) => {
+  res.json(openApiSpec);
+});
+
+app.get('/api/docs', (_req, res) => {
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>SyncSpace API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"/>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: '/api/docs/openapi.json',
+      dom_id: '#swagger-ui',
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+      layout: 'BaseLayout',
+    });
+  </script>
+</body>
+</html>`);
 });
 
 app.use('/api/auth', authRateLimit, authRoutes);
