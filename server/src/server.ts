@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import app from './app.js';
+import app, { printRoutes } from './app.js';
 import { logger } from './utils/logger.js';
 import connectDB from './configs/db.js';
 
@@ -12,6 +12,7 @@ async function startServer() {
   app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`);
     logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    printRoutes();
   });
 }
 

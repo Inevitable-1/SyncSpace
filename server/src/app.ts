@@ -74,6 +74,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
+app.get('/', (_req, res) => {
+  res.json({ success: true, message: 'SyncSpace API is running', version: '1.0.0' });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -128,5 +132,35 @@ initializeSocketHandlers(io);
 initializeEditorHandlers(io);
 
 app.use(errorHandler);
+
+function printRoutes(): void {
+  const registeredRoutes = [
+    'GET     /',
+    'GET     /api/health',
+    'GET     /api/docs',
+    'GET     /api/docs/openapi.json',
+    'ALL     /api/auth/*',
+    'ALL     /api/profile/*',
+    'ALL     /api/dashboard/*',
+    'ALL     /api/workspaces/*',
+    'ALL     /api/rooms/*',
+    'ALL     /api/activities/*',
+    'ALL     /api/notifications/*',
+    'ALL     /api/whiteboards/*',
+    'ALL     /api/chat/*',
+    'ALL     /api/tasks/*',
+    'ALL     /api/files/*',
+    'ALL     /api/workspaces/:id/members/*',
+    'ALL     /api/workspaces/:id/invites/*',
+    'ALL     /api/invites/*',
+    'ALL     /api/documents/*',
+    'ALL     /api/meetings/*',
+  ];
+  console.log('\n=== Registered Routes ===');
+  registeredRoutes.forEach((r) => console.log(`  ${r}`));
+  console.log(`\n  Total: ${registeredRoutes.length} route groups\n`);
+}
+
+export { printRoutes };
 
 export default app;
