@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { getProfile, updateProfile } from '../controllers/profile.js';
+import {
+  getProfile,
+  updateProfile,
+  changePassword,
+  deleteProfile,
+} from '../controllers/profile.js';
 import { authenticate } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
@@ -19,5 +24,24 @@ router.put(
   ],
   asyncHandler(updateProfile),
 );
+
+router.put(
+  '/password',
+  [
+    body('currentPassword').notEmpty().withMessage('Current password is required'),
+    body('newPassword')
+      .isLength({ min: 8 })
+      .withMessage('Password must be at least 8 characters')
+      .matches(/[A-Z]/)
+      .withMessage('Password must contain an uppercase letter')
+      .matches(/[a-z]/)
+      .withMessage('Password must contain a lowercase letter')
+      .matches(/\d/)
+      .withMessage('Password must contain a number'),
+  ],
+  asyncHandler(changePassword),
+);
+
+router.delete('/', asyncHandler(deleteProfile));
 
 export default router;

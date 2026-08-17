@@ -6,6 +6,10 @@ import type {
 } from '../dto/workspace.dto.js';
 import type { PaginatedResponse } from '../dto/common.dto.js';
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 class WorkspaceRepository {
   async create(userId: string, data: CreateWorkspaceDto): Promise<IWorkspaceDocument> {
     const workspace = new Workspace({
@@ -40,7 +44,7 @@ class WorkspaceRepository {
     };
 
     if (search) {
-      filter.name = { $regex: search, $options: 'i' };
+      filter.name = { $regex: escapeRegex(search), $options: 'i' };
     }
 
     if (isPublic !== undefined) {
@@ -94,7 +98,7 @@ class WorkspaceRepository {
     return Workspace.find({
       $or: [{ owner: userId }, { members: userId }],
       isDeleted: false,
-      name: { $regex: query, $options: 'i' },
+      name: { $regex: escapeRegex(query), $options: 'i' },
     }).limit(20);
   }
 

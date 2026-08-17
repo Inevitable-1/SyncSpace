@@ -2,9 +2,40 @@ import type { Response } from 'express';
 import mongoose from 'mongoose';
 import { Task } from '../models/Task.js';
 import { TaskComment } from '../models/TaskComment.js';
+import { Member } from '../models/Member.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { logActivity } from './activity.js';
+
+async function assertWorkspaceMember(workspaceId: string, userId: string): Promise<void> {
+  const member = await Member.findOne({
+    workspaceId: new mongoose.Types.ObjectId(workspaceId),
+    userId: new mongoose.Types.ObjectId(userId),
+    status: 'active',
+  });
+  if (!member) {
+    throw new AppError('You are not a member of this workspace', 403);
+  }
+}
+
+export async function getTask(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
+
+  const taskId = String(req.params.id);
+  const task = await Task.findById(taskId)
+    .populate('creator', 'name email avatar')
+    .populate('assignee', 'name email avatar');
+
+  if (!task || task.isDeleted) {
+    throw new AppError('Task not found', 404);
+  }
+
+  await assertWorkspaceMember(String(task.workspace), req.user.userId);
+
+  res.json({ success: true, data: { task } });
+}
 
 export async function getTasks(req: AuthRequest, res: Response): Promise<void> {
   if (!req.user) {

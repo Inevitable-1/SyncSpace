@@ -7,6 +7,10 @@ import {
 import type { InviteQueryDto } from '../dto/invite.dto.js';
 import type { PaginatedResponse } from '../dto/common.dto.js';
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 class InviteRepository {
   async create(data: {
     email: string;
@@ -55,7 +59,7 @@ class InviteRepository {
     const filter: Record<string, unknown> = { workspaceId };
 
     if (status) filter.status = status;
-    if (search) filter.email = { $regex: search, $options: 'i' };
+    if (search) filter.email = { $regex: escapeRegex(search), $options: 'i' };
 
     const [data, total] = await Promise.all([
       Invite.find(filter)

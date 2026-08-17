@@ -6,6 +6,10 @@ import { AppError } from '../middleware/errorHandler.js';
 import type { AuthRequest } from '../middleware/auth.js';
 import { logActivity } from './activity.js';
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function getFiles(req: AuthRequest, res: Response): Promise<void> {
   if (!req.user) {
     throw new AppError('Not authenticated', 401);
@@ -29,7 +33,7 @@ export async function getFiles(req: AuthRequest, res: Response): Promise<void> {
   }
 
   if (search) {
-    query.name = { $regex: search, $options: 'i' };
+    query.name = { $regex: escapeRegex(search), $options: 'i' };
   }
 
   const files = await UploadedFile.find(query)
@@ -105,6 +109,11 @@ export async function downloadFile(req: AuthRequest, res: Response): Promise<voi
   res.setHeader('Content-Type', file.mimeType);
 
   const stream = fs.createReadStream(filePath);
+  stream.on('error', () => {
+    if (!res.headersSent) {
+      throw new AppError('Error reading file', 500);
+    }
+  });
   stream.pipe(res);
 }
 

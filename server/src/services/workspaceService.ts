@@ -7,6 +7,10 @@ import { AppError } from '../middleware/errorHandler.js';
 import { logActivity } from '../controllers/activity.js';
 import { logNotification } from '../controllers/notification.js';
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 interface CreateWorkspaceData {
   name: string;
   description?: string;
@@ -194,7 +198,7 @@ class WorkspaceService {
     };
 
     if (query && typeof query === 'string') {
-      filter.name = { $regex: query, $options: 'i' };
+      filter.name = { $regex: escapeRegex(query), $options: 'i' };
     }
 
     return Workspace.find(filter).sort({ updatedAt: -1 });

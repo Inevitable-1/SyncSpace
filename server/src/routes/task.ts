@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import {
   getTasks,
   getTasksByWorkspace,
+  getTask,
   createTask,
   updateTask,
   deleteTask,
@@ -18,6 +19,7 @@ router.use(authenticate);
 
 router.get('/workspace/:workspaceId', asyncHandler(getTasksByWorkspace));
 router.get('/', asyncHandler(getTasks));
+router.get('/:id', asyncHandler(getTask));
 router.post(
   '/',
   [body('title').trim().notEmpty(), body('workspace').notEmpty()],

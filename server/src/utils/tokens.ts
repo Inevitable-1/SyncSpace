@@ -2,7 +2,12 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import type { AuthPayload, TokenPair } from '../types/index.js';
 
-const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET || 'fallback-secret';
+const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET as string;
+if (!JWT_SECRET) {
+  throw new Error(
+    'JWT_SECRET environment variable is required. Set it in your .env file or environment.',
+  );
+}
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '15m') as jwt.SignOptions['expiresIn'];
 const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 

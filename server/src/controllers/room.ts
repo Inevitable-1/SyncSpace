@@ -324,7 +324,11 @@ export async function getStats(req: AuthRequest, res: Response): Promise<void> {
     createdAt: { $lt: thirtyDaysAgo },
   });
 
-  const onlineMembers = totalMembers;
+  const onlineMembers = await Room.countDocuments({
+    isDeleted: { $ne: true },
+    isActive: true,
+    $or: [{ owner: userId }, { participants: userId }],
+  });
 
   const filesShared = await Room.countDocuments({
     isDeleted: { $ne: true },

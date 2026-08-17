@@ -364,10 +364,18 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
   user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
   await user.save({ validateModifiedOnly: true });
 
+  // In production the reset token is only sent via email. In development we
+  // include it in the response so the password-reset flow can be tested
+  // without an SMTP server.
+  const devPayload: { resetToken?: string } = {};
+  if (process.env.NODE_ENV !== 'production') {
+    devPayload.resetToken = resetToken;
+  }
+
   res.json({
     success: true,
     message: 'If the email exists, a reset link has been sent',
-    data: { resetToken },
+    data: devPayload,
   });
 }
 
