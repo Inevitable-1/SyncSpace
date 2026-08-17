@@ -2,17 +2,21 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import type { AuthPayload, TokenPair } from '../types/index.js';
 
-const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET as string;
-if (!JWT_SECRET) {
-  throw new Error(
-    'JWT_SECRET environment variable is required. Set it in your .env file or environment.',
-  );
-}
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '15m') as jwt.SignOptions['expiresIn'];
 const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 
+function getJwtSecret(): jwt.Secret {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      'JWT_SECRET environment variable is required. Set it in your .env file or environment.',
+    );
+  }
+  return secret;
+}
+
 function generateAccessToken(payload: AuthPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: JWT_EXPIRES_IN });
 }
 
 function generateRefreshToken(): { token: string; hashedToken: string; expiresAt: Date } {
@@ -36,7 +40,7 @@ export function generateTokenPair(
 }
 
 export function verifyAccessToken(token: string): AuthPayload {
-  return jwt.verify(token, JWT_SECRET) as AuthPayload;
+  return jwt.verify(token, getJwtSecret()) as AuthPayload;
 }
 
 export function hashToken(token: string): string {
