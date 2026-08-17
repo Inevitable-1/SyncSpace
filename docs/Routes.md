@@ -238,7 +238,6 @@ All routes below are mounted in `server/src/app.ts`.
 - ✅ Every protected router applies `authenticate` via `router.use(...)`
 - ✅ No mounted-but-unreachable router (each is registered in `app.ts`)
 - ✅ No duplicate conflicting paths (invite double-mount is intentional and scoped)
-- 🟡 Demo-backed frontend services (workspace/room/meeting/file/member/activity) don't currently call these REST endpoints; the endpoints are implemented, validated, and documented in `docs/API_REFERENCE.md`.
 
 ---
 

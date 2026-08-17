@@ -5,6 +5,7 @@ import {
   updateProfile,
   changePassword,
   deleteProfile,
+  getContributionScore,
 } from '../controllers/profile.js';
 import { authenticate } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -43,5 +44,7 @@ router.put(
 );
 
 router.delete('/', asyncHandler(deleteProfile));
+
+router.get('/contributions', asyncHandler(getContributionScore));
 
 export default router;

@@ -23,6 +23,7 @@ import { setUser } from '../../features/auth/authSlice';
 import { activityService } from '../../services/activityService';
 import { fileService } from '../../services/fileService';
 import { profileService } from '../../services/profileService';
+import type { ContributionScore } from '../../services/profileService';
 import type { RootState, AppDispatch } from '../../store';
 import type { Activity, UploadedFile, Workspace, User } from '../../types';
 
@@ -135,6 +136,7 @@ export default function ProfilePage() {
 
   const [activities, setActivities] = useState<Activity[]>([]);
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [contributions, setContributions] = useState<ContributionScore | null>(null);
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
   const [editEmail, setEditEmail] = useState(user?.email || '');
@@ -152,6 +154,10 @@ export default function ProfilePage() {
     activityService
       .getAll()
       .then(setActivities)
+      .catch(() => {});
+    profileService
+      .getContributionScore()
+      .then(setContributions)
       .catch(() => {});
   }, [dispatch]);
 
@@ -380,6 +386,67 @@ export default function ProfilePage() {
           </motion.div>
         ))}
       </div>
+
+      {contributions && (
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.4 }}
+          className="rounded-2xl p-4 backdrop-blur-2xl border border-white/5 bg-white/[0.02] hover:border-brand-500/20 transition-all duration-300"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                Contribution Score
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                Level {contributions.level} · {contributions.score} points
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-black text-brand-400">{contributions.score}</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                Next: {contributions.nextLevelAt}
+              </p>
+            </div>
+          </div>
+          <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden mb-3">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-brand-500 to-purple-500 transition-all duration-500"
+              style={{ width: `${contributions.progress}%` }}
+            />
+          </div>
+          <div className="grid grid-cols-4 gap-2 text-center">
+            {[
+              { label: 'Workspaces', value: contributions.breakdown.workspacesCreated },
+              { label: 'Rooms', value: contributions.breakdown.roomsCreated },
+              { label: 'Files', value: contributions.breakdown.filesUploaded },
+              { label: 'Tasks', value: contributions.breakdown.tasksCreated },
+            ].map((item) => (
+              <div key={item.label} className="p-2 rounded-lg bg-white/[0.03]">
+                <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {item.value}
+                </p>
+                <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                  {item.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          {contributions.badges.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {contributions.badges.map((badge) => (
+                <span
+                  key={badge}
+                  className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-500/15 text-brand-400 border border-brand-500/20"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {!hasAnyActivity ? (
         <motion.div

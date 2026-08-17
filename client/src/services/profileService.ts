@@ -9,6 +9,23 @@ export interface Profile {
   isEmailVerified: boolean;
 }
 
+export interface ContributionScore {
+  score: number;
+  level: number;
+  nextLevelAt: number;
+  progress: number;
+  badges: string[];
+  breakdown: {
+    workspacesCreated: number;
+    roomsCreated: number;
+    filesUploaded: number;
+    meetingsCreated: number;
+    invitesSent: number;
+    tasksCreated: number;
+    totalActivities: number;
+  };
+}
+
 export const profileService = {
   async getProfile(): Promise<Profile> {
     const { data } = await api.get('/profile');
@@ -26,5 +43,10 @@ export const profileService = {
 
   async deleteAccount(): Promise<void> {
     await api.delete('/profile');
+  },
+
+  async getContributionScore(): Promise<ContributionScore> {
+    const { data } = await api.get('/profile/contributions');
+    return data.data as ContributionScore;
   },
 };

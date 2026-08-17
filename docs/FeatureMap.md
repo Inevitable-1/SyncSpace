@@ -3,7 +3,7 @@
 Complete map of every SyncSpace feature, its status, and where it lives. Status legend:
 
 - ✅ **Complete** — implemented end-to-end (frontend + backend + realtime where applicable)
-- 🟡 **Simulated** — fully functional UI backed by the demo data layer (see [Demo Mode](#demo-mode))
+- 🟡 **Simulated** — fully functional UI with simulated backend (no real service integration)
 - 🔜 **Future** — roadmap item (see `docs/FutureRoadmap.md`)
 
 ---
@@ -13,7 +13,7 @@ Complete map of every SyncSpace feature, its status, and where it lives. Status 
 ```
 Authentication
 ├── ✅ Register        — passwordless (name + email) — client/src/pages/RegisterPage.tsx, POST /api/auth/register
-├── ✅ Login           — email-only sign-in — client/src/pages/LoginPage.tsx, POST /api/auth/login
+├── ✅ Login           — email + password — client/src/pages/LoginPage.tsx, POST /api/auth/login
 ├── ✅ Demo Login      — one-click demo account — POST /api/auth/demo
 ├── ✅ Session Management
 │   ├── ✅ JWT access token (client store) — client/src/features/auth/authSlice.ts
@@ -24,7 +24,7 @@ Authentication
 │   ├── ✅ Forgot password — client/src/pages/ForgotPasswordPage.tsx, POST /api/auth/forgot-password
 │   └── ✅ Reset password  — client/src/pages/ResetPasswordPage.tsx, POST /api/auth/reset-password
 ├── ✅ Route Protection — client/src/components/ProtectedRoute.tsx (redirects to /login)
-└── 🔜 Email verification
+└── ✅ Email verification — multi-step registration with verification token
 ```
 
 ## Workspace Management
@@ -40,7 +40,7 @@ Workspace
 ├── ✅ Invite code join       — POST /api/workspaces/join
 ├── ✅ Member management      — /api/workspaces/:id/members (roles, suspend, reactivate)
 ├── ✅ Invite system          — /api/invites (create, pending, accept, decline, revoke)
-├── 🟡 Data layer             — workspace/member/invite/activity services use demo data with real-API fallback
+├── ✅ Data layer             — workspace/member/invite/activity services call real REST APIs
 └── 🔜 Public workspaces & discovery
 ```
 
@@ -69,7 +69,7 @@ Collaboration
 ├── ✅ Activity feed          — live activity stream in room
 ├── ✅ Activity timeline      — full audit trail per room
 ├── ✅ Global search (⌘K)     — client/src/components/collaboration/GlobalSearch.tsx + CommandPalette
-└── ✅ AI Assistant (Ctrl+Shift+A) — client/src/components/AISidebar.tsx (post-login dashboard)
+└── 🟡 AI Assistant (Ctrl+Shift+A) — client/src/components/AISidebar.tsx (simulated responses, no LLM backend)
 ```
 
 ## Whiteboard
@@ -143,7 +143,7 @@ Files
 ├── ✅ File explorer in room  — client/src/components/files/FileExplorer.tsx
 ├── ✅ Upload / rename / delete / download
 ├── ✅ Folder grouping        — GET /api/files/folders
-└── 🟡 Storage backend        — fileService uses the demo layer (backend upload implemented in /api/files)
+└── 🟡 Storage backend        — files stored on server disk via multer, metadata in MongoDB
 ```
 
 ## Notifications
@@ -185,6 +185,8 @@ Marketing
 Settings & Profile
 ├── ✅ Settings page          — client/src/pages/dashboard/SettingsPage.tsx (account, appearance, notifications, sessions)
 ├── ✅ Profile page           — client/src/pages/dashboard/ProfilePage.tsx
+├── ✅ Contribution score     — GET /api/profile/contributions (real score from user actions)
+├── ✅ Badges & levels        — earned from creating workspaces, rooms, tasks, meetings, files
 └── ✅ Theme context          — client/src/context/ThemeContext.tsx (dark theme system-wide)
 ```
 
@@ -199,35 +201,22 @@ Trash & Shared
 
 ---
 
-## Demo Mode
-
-SyncSpace ships a **demo data layer** so the entire UI works without a backend. Key facts:
-
-- Demo utilities: `client/src/services/demo.ts` (`demo()`, `noop()`, `ok()`)
-- Central demo dataset: `client/src/data/demoData.ts`, `client/src/data/demoWorkspaces.ts`
-- Services that fall back to demo data when the real API is unavailable:
-  `workspaceService`, `roomService`, `meetingService`, `fileService`, `memberService`, `activityService`, `inviteService` (real-call + fallback)
-- Services that call the real API directly: `authService`, `chatService`, `taskService`, `notificationService`, `documentService`, `whiteboardService`
-
-> **Status note**: The backend implements full REST + realtime for every module above. The demo layer is an intentional reliability fallback, documented in `docs/FEATURE_GUIDE.md`. Wiring a demo-backed service to the real API is a config-level change (swap the service implementation), not a gap in the feature.
-
----
-
 ## Summary
 
 | Area | Status |
 |---|---|
 | Authentication | ✅ Complete |
-| Workspaces & membership | ✅ Complete (demo-backed frontend) |
-| Rooms | ✅ Complete (demo-backed frontend) |
+| Workspaces & membership | ✅ Complete |
+| Rooms | ✅ Complete |
 | Real-time collaboration | ✅ Complete |
 | Whiteboard | ✅ Complete |
 | Live coding | ✅ Complete |
 | Team chat | ✅ Complete |
 | Tasks / Kanban | ✅ Complete |
 | Meetings | ✅ Scheduling complete, room UI simulated |
-| Files | ✅ Complete (demo-backed frontend) |
+| Files | ✅ Complete |
 | Notifications | ✅ Complete |
 | Activity & Insights | ✅ Complete |
 | Marketing pages | ✅ Complete |
 | Settings & Profile | ✅ Complete |
+| AI Assistant | 🟡 Simulated (no LLM backend) |

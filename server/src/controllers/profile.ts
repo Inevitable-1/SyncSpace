@@ -1,7 +1,14 @@
 import type { Response } from 'express';
+import mongoose from 'mongoose';
 import { User } from '../models/User.js';
 import { Member } from '../models/Member.js';
 import { Workspace } from '../models/Workspace.js';
+import { Activity } from '../models/Activity.js';
+import { Room } from '../models/Room.js';
+import { Meeting } from '../models/Meeting.js';
+import { UploadedFile } from '../models/UploadedFile.js';
+import { Task } from '../models/Task.js';
+import { Invite } from '../models/Invite.js';
 import { AppError } from '../middleware/errorHandler.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
@@ -107,4 +114,69 @@ export async function deleteProfile(req: AuthRequest, res: Response): Promise<vo
   res.clearCookie('refreshToken', { path: '/' });
 
   res.json({ success: true, message: 'Account deleted successfully' });
+}
+
+export async function getContributionScore(req: AuthRequest, res: Response): Promise<void> {
+  const userId = assertUser(req);
+  const uid = new mongoose.Types.ObjectId(userId);
+
+  const [
+    workspacesCreated,
+    roomsCreated,
+    filesUploaded,
+    meetingsCreated,
+    invitesSent,
+    tasksCreated,
+    totalActivities,
+  ] = await Promise.all([
+    Workspace.countDocuments({ owner: uid, isDeleted: { $ne: true } }),
+    Room.countDocuments({ owner: uid, isDeleted: { $ne: true } }),
+    UploadedFile.countDocuments({ uploader: uid, isDeleted: { $ne: true } }),
+    Meeting.countDocuments({ host: uid, isDeleted: { $ne: true } }),
+    Invite.countDocuments({ invitedBy: uid }),
+    Task.countDocuments({ creator: uid, isDeleted: { $ne: true } }),
+    Activity.countDocuments({ user: uid }),
+  ]);
+
+  const score =
+    workspacesCreated * 10 +
+    roomsCreated * 8 +
+    filesUploaded * 5 +
+    meetingsCreated * 7 +
+    invitesSent * 6 +
+    tasksCreated * 4 +
+    totalActivities * 1;
+
+  const level = Math.floor(score / 50) + 1;
+  const nextLevelAt = level * 50;
+  const progress = score > 0 ? ((score % 50) / 50) * 100 : 0;
+
+  const badges: string[] = [];
+  if (workspacesCreated >= 1) badges.push('Workspace Creator');
+  if (roomsCreated >= 3) badges.push('Room Master');
+  if (filesUploaded >= 5) badges.push('File Sharer');
+  if (meetingsCreated >= 3) badges.push('Meeting Organizer');
+  if (tasksCreated >= 10) badges.push('Task Champion');
+  if (totalActivities >= 20) badges.push('Active Contributor');
+  if (invitesSent >= 5) badges.push('Team Builder');
+
+  res.json({
+    success: true,
+    data: {
+      score,
+      level,
+      nextLevelAt,
+      progress,
+      badges,
+      breakdown: {
+        workspacesCreated,
+        roomsCreated,
+        filesUploaded,
+        meetingsCreated,
+        invitesSent,
+        tasksCreated,
+        totalActivities,
+      },
+    },
+  });
 }

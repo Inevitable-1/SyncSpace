@@ -69,7 +69,7 @@ Dedicated hooks wrap the Socket.IO client:
 
 ### Services
 
-`services/` contains thin axios wrappers (one per domain). Every service supports a **demo-mode fallback** so the UI remains explorable when the API is offline.
+`services/` contains thin axios wrappers (one per domain), each calling the real REST API.
 
 ---
 
