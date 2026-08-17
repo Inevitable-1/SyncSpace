@@ -19,4 +19,12 @@ export const profileService = {
     const { data } = await api.put('/profile', patch);
     return data.data.profile as Profile;
   },
+
+  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<void> {
+    await api.put('/profile/password', data);
+  },
+
+  async deleteAccount(): Promise<void> {
+    await api.delete('/profile');
+  },
 };

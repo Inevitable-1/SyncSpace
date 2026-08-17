@@ -240,9 +240,6 @@ function StatCards({ stats }: { stats: StatDef[] }) {
               >
                 {stat.trend}
               </span>
-              <span className="text-[10px] ml-auto" style={{ color: 'var(--text-tertiary)' }}>
-                vs last week
-              </span>
             </div>
           </div>
         </motion.div>
@@ -1480,8 +1477,8 @@ export default function DashboardHome() {
       label: 'Total Workspaces',
       value: workspaces.length,
       icon: FolderIcon,
-      trend: '+2 this month',
-      trendUp: true,
+      trend: workspaces.length > 0 ? `${workspaces.length} total` : 'none yet',
+      trendUp: workspaces.length > 0,
       iconGradient: 'from-brand-500 to-purple-600',
       borderGradient: 'from-brand-500/60 via-purple-500/40 to-pink-500/50',
     },
@@ -1489,8 +1486,8 @@ export default function DashboardHome() {
       label: 'Total Rooms',
       value: rooms.length,
       icon: ClockIcon,
-      trend: `${activeRooms} active now`,
-      trendUp: true,
+      trend: activeRooms > 0 ? `${activeRooms} active now` : 'none active',
+      trendUp: activeRooms > 0,
       iconGradient: 'from-emerald-500 to-teal-600',
       borderGradient: 'from-emerald-500/60 via-teal-500/40 to-cyan-500/50',
     },
@@ -1498,7 +1495,12 @@ export default function DashboardHome() {
       label: 'Total Meetings',
       value: meetings.length,
       icon: VideoCameraIcon,
-      trend: liveMeetings > 0 ? `${liveMeetings} live now` : '2 today',
+      trend:
+        liveMeetings > 0
+          ? `${liveMeetings} live now`
+          : meetings.length > 0
+            ? `${meetings.length} total`
+            : 'none scheduled',
       trendUp: liveMeetings > 0,
       iconGradient: 'from-amber-500 to-orange-600',
       borderGradient: 'from-amber-500/60 via-orange-500/40 to-rose-500/50',

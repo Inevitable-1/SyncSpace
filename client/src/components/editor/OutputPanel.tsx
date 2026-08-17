@@ -11,18 +11,6 @@ const defaultTabs: OutputTab[] = [
   { id: 'output', label: 'Output', count: 0 },
 ];
 
-const mockConsoleEntries = [
-  { type: 'log', message: '[SyncSpace] Editor initialized', time: '10:30:15' },
-  { type: 'info', message: '[HMR] Connected to dev server', time: '10:30:16' },
-  { type: 'log', message: '[SyncSpace] Collaborative session started', time: '10:30:17' },
-];
-
-const mockOutputEntries = [
-  '[info] TypeScript compilation successful',
-  '[info] No errors found',
-  '[info] Build completed in 1.2s',
-];
-
 export default function OutputPanel({ isVisible }: OutputPanelProps) {
   const [activeTab, setActiveTab] = useState('problems');
 
@@ -46,11 +34,6 @@ export default function OutputPanel({ isVisible }: OutputPanelProps) {
             style={activeTab !== tab.id ? { color: 'var(--text-tertiary)' } : undefined}
           >
             {tab.label}
-            {(tab.count ?? 0) > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 text-[10px]">
-                {tab.count}
-              </span>
-            )}
           </button>
         ))}
       </div>
@@ -73,33 +56,14 @@ export default function OutputPanel({ isVisible }: OutputPanelProps) {
         )}
 
         {activeTab === 'console' && (
-          <div className="space-y-1">
-            {mockConsoleEntries.map((entry, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-gray-500">{entry.time}</span>
-                <span
-                  className={
-                    entry.type === 'error'
-                      ? 'text-red-400'
-                      : entry.type === 'info'
-                        ? 'text-blue-400'
-                        : 'text-gray-300'
-                  }
-                >
-                  {entry.message}
-                </span>
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <p style={{ color: 'var(--text-tertiary)' }}>No console output</p>
           </div>
         )}
 
         {activeTab === 'output' && (
-          <div className="space-y-1">
-            {mockOutputEntries.map((entry, i) => (
-              <div key={i} className="text-gray-300">
-                {entry}
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <p style={{ color: 'var(--text-tertiary)' }}>No output</p>
           </div>
         )}
       </div>

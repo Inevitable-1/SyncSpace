@@ -1,102 +1,26 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import type { TerminalEntry } from '../../types';
 
 interface TerminalPanelProps {
   isVisible: boolean;
 }
 
-const MOCK_COMMANDS: Record<string, string> = {
-  help: 'Available commands: help, clear, ls, echo, pwd, date, node --version',
-  ls: 'src/\npackage.json\ntsconfig.json\nREADME.md',
-  pwd: '/home/user/project',
-  date: new Date().toISOString(),
-  'node --version': 'v20.11.0',
-  'npm --version': '10.2.4',
-  'git status': 'On branch main\nYour branch is up to date',
-};
-
 export default function TerminalPanel({ isVisible }: TerminalPanelProps) {
-  const [entries, setEntries] = useState<TerminalEntry[]>([
-    {
-      id: '1',
-      type: 'info',
-      content: 'SyncSpace Terminal v1.0.0\nType "help" for available commands.\n',
-      timestamp: new Date().toISOString(),
-    },
-  ]);
-  const [input, setInput] = useState('');
-  const [history, setHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+
+  const initialEntry: TerminalEntry = {
+    id: '1',
+    type: 'info',
+    content:
+      'Terminal is connected to the collaboration session.\nCommands are executed on the remote server.',
+    timestamp: new Date().toISOString(),
+  };
 
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [entries]);
-
-  const executeCommand = useCallback((cmd: string) => {
-    const trimmed = cmd.trim();
-    if (!trimmed) return;
-
-    setHistory((prev) => [...prev, trimmed]);
-    setHistoryIndex(-1);
-
-    const commandEntry: TerminalEntry = {
-      id: Math.random().toString(36).slice(2),
-      type: 'command',
-      content: `$ ${trimmed}`,
-      timestamp: new Date().toISOString(),
-    };
-
-    if (trimmed === 'clear') {
-      setEntries([]);
-      setInput('');
-      return;
-    }
-
-    const output = MOCK_COMMANDS[trimmed] || `bash: ${trimmed.split(' ')[0]}: command not found`;
-
-    const outputEntry: TerminalEntry = {
-      id: Math.random().toString(36).slice(2),
-      type: trimmed.includes('not found') ? 'error' : 'output',
-      content: output,
-      timestamp: new Date().toISOString(),
-    };
-
-    setEntries((prev) => [...prev, commandEntry, outputEntry]);
-    setInput('');
   }, []);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        executeCommand(input);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (history.length > 0) {
-          const newIndex = historyIndex < history.length - 1 ? historyIndex + 1 : historyIndex;
-          setHistoryIndex(newIndex);
-          setInput(history[history.length - 1 - newIndex]);
-        }
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (historyIndex > 0) {
-          const newIndex = historyIndex - 1;
-          setHistoryIndex(newIndex);
-          setInput(history[history.length - 1 - newIndex]);
-        } else {
-          setHistoryIndex(-1);
-          setInput('');
-        }
-      } else if (e.key === 'l' && e.ctrlKey) {
-        e.preventDefault();
-        setEntries([]);
-      }
-    },
-    [input, executeCommand, history, historyIndex],
-  );
 
   if (!isVisible) return null;
 
@@ -122,40 +46,14 @@ export default function TerminalPanel({ isVisible }: TerminalPanelProps) {
           </svg>
           <span className="text-xs font-medium text-gray-400">Terminal</span>
         </div>
-        <button
-          onClick={() => setEntries([])}
-          className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-        >
-          Clear
-        </button>
       </div>
 
       <div
         ref={containerRef}
         className="flex-1 overflow-y-auto px-3 py-2 font-mono text-xs scrollbar-thin"
-        onClick={() => inputRef.current?.focus()}
       >
-        {entries.map((entry) => (
-          <div key={entry.id} className="whitespace-pre-wrap mb-0.5">
-            {entry.type === 'command' && <span className="text-green-400">{entry.content}</span>}
-            {entry.type === 'output' && <span className="text-gray-300">{entry.content}</span>}
-            {entry.type === 'error' && <span className="text-red-400">{entry.content}</span>}
-            {entry.type === 'info' && <span className="text-blue-400">{entry.content}</span>}
-          </div>
-        ))}
-
-        <div className="flex items-center gap-1">
-          <span className="text-green-400">$</span>
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent text-gray-200 outline-none font-mono text-xs"
-            placeholder="Type a command..."
-            spellCheck={false}
-            autoComplete="off"
-          />
+        <div className="whitespace-pre-wrap mb-0.5">
+          <span className="text-blue-400">{initialEntry.content}</span>
         </div>
       </div>
     </div>

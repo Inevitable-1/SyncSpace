@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../components/common/Toast';
 import { SunIcon, MoonIcon, CheckIcon } from '../../components/Icons';
-import type { RootState } from '../../store';
+import { profileService } from '../../services/profileService';
+import { logout } from '../../features/auth/authSlice';
+import { useNavigate } from 'react-router-dom';
+import type { RootState, AppDispatch } from '../../store';
 
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   return (
@@ -61,6 +64,8 @@ function SettingRow({
 
 export default function SettingsPage() {
   const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const [editName, setEditName] = useState(false);
@@ -75,32 +80,63 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const handleSaveName = () => {
-    if (nameValue.trim()) {
+  const handleSaveName = async () => {
+    if (!nameValue.trim()) return;
+    setSaving(true);
+    try {
+      await profileService.updateProfile({ name: nameValue.trim() });
       showToast('Display name updated successfully', 'success');
       setEditName(false);
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'Failed to update name', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       showToast('Please fill in all fields', 'error');
       return;
     }
-    if (newPassword.length < 6) {
-      showToast('Password must be at least 6 characters', 'error');
+    if (newPassword.length < 8) {
+      showToast('Password must be at least 8 characters', 'error');
       return;
     }
     if (newPassword !== confirmPassword) {
       showToast('Passwords do not match', 'error');
       return;
     }
-    showToast('Password changed successfully', 'success');
-    setShowPasswordModal(false);
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setSaving(true);
+    try {
+      await profileService.changePassword({ currentPassword, newPassword });
+      showToast('Password changed successfully', 'success');
+      setShowPasswordModal(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'Failed to change password', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setSaving(true);
+    try {
+      await profileService.deleteAccount();
+      showToast('Account deleted successfully', 'success');
+      dispatch(logout());
+      navigate('/login');
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'Failed to delete account', 'error');
+    } finally {
+      setSaving(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   return (
@@ -255,13 +291,11 @@ export default function SettingsPage() {
                 Are you sure?
               </span>
               <button
-                onClick={() => {
-                  showToast('Account deletion is not available right now', 'info');
-                  setShowDeleteConfirm(false);
-                }}
+                onClick={handleDeleteAccount}
+                disabled={saving}
                 className="btn-danger text-xs px-3 py-1.5"
               >
-                Yes, delete
+                {saving ? 'Deleting...' : 'Yes, delete'}
               </button>
               <button onClick={() => setShowDeleteConfirm(false)} className="btn-secondary text-xs">
                 Cancel
