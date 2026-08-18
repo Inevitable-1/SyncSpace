@@ -7,6 +7,7 @@ import {
   deleteProfile,
   getContributionScore,
   getHeatmapData,
+  getMonthlyCalendar,
 } from '../controllers/profile.js';
 import { authenticate } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -50,5 +51,7 @@ router.delete('/', asyncHandler(deleteProfile));
 router.get('/contributions', asyncHandler(getContributionScore));
 
 router.get('/heatmap', asyncHandler(getHeatmapData));
+
+router.get('/calendar', asyncHandler(getMonthlyCalendar));
 
 export default router;

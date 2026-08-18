@@ -1564,23 +1564,14 @@ export default function DashboardHome() {
   const emptyDashboard = !loading && !hasAnyData;
   const visibleStats = stats.filter((s) => s.value > 0);
 
-  const requireWorkspace = (next?: () => void) => {
-    if (workspaces.length === 0) {
-      showToast('Create a workspace first', 'error');
-      setShowCreateWsModal(true);
-      return;
-    }
-    next?.();
-  };
-
   return (
     <div className="space-y-6 pb-16">
       {emptyDashboard ? (
         <WelcomeSection
           onCreateWorkspace={() => setShowCreateWsModal(true)}
-          onCreateRoom={() => requireWorkspace(() => setShowCreateRoomModal(true))}
-          onCreateMeeting={() => requireWorkspace(() => setShowScheduleModal(true))}
-          onUploadFile={() => requireWorkspace(() => fileInputRef.current?.click())}
+          onCreateRoom={() => setShowCreateRoomModal(true)}
+          onCreateMeeting={() => setShowScheduleModal(true)}
+          onUploadFile={() => navigate('/dashboard/files')}
         />
       ) : (
         <>

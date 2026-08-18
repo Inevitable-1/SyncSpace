@@ -137,12 +137,10 @@ export async function getContributionScore(req: AuthRequest, res: Response): Pro
 
   const score =
     workspacesCreated * 10 +
-    roomsCreated * 8 +
-    filesUploaded * 5 +
-    meetingsCreated * 7 +
-    invitesSent * 6 +
-    tasksCreated * 4 +
-    totalActivities * 1;
+    roomsCreated * 5 +
+    filesUploaded * 2 +
+    meetingsCreated * 5 +
+    invitesSent * 3;
 
   const level = Math.floor(score / 50) + 1;
   const nextLevelAt = level * 50;
@@ -164,15 +162,12 @@ export async function getContributionScore(req: AuthRequest, res: Response): Pro
       level,
       nextLevelAt,
       progress,
-      badges,
       breakdown: {
         workspacesCreated,
         roomsCreated,
         filesUploaded,
         meetingsCreated,
         invitesSent,
-        tasksCreated,
-        totalActivities,
       },
     },
   });
@@ -218,6 +213,55 @@ export async function getHeatmapData(req: AuthRequest, res: Response): Promise<v
       heatmap: data,
       totalContributions,
       recentActions,
+    },
+  });
+}
+
+export async function getMonthlyCalendar(req: AuthRequest, res: Response): Promise<void> {
+  const userId = assertUser(req);
+  const uid = new mongoose.Types.ObjectId(userId);
+
+  const now = new Date();
+  const month =
+    req.query.month !== undefined ? parseInt(req.query.month as string, 10) : now.getMonth();
+  const year =
+    req.query.year !== undefined ? parseInt(req.query.year as string, 10) : now.getFullYear();
+
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+  const activities = await Activity.find({
+    user: uid,
+    createdAt: { $gte: startDate, $lte: endDate },
+  })
+    .select('createdAt action entityType')
+    .lean();
+
+  const dailyCounts: Record<string, number> = {};
+  const actionBreakdown: Record<string, number> = {};
+
+  const daysInMonth = endDate.getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = new Date(year, month, d).toISOString().split('T')[0];
+    dailyCounts[dateStr] = 0;
+  }
+
+  activities.forEach((a) => {
+    const dateStr = new Date(a.createdAt).toISOString().split('T')[0];
+    dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
+    actionBreakdown[a.action] = (actionBreakdown[a.action] || 0) + 1;
+  });
+
+  const calendar = Object.entries(dailyCounts).map(([date, count]) => ({ date, count }));
+
+  res.json({
+    success: true,
+    data: {
+      month,
+      year,
+      totalActivities: activities.length,
+      calendar,
+      actionBreakdown,
     },
   });
 }

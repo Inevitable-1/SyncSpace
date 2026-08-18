@@ -29,10 +29,10 @@ const mainNavItems = [
   { to: '/dashboard/shared', icon: UserGroupIcon, label: 'Shared' },
   { to: '/dashboard/insights', icon: ChartBarIcon, label: 'Insights' },
   { to: '/dashboard/activity', icon: ChartBarIcon, label: 'Activity' },
-  { to: '/dashboard/profile', icon: UserIcon, label: 'Profile' },
 ];
 
 const bottomNavItems = [
+  { to: '/dashboard/profile', icon: UserIcon, label: 'Profile' },
   { to: '/dashboard/notifications', icon: BellIcon, label: 'Notifications' },
   { to: '/dashboard/trash', icon: TrashIcon, label: 'Trash' },
   { to: '/dashboard/settings', icon: Cog6ToothIcon, label: 'Settings' },

@@ -616,11 +616,7 @@ export default function RoomDetailPage() {
         {renderTabContent()}
       </div>
 
-      <GlobalSearch
-        isOpen={showSearch}
-        onClose={() => setShowSearch(false)}
-        workspaceId={workspaceId}
-      />
+      <GlobalSearch isOpen={showSearch} onClose={() => setShowSearch(false)} />
 
       <InviteModal
         isOpen={showInviteModal}

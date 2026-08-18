@@ -27,6 +27,14 @@ export interface ContributionScore {
   };
 }
 
+export interface MonthlyCalendar {
+  month: number;
+  year: number;
+  totalActivities: number;
+  calendar: Array<{ date: string; count: number }>;
+  actionBreakdown: Record<string, number>;
+}
+
 export interface HeatmapData {
   heatmap: Array<{ date: string; count: number }>;
   totalContributions: number;
@@ -83,5 +91,13 @@ export const profileService = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return data.data.url as string;
+  },
+
+  async getMonthlyCalendar(month?: number, year?: number): Promise<MonthlyCalendar> {
+    const params: Record<string, string> = {};
+    if (month !== undefined) params.month = String(month);
+    if (year !== undefined) params.year = String(year);
+    const { data } = await api.get('/profile/calendar', { params });
+    return data.data as MonthlyCalendar;
   },
 };

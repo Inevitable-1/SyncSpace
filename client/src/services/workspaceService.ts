@@ -69,4 +69,9 @@ export const workspaceService = {
     const { data: res } = await api.post(`/workspaces/${id}/favorite`);
     return res.data.data as Workspace;
   },
+
+  async getSharedWorkspaces(): Promise<Workspace[]> {
+    const { data } = await api.get('/shared/workspaces');
+    return data.data.workspaces as Workspace[];
+  },
 };
