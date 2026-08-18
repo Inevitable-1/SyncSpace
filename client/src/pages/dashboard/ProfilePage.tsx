@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, animate } from 'framer-motion';
 import {
@@ -7,9 +7,8 @@ import {
   DocumentTextIcon,
   PencilIcon,
   CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   UserGroupIcon,
+  StarIcon,
 } from '../../components/Icons';
 import { useToast } from '../../components/common/Toast';
 import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
@@ -17,7 +16,7 @@ import { fetchRooms } from '../../features/room/roomSlice';
 import { fetchMeetings } from '../../features/meeting/meetingSlice';
 import { setUser } from '../../features/auth/authSlice';
 import { profileService } from '../../services/profileService';
-import type { ContributionScore, MonthlyCalendar } from '../../services/profileService';
+import type { ContributionScore } from '../../services/profileService';
 import type { RootState, AppDispatch } from '../../store';
 import type { User } from '../../types';
 
@@ -34,149 +33,19 @@ function AnimatedNumber({ value }: { value: number }) {
   return <span>{display.toLocaleString()}</span>;
 }
 
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function ContributionCalendar({
-  calendar,
-  month,
-  year,
-  onPrev,
-  onNext,
-  total,
-}: {
-  calendar: MonthlyCalendar | null;
-  month: number;
-  year: number;
-  onPrev: () => void;
-  onNext: () => void;
-  total: number;
-}) {
-  const days = useMemo(() => {
-    if (!calendar) return [];
-    const dateMap = new Map<string, number>();
-    calendar.calendar.forEach((d) => dateMap.set(d.date, d.count));
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const result: Array<{ day: number; count: number; dateStr: string; empty: boolean }> = [];
-    for (let i = 0; i < firstDay; i++) {
-      result.push({ day: 0, count: 0, dateStr: '', empty: true });
+function persistUser(user: User) {
+  try {
+    const stored = localStorage.getItem('auth');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed?.state) {
+        parsed.state.user = user;
+        localStorage.setItem('auth', JSON.stringify(parsed));
+      }
     }
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = new Date(year, month, d).toISOString().split('T')[0];
-      result.push({ day: d, count: dateMap.get(dateStr) || 0, dateStr, empty: false });
-    }
-    return result;
-  }, [calendar, month, year]);
-
-  const getIntensity = (count: number): string => {
-    if (count === 0) return 'rgba(255,255,255,0.04)';
-    if (count <= 2) return 'rgba(0,229,255,0.2)';
-    if (count <= 5) return 'rgba(0,229,255,0.4)';
-    if (count <= 10) return 'rgba(0,229,255,0.6)';
-    return 'rgba(0,229,255,0.9)';
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2, duration: 0.4 }}
-      className="rounded-2xl p-5 backdrop-blur-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.04)]"
-      style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-sm font-bold" style={{ color: '#00E5FF' }}>
-            Contribution Calendar
-          </p>
-          <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            {total} activities this month
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onPrev}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-            style={{ color: 'rgba(255,255,255,0.6)' }}
-          >
-            <ChevronLeftIcon className="w-4 h-4" />
-          </button>
-          <span
-            className="text-sm font-semibold min-w-[140px] text-center"
-            style={{ color: 'rgba(255,255,255,0.9)' }}
-          >
-            {MONTH_NAMES[month]} {year}
-          </span>
-          <button
-            onClick={onNext}
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-            style={{ color: 'rgba(255,255,255,0.6)' }}
-          >
-            <ChevronRightIcon className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {DAY_NAMES.map((d) => (
-          <div
-            key={d}
-            className="text-center text-[10px] font-semibold py-1"
-            style={{ color: 'rgba(255,255,255,0.4)' }}
-          >
-            {d}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((d, i) => (
-          <div
-            key={i}
-            className={`aspect-square rounded-lg flex items-center justify-center text-[11px] font-medium transition-all ${d.empty ? '' : 'cursor-pointer hover:ring-1 hover:ring-[#00E5FF]/50'}`}
-            style={{
-              background: d.empty ? 'transparent' : getIntensity(d.count),
-              color: d.empty
-                ? 'transparent'
-                : d.count > 0
-                  ? 'rgba(255,255,255,0.9)'
-                  : 'rgba(255,255,255,0.3)',
-            }}
-            title={d.empty ? undefined : `${d.count} activities on ${MONTH_NAMES[month]} ${d.day}`}
-          >
-            {d.empty ? '' : d.day}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex items-center justify-end gap-1.5 mt-3">
-        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          Less
-        </span>
-        {[0, 2, 5, 10].map((c) => (
-          <div key={c} className="w-3 h-3 rounded-sm" style={{ background: getIntensity(c) }} />
-        ))}
-        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          More
-        </span>
-      </div>
-    </motion.div>
-  );
+  } catch {
+    // ignore
+  }
 }
 
 export default function ProfilePage() {
@@ -186,20 +55,13 @@ export default function ProfilePage() {
   const { showToast } = useToast();
 
   const [contributions, setContributions] = useState<ContributionScore | null>(null);
-  const [calendar, setCalendar] = useState<MonthlyCalendar | null>(null);
-  const [calMonth, setCalMonth] = useState(new Date().getMonth());
-  const [calYear, setCalYear] = useState(new Date().getFullYear());
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
   const [editBio, setEditBio] = useState('');
-  const [profileOverride, setProfileOverride] = useState<{
-    name: string;
-    email: string;
-    bio: string;
-    coverImage: string;
-  } | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [coverUploading, setCoverUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
@@ -211,39 +73,11 @@ export default function ProfilePage() {
       .catch(() => {});
   }, [dispatch]);
 
-  const loadCalendar = useCallback((month: number, year: number) => {
-    profileService
-      .getMonthlyCalendar(month, year)
-      .then(setCalendar)
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    loadCalendar(calMonth, calYear);
-  }, [calMonth, calYear, loadCalendar]);
-
-  const handlePrevMonth = () => {
-    if (calMonth === 0) {
-      setCalMonth(11);
-      setCalYear(calYear - 1);
-    } else {
-      setCalMonth(calMonth - 1);
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (calMonth === 11) {
-      setCalMonth(0);
-      setCalYear(calYear + 1);
-    } else {
-      setCalMonth(calMonth + 1);
-    }
-  };
-
-  const displayName = profileOverride?.name || user?.name || 'User';
-  const displayEmail = profileOverride?.email || user?.email || '';
-  const displayBio = profileOverride?.bio || '';
-  const displayCover = profileOverride?.coverImage || '';
+  const displayName = user?.name || 'User';
+  const displayEmail = user?.email || '';
+  const displayBio = user?.bio || '';
+  const displayAvatar = avatarPreview || user?.avatar || '';
+  const displayCover = coverPreview || user?.coverImage || '';
 
   const ownsWorkspace = workspaces.some((ws) => {
     const ownerId =
@@ -252,43 +86,50 @@ export default function ProfilePage() {
   });
   const role = ownsWorkspace ? 'Owner' : 'Member';
 
-  const stats = [
-    {
-      label: 'Workspaces',
-      value: contributions?.breakdown.workspacesCreated || 0,
-      icon: FolderIcon,
-      gradient: 'from-[#00E5FF] to-[#0088cc]',
-    },
-    {
-      label: 'Rooms',
-      value: contributions?.breakdown.roomsCreated || 0,
-      icon: UserGroupIcon,
-      gradient: 'from-[#7C3AED] to-[#5B21B6]',
-    },
-    {
-      label: 'Files Uploaded',
-      value: contributions?.breakdown.filesUploaded || 0,
-      icon: DocumentTextIcon,
-      gradient: 'from-[#14F195] to-[#059669]',
-    },
-    {
-      label: 'Meetings Hosted',
-      value: contributions?.breakdown.meetingsCreated || 0,
-      icon: VideoCameraIcon,
-      gradient: 'from-[#00E5FF] to-[#7C3AED]',
-    },
-  ];
+  const stats = useMemo(
+    () => [
+      {
+        label: 'Workspaces',
+        value: contributions?.breakdown.workspacesCreated || 0,
+        icon: FolderIcon,
+        color: '#00E5FF',
+      },
+      {
+        label: 'Rooms',
+        value: contributions?.breakdown.roomsCreated || 0,
+        icon: UserGroupIcon,
+        color: '#7C3AED',
+      },
+      {
+        label: 'Files',
+        value: contributions?.breakdown.filesUploaded || 0,
+        icon: DocumentTextIcon,
+        color: '#14F195',
+      },
+      {
+        label: 'Meetings',
+        value: contributions?.breakdown.meetingsCreated || 0,
+        icon: VideoCameraIcon,
+        color: '#00E5FF',
+      },
+    ],
+    [contributions],
+  );
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarUploading(true);
     try {
+      const localPreview = URL.createObjectURL(file);
+      setAvatarPreview(localPreview);
       const url = await profileService.uploadAvatar(file);
-      await profileService.updateProfile({ avatar: url });
-      dispatch(setUser({ ...user!, avatar: url } as any));
+      const updated: User = { ...user!, avatar: url };
+      dispatch(setUser(updated));
+      persistUser(updated);
       showToast('Avatar updated!', 'success');
     } catch {
+      setAvatarPreview(null);
       showToast('Failed to upload avatar', 'error');
     }
     setAvatarUploading(false);
@@ -299,11 +140,15 @@ export default function ProfilePage() {
     if (!file) return;
     setCoverUploading(true);
     try {
+      const localPreview = URL.createObjectURL(file);
+      setCoverPreview(localPreview);
       const url = await profileService.uploadCover(file);
-      await profileService.updateProfile({ coverImage: url });
-      setProfileOverride((prev) => (prev ? { ...prev, coverImage: url } : prev));
+      const updated: User = { ...user!, coverImage: url };
+      dispatch(setUser(updated));
+      persistUser(updated);
       showToast('Cover image updated!', 'success');
     } catch {
+      setCoverPreview(null);
       showToast('Failed to upload cover', 'error');
     }
     setCoverUploading(false);
@@ -317,75 +162,79 @@ export default function ProfilePage() {
         name: editName.trim(),
         bio: editBio.trim(),
       });
-      setProfileOverride({
-        name: profile.name,
-        email: profile.email,
-        bio: profile.bio,
-        coverImage: profile.coverImage,
-      });
-      dispatch(setUser(profile as any));
+      const updated = { ...user!, ...profile } as User;
+      dispatch(setUser(updated));
+      persistUser(updated);
       setShowEdit(false);
-      showToast('Profile updated successfully!', 'success');
+      showToast('Profile updated!', 'success');
     } catch {
       showToast('Failed to update profile', 'error');
     }
   };
 
   return (
-    <div className="space-y-5 pb-12">
-      {/* Cover + Avatar */}
+    <div className="space-y-4 pb-8">
+      {/* Cover + Profile Header */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative overflow-hidden rounded-3xl border border-white/[0.08]"
+        transition={{ duration: 0.35 }}
+        className="rounded-2xl border border-white/[0.08] overflow-hidden"
         style={{ background: '#08111f' }}
       >
-        <div className="h-28 sm:h-36 relative overflow-hidden">
+        {/* Cover */}
+        <div className="h-16 sm:h-20 relative overflow-hidden">
           {displayCover ? (
             <img src={displayCover} alt="Cover" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-[#00E5FF] via-[#7C3AED] to-[#14F195]" />
           )}
           <div
-            className="absolute inset-0 opacity-20"
+            className="absolute inset-0 opacity-15"
             style={{
               backgroundImage:
                 'radial-gradient(circle at 20% 30%, rgba(0,229,255,0.35) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(124,58,237,0.25) 0%, transparent 45%)',
             }}
           />
-          <div className="absolute top-3 right-4">
-            <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-black/30 text-white backdrop-blur-sm border border-white/20 hover:bg-black/50 transition-all cursor-pointer">
+          <div className="absolute top-2 right-3">
+            <label className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-black/30 text-white backdrop-blur-sm border border-white/20 hover:bg-black/50 transition-all cursor-pointer">
               {coverUploading ? (
-                <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
-                <PencilIcon className="w-3.5 h-3.5" />
+                <PencilIcon className="w-3 h-3" />
               )}
-              Change Cover
+              Cover
               <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
             </label>
           </div>
         </div>
-        <div className="p-5 pt-0 relative" style={{ background: 'rgba(255,255,255,0.04)' }}>
-          <div className="flex flex-col sm:flex-row sm:items-end gap-3 -mt-10">
-            <label className="relative group cursor-pointer">
+
+        {/* Profile Info */}
+        <div className="px-4 pb-4 relative">
+          <div className="flex items-end gap-3 -mt-7">
+            {/* Avatar */}
+            <label className="relative group cursor-pointer flex-shrink-0">
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
+                initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 16 }}
-                className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#00E5FF] to-[#7C3AED] flex items-center justify-center text-white text-2xl font-black shadow-xl ring-4 ring-[#08111f] flex-shrink-0 overflow-hidden"
+                transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 16 }}
+                className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#00E5FF] to-[#7C3AED] flex items-center justify-center text-white text-xl font-black shadow-lg ring-3 ring-[#08111f] overflow-hidden"
               >
-                {user?.avatar ? (
-                  <img src={user.avatar} alt={displayName} className="w-full h-full object-cover" />
+                {displayAvatar ? (
+                  <img
+                    src={displayAvatar}
+                    alt={displayName}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   displayName.charAt(0).toUpperCase()
                 )}
               </motion.div>
-              <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 {avatarUploading ? (
-                  <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <PencilIcon className="w-5 h-5 text-white" />
+                  <PencilIcon className="w-4 h-4 text-white" />
                 )}
               </div>
               <input
@@ -395,141 +244,121 @@ export default function ProfilePage() {
                 onChange={handleAvatarUpload}
               />
             </label>
-            <div className="flex-1 min-w-0 pb-1">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+
+            {/* Name + Info */}
+            <div className="flex-1 min-w-0 pb-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-base sm:text-lg font-black tracking-tight text-white truncate">
                   {displayName}
                 </h1>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#14F195]/15 text-[#14F195] border border-[#14F195]/30">
-                  <CheckIcon className="w-3 h-3" /> Verified
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full text-[9px] font-bold bg-[#14F195]/15 text-[#14F195] border border-[#14F195]/30">
+                  <CheckIcon className="w-2.5 h-2.5" /> Verified
                 </span>
-                <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-gradient-to-r from-[#00E5FF] to-[#7C3AED] text-white">
+                <span className="px-2 py-px rounded-md text-[10px] font-semibold bg-gradient-to-r from-[#00E5FF] to-[#7C3AED] text-white">
                   {role}
                 </span>
               </div>
-              <p className="text-sm mt-1 truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 {displayEmail}
               </p>
               {displayBio && (
                 <p
-                  className="text-sm mt-2 leading-relaxed line-clamp-2"
-                  style={{ color: 'rgba(255,255,255,0.6)' }}
+                  className="text-xs mt-0.5 line-clamp-1"
+                  style={{ color: 'rgba(255,255,255,0.45)' }}
                 >
                   {displayBio}
                 </p>
               )}
             </div>
+
+            {/* Edit button */}
             <button
               onClick={() => {
                 setEditName(displayName);
                 setEditBio(displayBio || '');
                 setShowEdit(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 text-white backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-white/10 text-white border border-white/15 hover:bg-white/15 transition-all flex-shrink-0"
             >
-              <PencilIcon className="w-3.5 h-3.5" /> Edit Profile
+              <PencilIcon className="w-3 h-3" /> Edit
             </button>
           </div>
         </div>
       </motion.div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* Stats + Contribution Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {stats.map((stat, i) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06, duration: 0.4 }}
-            whileHover={{ y: -3 }}
-            className="rounded-2xl p-4 backdrop-blur-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.04)] hover:border-[#00E5FF]/25 transition-all duration-300"
-            style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}
+            transition={{ delay: i * 0.05, duration: 0.3 }}
+            whileHover={{ y: -2 }}
+            className="rounded-xl p-3 backdrop-blur-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.04)] hover:border-[#00E5FF]/20 transition-all duration-200"
           >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-xl sm:text-2xl font-black text-white">
+                <p className="text-lg font-black text-white">
                   <AnimatedNumber value={stat.value} />
                 </p>
-                <p
-                  className="text-[11px] mt-0.5 truncate"
-                  style={{ color: 'rgba(255,255,255,0.5)' }}
-                >
+                <p className="text-[10px] truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   {stat.label}
                 </p>
               </div>
               <div
-                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg flex-shrink-0`}
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: `${stat.color}20` }}
               >
-                <stat.icon className="w-5 h-5 text-white" />
+                <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
               </div>
             </div>
           </motion.div>
         ))}
-      </div>
 
-      {/* Monthly Calendar */}
-      <ContributionCalendar
-        calendar={calendar}
-        month={calMonth}
-        year={calYear}
-        onPrev={handlePrevMonth}
-        onNext={handleNextMonth}
-        total={calendar?.totalActivities || 0}
-      />
-
-      {/* Contribution Score */}
-      {contributions && (
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.4 }}
-          className="rounded-2xl p-5 backdrop-blur-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.04)]"
-          style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-sm font-bold" style={{ color: '#00E5FF' }}>
-                Contribution Score
-              </p>
-              <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                Level {contributions.level} · {contributions.score} points
-              </p>
-            </div>
-          </div>
-          <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden mb-3">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-[#00E5FF] to-[#7C3AED] transition-all duration-500"
-              style={{ width: `${contributions.progress}%` }}
-            />
-          </div>
-          <div className="grid grid-cols-5 gap-2 text-center">
-            {[
-              { label: 'Workspaces', value: contributions.breakdown.workspacesCreated, points: 10 },
-              { label: 'Rooms', value: contributions.breakdown.roomsCreated, points: 5 },
-              { label: 'Files', value: contributions.breakdown.filesUploaded, points: 2 },
-              { label: 'Meetings', value: contributions.breakdown.meetingsCreated, points: 5 },
-              { label: 'Shares', value: contributions.breakdown.invitesSent, points: 3 },
-            ].map((item) => (
-              <div key={item.label} className="p-2 rounded-lg bg-white/[0.03]">
-                <p className="text-base font-bold text-white">{item.value}</p>
-                <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  {item.label}
+        {/* Contribution Score Card */}
+        {contributions && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.3 }}
+            whileHover={{ y: -2 }}
+            className="rounded-xl p-3 backdrop-blur-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.04)] hover:border-[#00E5FF]/20 transition-all duration-200"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(0,229,255,0.15)' }}
+              >
+                <StarIcon className="w-4 h-4" style={{ color: '#00E5FF' }} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold" style={{ color: '#00E5FF' }}>
+                  Score: {contributions.score}
                 </p>
-                <p className="text-[9px] mt-0.5" style={{ color: '#00E5FF' }}>
-                  +{item.points}pts
+                <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  Level {contributions.level}
                 </p>
               </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
+            </div>
+            <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#00E5FF] to-[#7C3AED] transition-all duration-500"
+                style={{ width: `${contributions.progress}%` }}
+              />
+            </div>
+            <p className="text-[9px] mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              {contributions.nextLevelAt - contributions.score} pts to next level
+            </p>
+          </motion.div>
+        )}
+      </div>
 
       {/* Edit Profile Modal */}
       {showEdit && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
           <div
@@ -539,7 +368,6 @@ export default function ProfilePage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
             className="relative w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden"
             style={{ background: '#0a1628', borderColor: 'rgba(255,255,255,0.1)' }}
           >
@@ -592,7 +420,7 @@ export default function ProfilePage() {
                   className="btn-primary flex items-center gap-2"
                   disabled={!editName.trim()}
                 >
-                  <CheckIcon className="w-4 h-4" /> Save Profile
+                  <CheckIcon className="w-4 h-4" /> Save
                 </button>
               </div>
             </form>

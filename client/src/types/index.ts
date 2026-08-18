@@ -4,6 +4,7 @@ export interface User {
   email: string;
   avatar: string;
   coverImage?: string;
+  bio?: string;
   isEmailVerified: boolean;
 }
 
