@@ -6,6 +6,7 @@ export interface IUserDocument extends Document {
   email: string;
   password: string;
   avatar?: string;
+  coverImage?: string;
   bio?: string;
   isEmailVerified: boolean;
   emailVerificationToken?: string;
@@ -39,6 +40,10 @@ const userSchema = new Schema<IUserDocument>(
       select: false,
     },
     avatar: {
+      type: String,
+      default: '',
+    },
+    coverImage: {
       type: String,
       default: '',
     },

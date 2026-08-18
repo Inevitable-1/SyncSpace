@@ -5,6 +5,7 @@ export interface Profile {
   name: string;
   email: string;
   avatar: string;
+  coverImage: string;
   bio: string;
   isEmailVerified: boolean;
 }
@@ -26,13 +27,24 @@ export interface ContributionScore {
   };
 }
 
+export interface HeatmapData {
+  heatmap: Array<{ date: string; count: number }>;
+  totalContributions: number;
+  recentActions: Array<{ action: string; date: string }>;
+}
+
 export const profileService = {
   async getProfile(): Promise<Profile> {
     const { data } = await api.get('/profile');
     return data.data.profile as Profile;
   },
 
-  async updateProfile(patch: { name?: string; avatar?: string; bio?: string }): Promise<Profile> {
+  async updateProfile(patch: {
+    name?: string;
+    avatar?: string;
+    bio?: string;
+    coverImage?: string;
+  }): Promise<Profile> {
     const { data } = await api.put('/profile', patch);
     return data.data.profile as Profile;
   },
@@ -48,5 +60,28 @@ export const profileService = {
   async getContributionScore(): Promise<ContributionScore> {
     const { data } = await api.get('/profile/contributions');
     return data.data as ContributionScore;
+  },
+
+  async getHeatmapData(): Promise<HeatmapData> {
+    const { data } = await api.get('/profile/heatmap');
+    return data.data as HeatmapData;
+  },
+
+  async uploadAvatar(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await api.post('/files/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data.data.url as string;
+  },
+
+  async uploadCover(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await api.post('/files/cover', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data.data.url as string;
   },
 };

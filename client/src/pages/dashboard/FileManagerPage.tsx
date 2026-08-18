@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
-import { fetchFiles, uploadFile, deleteFile, fetchFolders } from '../../features/files/fileSlice';
+import {
+  fetchFiles,
+  uploadFile,
+  deleteFile,
+  renameFile,
+  fetchFolders,
+} from '../../features/files/fileSlice';
+import { fileService } from '../../services/fileService';
 import { useToast } from '../../components/common/Toast';
 import type { RootState, AppDispatch } from '../../store';
 import type { UploadedFile } from '../../types';
@@ -27,18 +34,31 @@ function formatSize(bytes: number): string {
 function getFileIcon(mimeType: string): string {
   if (mimeType.includes('image')) return '🖼️';
   if (mimeType.includes('pdf')) return '📄';
-  if (mimeType.includes('zip')) return '📦';
+  if (mimeType.includes('zip') || mimeType.includes('rar')) return '📦';
   if (mimeType.includes('markdown') || mimeType.includes('text')) return '📝';
   if (mimeType.includes('fig')) return '🎨';
   if (mimeType.includes('csv') || mimeType.includes('excel') || mimeType.includes('sheet'))
     return '📊';
   if (mimeType.includes('json')) return '🧾';
+  if (mimeType.includes('video')) return '🎬';
+  if (mimeType.includes('audio')) return '🎵';
   return '📎';
+}
+
+function getFileColor(mimeType: string): string {
+  if (mimeType.includes('image')) return 'from-pink-500 to-rose-600';
+  if (mimeType.includes('pdf')) return 'from-red-500 to-red-700';
+  if (mimeType.includes('zip') || mimeType.includes('rar')) return 'from-amber-500 to-orange-600';
+  if (mimeType.includes('text') || mimeType.includes('json')) return 'from-brand-500 to-brand-700';
+  if (mimeType.includes('video')) return 'from-purple-500 to-purple-700';
+  if (mimeType.includes('audio')) return 'from-emerald-500 to-emerald-700';
+  if (mimeType.includes('sheet') || mimeType.includes('csv')) return 'from-green-500 to-green-700';
+  return 'from-secondary-500 to-secondary-700';
 }
 
 function getUploaderName(file: UploadedFile): string {
   return typeof file.uploader === 'object' && file.uploader !== null
-    ? file.uploader.name
+    ? (file.uploader as { name: string }).name
     : 'Member';
 }
 
@@ -48,9 +68,17 @@ function folderLabel(folder: string): string {
 }
 
 type ViewFilter = 'all' | 'favorites' | 'recent';
+type SortBy = 'date' | 'name' | 'size';
 
 function isImageFile(file: UploadedFile): boolean {
   return file.mimeType.startsWith('image/');
+}
+
+interface UploadProgress {
+  id: string;
+  name: string;
+  progress: number;
+  status: 'uploading' | 'done' | 'error';
 }
 
 export default function FileManagerPage() {
@@ -64,10 +92,13 @@ export default function FileManagerPage() {
   const [search, setSearch] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all');
+  const [sortBy, setSortBy] = useState<SortBy>('date');
   const [isDragging, setIsDragging] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(loadFavorites);
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploads, setUploads] = useState<UploadProgress[]>([]);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -105,16 +136,21 @@ export default function FileManagerPage() {
 
   const filtered = useMemo(() => {
     let list = files;
-    if (viewFilter === 'favorites') {
-      list = list.filter((f) => favorites.has(f._id));
-    } else if (viewFilter === 'recent') {
+    if (viewFilter === 'favorites') list = list.filter((f) => favorites.has(f._id));
+    else if (viewFilter === 'recent') {
       const cutoff = Date.now() - 7 * 86400000;
       list = list.filter((f) => Date.parse(f.createdAt) >= cutoff);
     }
-    if (!search.trim()) return list;
-    const q = search.toLowerCase();
-    return list.filter((f) => f.name.toLowerCase().includes(q));
-  }, [files, search, viewFilter, favorites]);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((f) => f.name.toLowerCase().includes(q));
+    }
+    return [...list].sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      if (sortBy === 'size') return b.size - a.size;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [files, search, viewFilter, favorites, sortBy]);
 
   const folderChips = useMemo(() => {
     const unique = new Set<string>();
@@ -133,36 +169,61 @@ export default function FileManagerPage() {
     });
   };
 
-  const handleUpload = (fileList: FileList | null) => {
+  const handleUpload = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0 || !workspaceId) return;
-    setUploading(true);
-    const queue = Array.from(fileList);
-    const next = () => {
-      const f = queue.shift();
-      if (!f) {
-        setUploading(false);
-        showToast('Files uploaded', 'success');
-        return;
+    const newUploads: UploadProgress[] = Array.from(fileList).map((f) => ({
+      id: Math.random().toString(36).slice(2),
+      name: f.name,
+      progress: 0,
+      status: 'uploading' as const,
+    }));
+    setUploads((prev) => [...prev, ...newUploads]);
+
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      const uploadId = newUploads[i].id;
+      try {
+        setUploads((prev) => prev.map((u) => (u.id === uploadId ? { ...u, progress: 50 } : u)));
+        await dispatch(uploadFile({ file, workspaceId, folder: folder || undefined })).unwrap();
+        setUploads((prev) =>
+          prev.map((u) => (u.id === uploadId ? { ...u, progress: 100, status: 'done' } : u)),
+        );
+      } catch {
+        setUploads((prev) => prev.map((u) => (u.id === uploadId ? { ...u, status: 'error' } : u)));
+        showToast(`Failed to upload ${file.name}`, 'error');
       }
-      dispatch(uploadFile({ file: f, workspaceId, folder: folder || undefined })).then((action) => {
-        if (action.meta.requestStatus !== 'fulfilled') {
-          showToast((action.payload as string) || 'Upload failed', 'error');
-        }
-        next();
-      });
-    };
-    next();
+    }
+
+    setTimeout(() => setUploads((prev) => prev.filter((u) => u.status === 'uploading')), 2000);
+    showToast('Files uploaded', 'success');
   };
 
   const handleDelete = (file: UploadedFile) => {
     if (!window.confirm(`Delete "${file.name}"?`)) return;
     dispatch(deleteFile(file._id)).then((action) => {
-      if (action.meta.requestStatus === 'fulfilled') {
-        showToast('File deleted', 'info');
-      } else {
-        showToast((action.payload as string) || 'Failed to delete file', 'error');
-      }
+      if (action.meta.requestStatus === 'fulfilled') showToast('File deleted', 'info');
+      else showToast((action.payload as string) || 'Failed to delete', 'error');
     });
+  };
+
+  const handleRename = async (file: UploadedFile) => {
+    if (!renameValue.trim() || renameValue.trim() === file.name) {
+      setRenamingId(null);
+      return;
+    }
+    const action = await dispatch(renameFile({ id: file._id, name: renameValue.trim() }));
+    if (action.meta.requestStatus === 'fulfilled') showToast('File renamed', 'success');
+    else showToast('Failed to rename', 'error');
+    setRenamingId(null);
+  };
+
+  const handleDownload = async (file: UploadedFile) => {
+    try {
+      await fileService.download(file._id, file.originalName || file.name);
+      showToast('Download started', 'info');
+    } catch {
+      showToast('Download failed', 'error');
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -170,6 +231,8 @@ export default function FileManagerPage() {
     setIsDragging(false);
     handleUpload(e.dataTransfer.files);
   };
+
+  const activeUploads = uploads.filter((u) => u.status === 'uploading');
 
   return (
     <div className="space-y-6">
@@ -181,9 +244,7 @@ export default function FileManagerPage() {
           <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
             {isLoading && files.length === 0
               ? 'Loading files...'
-              : `${filtered.length} file${filtered.length !== 1 ? 's' : ''}${
-                  activeWorkspace ? ` in ${activeWorkspace.name}` : ''
-                }`}
+              : `${filtered.length} file${filtered.length !== 1 ? 's' : ''}${activeWorkspace ? ` in ${activeWorkspace.name}` : ''}`}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -214,30 +275,53 @@ export default function FileManagerPage() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={!workspaceId || uploading}
+            disabled={!workspaceId}
             className="btn-primary flex items-center gap-2 disabled:opacity-60"
           >
-            {uploading ? (
-              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            ) : (
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                />
-              </svg>
-            )}
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+              />
+            </svg>
             Upload
           </button>
         </div>
       </div>
+
+      {activeUploads.length > 0 && (
+        <div className="space-y-2">
+          {activeUploads.map((u) => (
+            <div key={u.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span
+                  className="text-xs font-medium truncate"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  {u.name}
+                </span>
+                <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                  {u.progress}%
+                </span>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${u.progress}%` }}
+                  className="h-full rounded-full bg-gradient-to-r from-brand-500 to-secondary-500"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row lg:items-center gap-3">
         <div className="flex-1 relative">
@@ -267,11 +351,7 @@ export default function FileManagerPage() {
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin">
           <button
             onClick={() => setFolder('')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border whitespace-nowrap transition-all ${
-              folder === ''
-                ? 'border-brand-500 bg-brand-600/10 text-brand-400'
-                : 'border-white/10 text-gray-400 hover:bg-white/5'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border whitespace-nowrap transition-all ${folder === '' ? 'border-brand-500 bg-brand-500/10 text-brand-400' : 'border-white/10 text-gray-400 hover:bg-white/5'}`}
           >
             All
           </button>
@@ -279,59 +359,67 @@ export default function FileManagerPage() {
             <button
               key={fd || 'root'}
               onClick={() => setFolder(fd)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border whitespace-nowrap transition-all ${
-                folder === fd
-                  ? 'border-brand-500 bg-brand-600/10 text-brand-400'
-                  : 'border-white/10 text-gray-400 hover:bg-white/5'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border whitespace-nowrap transition-all ${folder === fd ? 'border-brand-500 bg-brand-500/10 text-brand-400' : 'border-white/10 text-gray-400 hover:bg-white/5'}`}
             >
               {folderLabel(fd)}
             </button>
           ))}
         </div>
 
-        <div
-          className="flex rounded-xl overflow-hidden border shrink-0"
-          style={{ borderColor: 'var(--border-color)' }}
-        >
-          <button
-            onClick={() => setView('grid')}
-            className={`p-2.5 ${view === 'grid' ? 'bg-brand-600 text-white' : ''}`}
-            style={view !== 'grid' ? { color: 'var(--text-tertiary)' } : undefined}
+        <div className="flex items-center gap-2">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="input-base text-xs py-2 px-3 w-auto"
+            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
-              />
-            </svg>
-          </button>
-          <button
-            onClick={() => setView('list')}
-            className={`p-2.5 ${view === 'list' ? 'bg-brand-600 text-white' : ''}`}
-            style={view !== 'list' ? { color: 'var(--text-tertiary)' } : undefined}
+            <option value="date">Newest</option>
+            <option value="name">Name</option>
+            <option value="size">Size</option>
+          </select>
+          <div
+            className="flex rounded-xl overflow-hidden border shrink-0"
+            style={{ borderColor: 'var(--border-color)' }}
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
+            <button
+              onClick={() => setView('grid')}
+              className={`p-2.5 ${view === 'grid' ? 'bg-brand-600 text-white' : ''}`}
+              style={view !== 'grid' ? { color: 'var(--text-tertiary)' } : undefined}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+                />
+              </svg>
+            </button>
+            <button
+              onClick={() => setView('list')}
+              className={`p-2.5 ${view === 'list' ? 'bg-brand-600 text-white' : ''}`}
+              style={view !== 'list' ? { color: 'var(--text-tertiary)' } : undefined}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -346,9 +434,7 @@ export default function FileManagerPage() {
           <button
             key={f.value}
             onClick={() => setViewFilter(f.value)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              viewFilter === f.value ? 'bg-brand-600 text-white shadow' : ''
-            }`}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${viewFilter === f.value ? 'bg-brand-600 text-white shadow' : ''}`}
             style={viewFilter !== f.value ? { color: 'var(--text-secondary)' } : undefined}
           >
             {f.label}
@@ -412,11 +498,30 @@ export default function FileManagerPage() {
                   <button
                     onClick={() => setPreviewFile(file)}
                     className="text-3xl transition-transform hover:scale-110"
-                    title="Preview file"
+                    title="Preview"
                   >
                     {getFileIcon(file.mimeType)}
                   </button>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <button
+                      onClick={() => handleDownload(file)}
+                      className="p-1 rounded-lg hover:bg-white/5"
+                      title="Download"
+                    >
+                      <svg
+                        className="w-4 h-4 text-gray-400 hover:text-brand-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={1.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                        />
+                      </svg>
+                    </button>
                     <button
                       onClick={() => toggleFavorite(file._id)}
                       className="p-1 rounded-lg hover:bg-white/5"
@@ -455,12 +560,37 @@ export default function FileManagerPage() {
                     </button>
                   </div>
                 </div>
-                <p
-                  className="text-sm font-semibold truncate mb-1"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  {file.name}
-                </p>
+
+                {renamingId === file._id ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleRename(file);
+                    }}
+                    className="mb-1"
+                  >
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onBlur={() => handleRename(file)}
+                      className="w-full px-2 py-1 text-sm rounded-lg border border-brand-500/50 bg-white/5 outline-none"
+                      style={{ color: 'var(--text-primary)' }}
+                    />
+                  </form>
+                ) : (
+                  <p
+                    className="text-sm font-semibold truncate mb-1 hover:text-brand-400 cursor-pointer transition-colors"
+                    style={{ color: 'var(--text-primary)' }}
+                    onClick={() => {
+                      setRenamingId(file._id);
+                      setRenameValue(file.name);
+                    }}
+                    title="Click to rename"
+                  >
+                    {file.name}
+                  </p>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                     {formatSize(file.size)}
@@ -524,15 +654,38 @@ export default function FileManagerPage() {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-lg">{getFileIcon(file.mimeType)}</span>
-                        <button
-                          onClick={() => setPreviewFile(file)}
-                          className="text-sm font-medium truncate hover:text-brand-400 transition-colors"
-                          style={{ color: 'var(--text-primary)' }}
-                          title="Preview file"
+                        <div
+                          className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getFileColor(file.mimeType)} flex items-center justify-center text-sm flex-shrink-0`}
                         >
-                          {file.name}
-                        </button>
+                          {getFileIcon(file.mimeType)}
+                        </div>
+                        <div className="min-w-0">
+                          {renamingId === file._id ? (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleRename(file);
+                              }}
+                            >
+                              <input
+                                autoFocus
+                                value={renameValue}
+                                onChange={(e) => setRenameValue(e.target.value)}
+                                onBlur={() => handleRename(file)}
+                                className="w-full px-2 py-1 text-sm rounded-lg border border-brand-500/50 bg-white/5 outline-none"
+                                style={{ color: 'var(--text-primary)' }}
+                              />
+                            </form>
+                          ) : (
+                            <button
+                              onClick={() => setPreviewFile(file)}
+                              className="text-sm font-medium truncate hover:text-brand-400 transition-colors text-left block max-w-full"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {file.name}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td
@@ -561,6 +714,47 @@ export default function FileManagerPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 justify-end">
+                        <button
+                          onClick={() => handleDownload(file)}
+                          className="p-1.5 rounded-lg hover:bg-white/5"
+                          title="Download"
+                        >
+                          <svg
+                            className="w-4 h-4 text-gray-400 hover:text-brand-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={1.5}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setRenamingId(file._id);
+                            setRenameValue(file.name);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-white/5"
+                          title="Rename"
+                        >
+                          <svg
+                            className="w-4 h-4 text-gray-400 hover:text-brand-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={1.5}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
+                            />
+                          </svg>
+                        </button>
                         <button
                           onClick={() => toggleFavorite(file._id)}
                           className="p-1.5 rounded-lg hover:bg-white/5"
@@ -608,7 +802,21 @@ export default function FileManagerPage() {
 
         {!isDragging && !isLoading && filtered.length === 0 && (
           <div className="text-center py-16">
-            <div className="text-4xl mb-4">📂</div>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-brand-500/20 to-secondary-500/20 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-brand-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
+                />
+              </svg>
+            </div>
             <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
               {search ? 'No files match your search' : 'No files here yet'}
             </p>
@@ -665,33 +873,18 @@ export default function FileManagerPage() {
               <div className="rounded-xl border border-white/10 bg-[var(--bg-secondary)] flex items-center justify-center overflow-hidden aspect-video">
                 {isImageFile(previewFile) ? (
                   <img
-                    key={previewFile._id}
                     src={previewFile.path}
                     alt={previewFile.name}
                     className="max-h-full max-w-full object-contain"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
-                      const parent = e.currentTarget.parentElement;
-                      const fallback = parent?.querySelector<HTMLElement>('.preview-fallback');
-                      if (fallback) fallback.style.display = 'flex';
                     }}
                   />
                 ) : (
                   <div className="text-center p-8">
                     <div className="text-6xl mb-3">{getFileIcon(previewFile.mimeType)}</div>
                     <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                      Preview is available for image files.
-                    </p>
-                  </div>
-                )}
-                {isImageFile(previewFile) && (
-                  <div
-                    className="preview-fallback flex-col items-center text-center p-8"
-                    style={{ display: 'none' }}
-                  >
-                    <div className="text-6xl mb-3">{getFileIcon(previewFile.mimeType)}</div>
-                    <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                      Preview unavailable for this file type.
+                      Preview available for image files
                     </p>
                   </div>
                 )}
@@ -699,30 +892,8 @@ export default function FileManagerPage() {
 
               <div className="flex gap-2 justify-end mt-4">
                 <button
-                  onClick={() => toggleFavorite(previewFile._id)}
-                  className="btn-secondary text-xs flex items-center gap-1.5"
-                >
-                  <svg
-                    className={`w-3.5 h-3.5 ${favorites.has(previewFile._id) ? 'text-yellow-400 fill-yellow-400' : ''}`}
-                    viewBox="0 0 24 24"
-                    fill={favorites.has(previewFile._id) ? 'currentColor' : 'none'}
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.562.562 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                    />
-                  </svg>
-                  {favorites.has(previewFile._id) ? 'Favorited' : 'Favorite'}
-                </button>
-                <button
-                  onClick={() => {
-                    handleDelete(previewFile);
-                    setPreviewFile(null);
-                  }}
-                  className="btn-danger text-xs flex items-center gap-1.5"
+                  onClick={() => handleDownload(previewFile)}
+                  className="btn-primary text-xs flex items-center gap-1.5"
                 >
                   <svg
                     className="w-3.5 h-3.5"
@@ -734,9 +905,18 @@ export default function FileManagerPage() {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
                     />
                   </svg>
+                  Download
+                </button>
+                <button
+                  onClick={() => {
+                    handleDelete(previewFile);
+                    setPreviewFile(null);
+                  }}
+                  className="btn-danger text-xs flex items-center gap-1.5"
+                >
                   Delete
                 </button>
               </div>

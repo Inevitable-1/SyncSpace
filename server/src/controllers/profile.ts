@@ -17,6 +17,7 @@ function formatProfile(user: {
   name: string;
   email: string;
   avatar?: string;
+  coverImage?: string;
   bio?: string;
   isEmailVerified: boolean;
 }) {
@@ -25,6 +26,7 @@ function formatProfile(user: {
     name: user.name,
     email: user.email,
     avatar: user.avatar || '',
+    coverImage: user.coverImage || '',
     bio: user.bio || '',
     isEmailVerified: user.isEmailVerified,
   };
@@ -56,10 +58,11 @@ export async function updateProfile(req: AuthRequest, res: Response): Promise<vo
     throw new AppError('User not found', 404);
   }
 
-  const { name, avatar, bio } = req.body;
+  const { name, avatar, bio, coverImage } = req.body;
   if (name !== undefined) user.name = name;
   if (avatar !== undefined) user.avatar = avatar;
   if (bio !== undefined) user.bio = bio;
+  if (coverImage !== undefined) user.coverImage = coverImage;
 
   await user.save();
 
@@ -102,17 +105,11 @@ export async function deleteProfile(req: AuthRequest, res: Response): Promise<vo
     throw new AppError('User not found', 404);
   }
 
-  // Remove user from all workspaces they are a member of
   await Member.deleteMany({ userId: user._id });
-
-  // Remove user from workspace members arrays
   await Workspace.updateMany({ members: user._id }, { $pull: { members: user._id } });
-
-  // Delete the user
   await User.findByIdAndDelete(user._id);
 
   res.clearCookie('refreshToken', { path: '/' });
-
   res.json({ success: true, message: 'Account deleted successfully' });
 }
 
@@ -177,6 +174,50 @@ export async function getContributionScore(req: AuthRequest, res: Response): Pro
         tasksCreated,
         totalActivities,
       },
+    },
+  });
+}
+
+export async function getHeatmapData(req: AuthRequest, res: Response): Promise<void> {
+  const userId = assertUser(req);
+  const uid = new mongoose.Types.ObjectId(userId);
+
+  const twelveMonthsAgo = new Date();
+  twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+  twelveMonthsAgo.setHours(0, 0, 0, 0);
+
+  const activities = await Activity.find({
+    user: uid,
+    createdAt: { $gte: twelveMonthsAgo },
+  })
+    .select('createdAt action')
+    .lean();
+
+  const heatmap: Record<string, number> = {};
+
+  activities.forEach((a) => {
+    const dateStr = new Date(a.createdAt).toISOString().split('T')[0];
+    heatmap[dateStr] = (heatmap[dateStr] || 0) + 1;
+  });
+
+  const data = Object.entries(heatmap).map(([date, count]) => ({ date, count }));
+
+  const totalContributions = activities.length;
+
+  const recentActions = activities
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+    .map((a) => ({
+      action: a.action,
+      date: a.createdAt,
+    }));
+
+  res.json({
+    success: true,
+    data: {
+      heatmap: data,
+      totalContributions,
+      recentActions,
     },
   });
 }

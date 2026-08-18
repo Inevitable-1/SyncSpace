@@ -200,3 +200,53 @@ export async function getFolders(req: AuthRequest, res: Response): Promise<void>
     data: { folders },
   });
 }
+
+export async function uploadAvatar(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
+
+  const file = req.file;
+  if (!file) {
+    throw new AppError('No file provided', 400);
+  }
+
+  const { User } = await import('../models/User.js');
+  const user = await User.findById(req.user.userId);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  user.avatar = `/uploads/${file.filename}`;
+  await user.save();
+
+  res.json({
+    success: true,
+    data: { url: `/uploads/${file.filename}` },
+  });
+}
+
+export async function uploadCover(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
+
+  const file = req.file;
+  if (!file) {
+    throw new AppError('No file provided', 400);
+  }
+
+  const { User } = await import('../models/User.js');
+  const user = await User.findById(req.user.userId);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  user.coverImage = `/uploads/${file.filename}`;
+  await user.save();
+
+  res.json({
+    success: true,
+    data: { url: `/uploads/${file.filename}` },
+  });
+}

@@ -89,6 +89,28 @@ export default function AISidebar({ isOpen, onOpen, onClose }: AISidebarProps) {
 
   return (
     <>
+      <motion.button
+        onClick={isOpen ? onClose : onOpen}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        className="fixed bottom-6 right-6 z-[200] w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 via-secondary-600 to-accent-500 text-white shadow-xl shadow-brand-500/30 hover:shadow-brand-500/50 transition-all flex items-center justify-center"
+        title="AI Assistant (Ctrl+Shift+A)"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"
+          />
+        </svg>
+      </motion.button>
+
       <AnimatePresence>
         {isOpen && (
           <>
@@ -97,18 +119,18 @@ export default function AISidebar({ isOpen, onOpen, onClose }: AISidebarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-[190] bg-black/40"
-              onClick={() => onClose()}
+              onClick={onClose}
             />
-            <motion.aside
+            <motion.div
               initial={{ x: 400, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 400, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 z-[191] w-96 border-l border-white/10 bg-surface-850/95 backdrop-blur-2xl flex flex-col"
+              className="fixed right-0 top-0 bottom-0 z-[191] w-96 border-l border-white/10 bg-surface-900/95 backdrop-blur-2xl flex flex-col"
             >
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 via-secondary-600 to-accent-500 flex items-center justify-center">
                     <svg
                       className="w-4 h-4 text-white"
                       fill="none"
@@ -125,11 +147,11 @@ export default function AISidebar({ isOpen, onOpen, onClose }: AISidebarProps) {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-white">AI Assistant</h3>
-                    <p className="text-[10px] text-gray-500">Powered by GPT</p>
+                    <p className="text-[10px] text-gray-500">Powered by SyncSpace AI</p>
                   </div>
                 </div>
                 <button
-                  onClick={() => onClose()}
+                  onClick={onClose}
                   className="p-2 rounded-xl hover:bg-white/5 transition-colors text-gray-400 hover:text-white"
                 >
                   <svg
@@ -155,7 +177,7 @@ export default function AISidebar({ isOpen, onOpen, onClose }: AISidebarProps) {
                     <div
                       className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                         msg.role === 'user'
-                          ? 'bg-brand-600 text-white rounded-br-md'
+                          ? 'bg-gradient-to-r from-brand-600 to-secondary-600 text-white rounded-br-md'
                           : 'bg-white/5 text-gray-300 border border-white/5 rounded-bl-md'
                       }`}
                     >
@@ -221,7 +243,7 @@ export default function AISidebar({ isOpen, onOpen, onClose }: AISidebarProps) {
                   <button
                     onClick={() => handleSend()}
                     disabled={!input.trim() || isTyping}
-                    className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-400 hover:to-teal-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/25"
+                    className="p-3 rounded-xl bg-gradient-to-r from-brand-500 to-secondary-600 text-white hover:from-brand-400 hover:to-secondary-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-brand-500/25"
                   >
                     <svg
                       className="w-4 h-4"
@@ -240,7 +262,7 @@ export default function AISidebar({ isOpen, onOpen, onClose }: AISidebarProps) {
                 </div>
                 <p className="text-[10px] text-gray-600 mt-2 text-center">Ctrl+Shift+A to toggle</p>
               </div>
-            </motion.aside>
+            </motion.div>
           </>
         )}
       </AnimatePresence>

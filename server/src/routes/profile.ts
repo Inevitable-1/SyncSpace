@@ -6,6 +6,7 @@ import {
   changePassword,
   deleteProfile,
   getContributionScore,
+  getHeatmapData,
 } from '../controllers/profile.js';
 import { authenticate } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -21,6 +22,7 @@ router.put(
   [
     body('name').optional().trim().isLength({ min: 2, max: 50 }),
     body('avatar').optional().isString(),
+    body('coverImage').optional().isString(),
     body('bio').optional().isLength({ max: 300 }),
   ],
   asyncHandler(updateProfile),
@@ -46,5 +48,7 @@ router.put(
 router.delete('/', asyncHandler(deleteProfile));
 
 router.get('/contributions', asyncHandler(getContributionScore));
+
+router.get('/heatmap', asyncHandler(getHeatmapData));
 
 export default router;
