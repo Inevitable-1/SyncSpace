@@ -1503,7 +1503,7 @@ export default function WhiteboardPage() {
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-screen w-screen flex flex-col bg-white overflow-hidden">
       <Toolbar
         activeTool={tool}
         onToolChange={setTool}
@@ -1537,10 +1537,7 @@ export default function WhiteboardPage() {
         onLoadTemplate={handleLoadTemplate}
       />
 
-      <div
-        className="relative flex-1 overflow-hidden"
-        ref={stageRef as React.RefObject<HTMLDivElement>}
-      >
+      <div className="relative flex-1 min-h-0 overflow-hidden" ref={stageRef}>
         <WhiteboardCanvas
           objects={objects}
           tool={tool}
@@ -1557,6 +1554,7 @@ export default function WhiteboardPage() {
           onDelete={handleDelete}
           onCursorMove={handleCursorMove}
           onZoomChange={handleZoomChange}
+          zoom={zoom}
         />
         <CursorsOverlay cursors={cursors} />
         {showPanel && selectedObjects.length > 0 && (

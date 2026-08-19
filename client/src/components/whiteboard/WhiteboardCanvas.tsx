@@ -29,6 +29,7 @@ interface WhiteboardCanvasProps {
   onDelete: (objectId: string) => void;
   onCursorMove: (x: number, y: number) => void;
   onZoomChange: (zoom: number) => void;
+  zoom?: number;
 }
 
 function useHtmlImage(src: string | undefined): HTMLImageElement | null {
@@ -149,12 +150,13 @@ export default function WhiteboardCanvas({
   onDelete,
   onCursorMove,
   onZoomChange,
+  zoom: externalZoom,
 }: WhiteboardCanvasProps) {
   const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [internalZoom, setInternalZoom] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
@@ -162,6 +164,9 @@ export default function WhiteboardCanvas({
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(false);
   const [connectorStart, setConnectorStart] = useState<string | null>(null);
+
+  // Use external zoom if provided, otherwise use internal
+  const zoom = externalZoom !== undefined ? externalZoom : internalZoom;
 
   useEffect(() => {
     const updateSize = () => {
@@ -177,16 +182,42 @@ export default function WhiteboardCanvas({
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  const getPointerPosition = useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage) return { x: 0, y: 0 };
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return { x: 0, y: 0 };
-    return {
-      x: (pointer.x - stagePos.x) / zoom,
-      y: (pointer.y - stagePos.y) / zoom,
-    };
-  }, [stagePos, zoom]);
+  // Canonical coordinate conversion: screen (client) coords → canvas coords.
+  // All tools MUST use this function for consistency.
+  const screenToCanvas = useCallback(
+    (clientX: number, clientY: number) => {
+      const container = containerRef.current;
+      if (!container) return { x: 0, y: 0 };
+      const rect = container.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left) / zoom,
+        y: (clientY - rect.top) / zoom,
+      };
+    },
+    [zoom],
+  );
+
+  // Derive canvas position from a Konva event's native browser event.
+  const getPointerPosition = useCallback(
+    (e?: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+      const evt = e?.evt as MouseEvent | TouchEvent | undefined;
+      if (evt) {
+        const clientX = 'touches' in evt ? (evt.touches[0]?.clientX ?? 0) : evt.clientX;
+        const clientY = 'touches' in evt ? (evt.touches[0]?.clientY ?? 0) : evt.clientY;
+        return screenToCanvas(clientX, clientY);
+      }
+      // Fallback: use Konva's internal pointer position
+      const stage = stageRef.current;
+      if (!stage) return { x: 0, y: 0 };
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return { x: 0, y: 0 };
+      return {
+        x: (pointer.x - stagePos.x) / zoom,
+        y: (pointer.y - stagePos.y) / zoom,
+      };
+    },
+    [screenToCanvas, stagePos, zoom],
+  );
 
   const handleWheel = useCallback(
     (e: React.WheelEvent<HTMLDivElement>) => {
@@ -208,7 +239,7 @@ export default function WhiteboardCanvas({
         x: pointer.x - mousePointTo.x * clampedScale,
         y: pointer.y - mousePointTo.y * clampedScale,
       };
-      setZoom(clampedScale);
+      setInternalZoom(clampedScale);
       setStagePos(newPos);
       onZoomChange(clampedScale);
     },
@@ -219,7 +250,7 @@ export default function WhiteboardCanvas({
     (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
       const clickedOnEmpty =
         e.target === e.target.getStage() || e.target.getParent() === e.target.getStage();
-      const pos = getPointerPosition();
+      const pos = getPointerPosition(e);
 
       if (tool === 'hand') {
         setIsPanning(true);
@@ -300,7 +331,7 @@ export default function WhiteboardCanvas({
           width: 200,
         };
         onDraw(newObj);
-        setTimeout(() => setEditingTextId(id), 50);
+        setTimeout(() => handleTextDblClick(id), 50);
         return;
       }
 
@@ -388,8 +419,8 @@ export default function WhiteboardCanvas({
           type: 'ellipse',
           x: pos.x,
           y: pos.y,
-          radiusX: 0,
-          radiusY: 0,
+          width: 0,
+          height: 0,
           stroke: strokeColor,
           fill: fillColor,
           strokeWidth,
@@ -456,58 +487,59 @@ export default function WhiteboardCanvas({
     ],
   );
 
-  const handleMouseMove = useCallback(() => {
-    const pos = getPointerPosition();
-    onCursorMove(pos.x, pos.y);
+  const handleMouseMove = useCallback(
+    (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+      const pos = getPointerPosition(e);
+      onCursorMove(pos.x, pos.y);
 
-    if (isPanning) {
-      const pointer = stageRef.current?.getPointerPosition();
-      if (pointer) {
-        const dx = pointer.x - lastPanPoint.x;
-        const dy = pointer.y - lastPanPoint.y;
-        setStagePos((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-        setLastPanPoint(pointer);
+      if (isPanning) {
+        const pointer = stageRef.current?.getPointerPosition();
+        if (pointer) {
+          const dx = pointer.x - lastPanPoint.x;
+          const dy = pointer.y - lastPanPoint.y;
+          setStagePos((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+          setLastPanPoint(pointer);
+        }
+        return;
       }
-      return;
-    }
 
-    if (!isDrawing || !currentObject) return;
+      if (!isDrawing || !currentObject) return;
 
-    if (tool === 'pencil' && currentObject.type === 'line' && currentObject.points) {
-      const lastPoint =
-        currentObject.points.length >= 2
-          ? [
-              currentObject.points[currentObject.points.length - 2],
-              currentObject.points[currentObject.points.length - 1],
-            ]
-          : [0, 0];
-      const dx = pos.x - (currentObject.x + (lastPoint[0] as number));
-      const dy = pos.y - (currentObject.y + (lastPoint[1] as number));
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      setCurrentObject({
-        ...currentObject,
-        points: [...(currentObject.points || []), pos.x - currentObject.x, pos.y - currentObject.y],
-        strokeWidth: Math.max(1, Math.min(8, 2 + distance / 5)),
-      });
-    } else if (tool === 'line' || tool === 'arrow') {
-      setCurrentObject({
-        ...currentObject,
-        points: [0, 0, pos.x - currentObject.x, pos.y - currentObject.y],
-      });
-    } else if (currentObject.type === 'ellipse') {
-      setCurrentObject({
-        ...currentObject,
-        radiusX: Math.abs(pos.x - currentObject.x),
-        radiusY: Math.abs(pos.y - currentObject.y),
-      });
-    } else {
-      setCurrentObject({
-        ...currentObject,
-        width: pos.x - currentObject.x,
-        height: pos.y - currentObject.y,
-      });
-    }
-  }, [isPanning, isDrawing, currentObject, tool, lastPanPoint, getPointerPosition, onCursorMove]);
+      if (tool === 'pencil' && currentObject.type === 'line' && currentObject.points) {
+        const lastPoint =
+          currentObject.points.length >= 2
+            ? [
+                currentObject.points[currentObject.points.length - 2],
+                currentObject.points[currentObject.points.length - 1],
+              ]
+            : [0, 0];
+        const dx = pos.x - (currentObject.x + (lastPoint[0] as number));
+        const dy = pos.y - (currentObject.y + (lastPoint[1] as number));
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        setCurrentObject({
+          ...currentObject,
+          points: [
+            ...(currentObject.points || []),
+            pos.x - currentObject.x,
+            pos.y - currentObject.y,
+          ],
+          strokeWidth: Math.max(1, Math.min(8, 2 + distance / 5)),
+        });
+      } else if (tool === 'line' || tool === 'arrow') {
+        setCurrentObject({
+          ...currentObject,
+          points: [0, 0, pos.x - currentObject.x, pos.y - currentObject.y],
+        });
+      } else {
+        setCurrentObject({
+          ...currentObject,
+          width: pos.x - currentObject.x,
+          height: pos.y - currentObject.y,
+        });
+      }
+    },
+    [isPanning, isDrawing, currentObject, tool, lastPanPoint, getPointerPosition, onCursorMove],
+  );
 
   const handleMouseUp = useCallback(() => {
     if (isPanning) {
@@ -522,7 +554,7 @@ export default function WhiteboardCanvas({
         ((tool === 'rectangle' || tool === 'process') &&
           (Math.abs(currentObject.width || 0) > 2 || Math.abs(currentObject.height || 0) > 2)) ||
         (tool === 'circle' &&
-          ((currentObject.radiusX || 0) > 2 || (currentObject.radiusY || 0) > 2)) ||
+          (Math.abs(currentObject.width || 0) > 2 || Math.abs(currentObject.height || 0) > 2)) ||
         ([
           'triangle',
           'diamond',
@@ -591,9 +623,10 @@ export default function WhiteboardCanvas({
       setEditingTextId(objectId);
       const textPosition = textNode.getAbsolutePosition();
       const stageBox = stage.container().getBoundingClientRect();
+      // Account for stage transforms (pan + zoom) — same as screenToCanvas but in reverse
       const areaPosition = {
-        x: stageBox.left + textPosition.x,
-        y: stageBox.top + textPosition.y,
+        x: stageBox.left + textPosition.x * zoom + stagePos.x,
+        y: stageBox.top + textPosition.y * zoom + stagePos.y,
       };
       const obj = objects.find((o) => o.id === objectId);
       const textarea = document.createElement('textarea');
@@ -602,8 +635,8 @@ export default function WhiteboardCanvas({
       textarea.style.position = 'absolute';
       textarea.style.top = `${areaPosition.y}px`;
       textarea.style.left = `${areaPosition.x}px`;
-      textarea.style.width = `${Math.max(150, (obj?.width as number) || 150)}px`;
-      textarea.style.fontSize = `${(obj?.fontSize as number) || fontSize}px`;
+      textarea.style.width = `${Math.max(150, ((obj?.width as number) || 150) * zoom)}px`;
+      textarea.style.fontSize = `${((obj?.fontSize as number) || fontSize) * zoom}px`;
       textarea.style.fontFamily = (obj?.fontFamily as string) || fontFamily;
       textarea.style.fontWeight = obj?.bold ? 'bold' : 'normal';
       textarea.style.fontStyle = obj?.italic ? 'italic' : 'normal';
@@ -636,7 +669,7 @@ export default function WhiteboardCanvas({
         if (ke.key === 'Escape') textarea.blur();
       });
     },
-    [objects, fontSize, fontFamily, strokeColor, onUpdate],
+    [objects, fontSize, fontFamily, strokeColor, onUpdate, zoom, stagePos],
   );
 
   const handleDeleteKey = useCallback(
@@ -1153,8 +1186,10 @@ export default function WhiteboardCanvas({
           <Circle
             key={obj.id}
             {...commonProps}
-            radiusX={obj.radiusX || 0}
-            radiusY={obj.radiusY || 0}
+            x={(obj.x || 0) + (obj.width || 0) / 2}
+            y={(obj.y || 0) + (obj.height || 0) / 2}
+            radiusX={Math.abs(obj.width || 0) / 2}
+            radiusY={Math.abs(obj.height || 0) / 2}
             stroke={obj.stroke || '#000'}
             fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
             strokeWidth={obj.strokeWidth || 2}
@@ -1269,10 +1304,10 @@ export default function WhiteboardCanvas({
       case 'ellipse':
         return (
           <Circle
-            x={currentObject.x}
-            y={currentObject.y}
-            radiusX={currentObject.radiusX || 0}
-            radiusY={currentObject.radiusY || 0}
+            x={(currentObject.x || 0) + (currentObject.width || 0) / 2}
+            y={(currentObject.y || 0) + (currentObject.height || 0) / 2}
+            radiusX={Math.abs(currentObject.width || 0) / 2}
+            radiusY={Math.abs(currentObject.height || 0) / 2}
             stroke={currentObject.stroke || '#000'}
             fill={currentObject.fill === 'transparent' ? undefined : (currentObject.fill as string)}
             strokeWidth={currentObject.strokeWidth || 2}
