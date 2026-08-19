@@ -183,40 +183,42 @@ export default function WhiteboardCanvas({
   }, []);
 
   // Canonical coordinate conversion: screen (client) coords → canvas coords.
-  // All tools MUST use this function for consistency.
+  // Accounts for container offset, pan (stagePos), and zoom.
+  // Formula: canvasX = (clientX - containerLeft - stagePos.x) / zoom
   const screenToCanvas = useCallback(
     (clientX: number, clientY: number) => {
       const container = containerRef.current;
       if (!container) return { x: 0, y: 0 };
       const rect = container.getBoundingClientRect();
-      return {
-        x: (clientX - rect.left) / zoom,
-        y: (clientY - rect.top) / zoom,
-      };
+      const canvasX = (clientX - rect.left - stagePos.x) / zoom;
+      const canvasY = (clientY - rect.top - stagePos.y) / zoom;
+      return { x: canvasX, y: canvasY };
     },
-    [zoom],
+    [zoom, stagePos],
   );
+
+  // Extract clientX/clientY from mouse or touch event.
+  const getClientCoords = (e: MouseEvent | TouchEvent) => {
+    if ('touches' in e && e.touches.length > 0) {
+      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    }
+    if ('changedTouches' in e && e.changedTouches.length > 0) {
+      return { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY };
+    }
+    return { clientX: (e as MouseEvent).clientX, clientY: (e as MouseEvent).clientY };
+  };
 
   // Derive canvas position from a Konva event's native browser event.
   const getPointerPosition = useCallback(
     (e?: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
       const evt = e?.evt as MouseEvent | TouchEvent | undefined;
       if (evt) {
-        const clientX = 'touches' in evt ? (evt.touches[0]?.clientX ?? 0) : evt.clientX;
-        const clientY = 'touches' in evt ? (evt.touches[0]?.clientY ?? 0) : evt.clientY;
+        const { clientX, clientY } = getClientCoords(evt);
         return screenToCanvas(clientX, clientY);
       }
-      // Fallback: use Konva's internal pointer position
-      const stage = stageRef.current;
-      if (!stage) return { x: 0, y: 0 };
-      const pointer = stage.getPointerPosition();
-      if (!pointer) return { x: 0, y: 0 };
-      return {
-        x: (pointer.x - stagePos.x) / zoom,
-        y: (pointer.y - stagePos.y) / zoom,
-      };
+      return { x: 0, y: 0 };
     },
-    [screenToCanvas, stagePos, zoom],
+    [screenToCanvas],
   );
 
   const handleWheel = useCallback(
