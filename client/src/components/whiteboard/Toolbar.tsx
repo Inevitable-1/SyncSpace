@@ -187,7 +187,7 @@ export default function Toolbar({
   return (
     <>
       {/* Top Formatting Toolbar */}
-      <div className="absolute top-0 left-0 right-0 z-20 h-11 bg-white border-b border-gray-200 flex items-center px-3 gap-1 shadow-sm">
+      <div className="relative z-20 h-11 bg-white border-b border-gray-200 flex items-center px-3 gap-1 shadow-sm flex-shrink-0">
         {/* Drawing Tools */}
         <div className="flex items-center gap-0.5">
           {DRAW_TOOLS.map((t) => (

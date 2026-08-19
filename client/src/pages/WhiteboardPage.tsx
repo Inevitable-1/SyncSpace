@@ -436,10 +436,7 @@ export default function WhiteboardPage() {
       />
 
       {/* Canvas Area */}
-      <div
-        className="flex-1 relative overflow-hidden"
-        style={{ cursor: currentCursor, marginTop: 44 }}
-      >
+      <div className="flex-1 relative overflow-hidden" style={{ cursor: currentCursor }}>
         <WhiteboardCanvas
           objects={objects}
           tool={tool}
