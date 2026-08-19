@@ -28,37 +28,48 @@ interface ToolbarProps {
   onExportJPG: () => void;
   onExportPDF: () => void;
   onExportJSON: () => void;
+  onExportSVG: () => void;
   onUploadImage: (file: File) => void;
+  onLoadTemplate: (templateId: string) => void;
 }
 
-const DRAW_TOOLS: { id: ToolType; label: string; icon: string }[] = [
-  { id: 'pointer', label: 'Select', icon: 'cursor' },
-  { id: 'hand', label: 'Hand', icon: 'hand' },
-  { id: 'pencil', label: 'Pencil', icon: 'pencil' },
-  { id: 'line', label: 'Line', icon: 'line' },
-  { id: 'rectangle', label: 'Rectangle', icon: 'rect' },
-  { id: 'circle', label: 'Circle', icon: 'circle' },
+const BASIC_TOOLS: { id: ToolType; label: string; icon: string; shortcut?: string }[] = [
+  { id: 'pointer', label: 'Select', icon: 'cursor', shortcut: 'V' },
+  { id: 'hand', label: 'Hand', icon: 'hand', shortcut: 'H' },
+  { id: 'pencil', label: 'Pencil', icon: 'pencil', shortcut: 'P' },
+  { id: 'line', label: 'Line', icon: 'line', shortcut: 'L' },
+  { id: 'rectangle', label: 'Rectangle', icon: 'rect', shortcut: 'R' },
+  { id: 'circle', label: 'Circle', icon: 'circle', shortcut: 'C' },
   { id: 'triangle', label: 'Triangle', icon: 'triangle' },
   { id: 'diamond', label: 'Diamond', icon: 'diamond' },
-  { id: 'arrow', label: 'Arrow', icon: 'arrow' },
-  { id: 'text', label: 'Text', icon: 'text' },
-  { id: 'eraser', label: 'Eraser', icon: 'eraser' },
+  { id: 'arrow', label: 'Arrow', icon: 'arrow', shortcut: 'A' },
+  { id: 'text', label: 'Text', icon: 'text', shortcut: 'T' },
+  { id: 'connector', label: 'Connector', icon: 'connector' },
+  { id: 'eraser', label: 'Eraser', icon: 'eraser', shortcut: 'E' },
 ];
 
-const OBJECT_TOOLS: { id: ToolType; label: string; icon: string }[] = [
-  { id: 'rectangle', label: 'Rectangle', icon: 'rect' },
-  { id: 'circle', label: 'Circle', icon: 'circle' },
-  { id: 'triangle', label: 'Triangle', icon: 'triangle' },
-  { id: 'diamond', label: 'Diamond', icon: 'diamond' },
-  { id: 'arrow', label: 'Arrow', icon: 'arrow' },
-  { id: 'line', label: 'Line', icon: 'line' },
+const ADVANCED_SHAPES: { id: ToolType; label: string; icon: string }[] = [
+  { id: 'pentagon', label: 'Pentagon', icon: 'pentagon' },
+  { id: 'hexagon', label: 'Hexagon', icon: 'hexagon' },
+  { id: 'star', label: 'Star', icon: 'star' },
+  { id: 'cloud', label: 'Cloud', icon: 'cloud' },
+  { id: 'cylinder', label: 'Cylinder', icon: 'cylinder' },
+  { id: 'database', label: 'Database', icon: 'database' },
+  { id: 'document', label: 'Document', icon: 'document' },
+  { id: 'folder', label: 'Folder', icon: 'folder' },
+  { id: 'process', label: 'Process Box', icon: 'process' },
+  { id: 'decision', label: 'Decision', icon: 'diamond' },
+  { id: 'actor', label: 'Actor', icon: 'actor' },
+  { id: 'mindmap', label: 'Mind Map', icon: 'mindmap' },
 ];
 
-const STICKY_TOOLS: { id: ToolType; label: string; color: string }[] = [
-  { id: 'sticky-yellow', label: 'Yellow', color: '#FEF3C7' },
-  { id: 'sticky-green', label: 'Green', color: '#D1FAE5' },
-  { id: 'sticky-blue', label: 'Blue', color: '#DBEAFE' },
-  { id: 'sticky-pink', label: 'Pink', color: '#FCE7F3' },
+const TEMPLATES = [
+  { id: 'flowchart', label: 'Flowchart' },
+  { id: 'mindmap', label: 'Mind Map' },
+  { id: 'scrum', label: 'Scrum Board' },
+  { id: 'brainstorm', label: 'Brainstorming' },
+  { id: 'meeting', label: 'Meeting Notes' },
+  { id: 'architecture', label: 'Software Architecture' },
 ];
 
 const FONT_FAMILIES = ['Inter', 'Arial', 'Georgia', 'Times New Roman', 'Courier New', 'Verdana'];
@@ -131,11 +142,103 @@ function ToolIcon({ icon, className }: { icon: string; className?: string }) {
           <line x1="12" y1="4" x2="12" y2="20" />
         </svg>
       );
+    case 'connector':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="5" cy="12" r="3" />
+          <circle cx="19" cy="12" r="3" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+          <polyline points="14 8 18 12 14 16" />
+        </svg>
+      );
     case 'eraser':
       return (
         <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M20 20H7L3 16a1 1 0 010-1.41l9.59-9.59a2 2 0 012.82 0l5.59 5.59a2 2 0 010 2.82L14 20" />
           <line x1="18" y1="13" x2="11" y2="6" />
+        </svg>
+      );
+    case 'pentagon':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2L21 8.5L18 21H6L3 8.5L12 2z" />
+        </svg>
+      );
+    case 'hexagon':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2L21 7V17L12 22L3 17V7L12 2z" />
+        </svg>
+      );
+    case 'star':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      );
+    case 'cloud':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" />
+        </svg>
+      );
+    case 'cylinder':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <line x1="3" y1="5" x2="3" y2="19" />
+          <line x1="21" y1="5" x2="21" y2="19" />
+          <path d="M3 19a9 9 0 0018 0" />
+        </svg>
+      );
+    case 'database':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <line x1="3" y1="5" x2="3" y2="19" />
+          <line x1="21" y1="5" x2="21" y2="19" />
+          <path d="M3 19a9 9 0 0018 0" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+        </svg>
+      );
+    case 'document':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+      );
+    case 'folder':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+        </svg>
+      );
+    case 'process':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="6" width="18" height="12" rx="2" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+        </svg>
+      );
+    case 'actor':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="4" r="2.5" />
+          <line x1="12" y1="9" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+          <line x1="12" y1="16" x2="9" y2="21" />
+          <line x1="12" y1="16" x2="15" y2="21" />
+        </svg>
+      );
+    case 'mindmap':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="7" x2="12" y2="2" />
+          <line x1="12" y1="22" x2="12" y2="17" />
+          <line x1="7" y1="12" x2="2" y2="12" />
+          <line x1="22" y1="12" x2="17" y2="12" />
         </svg>
       );
     default:
@@ -169,11 +272,13 @@ export default function Toolbar({
   onExportJPG,
   onExportPDF,
   onExportJSON,
+  onExportSVG,
   onUploadImage,
+  onLoadTemplate,
 }: ToolbarProps) {
   const [showExport, setShowExport] = useState(false);
-  const [showSticky, setShowSticky] = useState(false);
-  const [showObjects, setShowObjects] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,15 +291,13 @@ export default function Toolbar({
 
   return (
     <>
-      {/* Top Formatting Toolbar */}
       <div className="relative z-20 h-11 bg-white border-b border-gray-200 flex items-center px-3 gap-1 shadow-sm flex-shrink-0">
-        {/* Drawing Tools */}
         <div className="flex items-center gap-0.5">
-          {DRAW_TOOLS.map((t) => (
+          {BASIC_TOOLS.map((t) => (
             <button
               key={t.id}
               onClick={() => onToolChange(t.id)}
-              title={t.label}
+              title={t.shortcut ? `${t.label} (${t.shortcut})` : t.label}
               className={`p-1.5 rounded-md transition-all ${
                 activeTool === t.id
                   ? 'bg-indigo-100 text-indigo-600'
@@ -208,13 +311,12 @@ export default function Toolbar({
 
         <div className="w-px h-5 bg-gray-200 mx-1.5" />
 
-        {/* Sticky Notes */}
         <div className="relative">
           <button
             onClick={() => {
-              setShowSticky(!showSticky);
-              setShowObjects(false);
+              setShowAdvanced(!showAdvanced);
               setShowExport(false);
+              setShowTemplates(false);
             }}
             className="px-2 py-1 text-xs rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100 flex items-center gap-1"
           >
@@ -225,80 +327,41 @@ export default function Toolbar({
               stroke="currentColor"
               strokeWidth="2"
             >
-              <path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z" />
-              <polyline points="14 3 14 9 21 9" />
+              <polygon points="12 2 22 8.5 18 21 6 21 2 8.5" />
             </svg>
-            Notes
+            Shapes
+            <svg
+              className="w-3 h-3 ml-0.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
           </button>
           <AnimatePresence>
-            {showSticky && (
+            {showAdvanced && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="absolute top-full left-0 mt-1 p-2 bg-white rounded-lg shadow-lg border border-gray-200 flex gap-2"
+                className="absolute top-full left-0 mt-1 p-2 bg-white rounded-lg shadow-xl border border-gray-200 grid grid-cols-4 gap-1"
               >
-                {STICKY_TOOLS.map((s) => (
+                {ADVANCED_SHAPES.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => {
                       onToolChange(s.id);
-                      setShowSticky(false);
+                      setShowAdvanced(false);
                     }}
-                    className="w-8 h-8 rounded-md border-2 border-gray-200 hover:scale-110 transition-transform"
-                    style={{ backgroundColor: s.color }}
-                    title={`${s.label} Note`}
-                  />
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Objects */}
-        <div className="relative">
-          <button
-            onClick={() => {
-              setShowObjects(!showObjects);
-              setShowSticky(false);
-              setShowExport(false);
-            }}
-            className="px-2 py-1 text-xs rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100 flex items-center gap-1"
-          >
-            <svg
-              className="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-            Shapes
-          </button>
-          <AnimatePresence>
-            {showObjects && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="absolute top-full left-0 mt-1 p-2 bg-white rounded-lg shadow-lg border border-gray-200 grid grid-cols-3 gap-1"
-              >
-                {OBJECT_TOOLS.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      onToolChange(t.id);
-                      setShowObjects(false);
-                    }}
-                    className={`p-2 rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100 ${
-                      activeTool === t.id ? 'bg-indigo-100 text-indigo-600' : ''
+                    className={`flex flex-col items-center gap-0.5 p-2 rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100 ${
+                      activeTool === s.id ? 'bg-indigo-100 text-indigo-600' : ''
                     }`}
-                    title={t.label}
+                    title={s.label}
                   >
-                    <ToolIcon icon={t.icon} />
+                    <ToolIcon icon={s.icon} />
+                    <span className="text-[9px] leading-tight">{s.label}</span>
                   </button>
                 ))}
               </motion.div>
@@ -306,7 +369,64 @@ export default function Toolbar({
           </AnimatePresence>
         </div>
 
-        {/* Image Upload */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              setShowTemplates(!showTemplates);
+              setShowExport(false);
+              setShowAdvanced(false);
+            }}
+            className="px-2 py-1 text-xs rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100 flex items-center gap-1"
+          >
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+            Templates
+          </button>
+          <AnimatePresence>
+            {showTemplates && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="absolute top-full left-0 mt-1 p-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[160px]"
+              >
+                {TEMPLATES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      onLoadTemplate(t.id);
+                      setShowTemplates(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100 rounded-md flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5 text-gray-400"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    {t.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         <button
           onClick={() => fileInputRef.current?.click()}
           className="px-2 py-1 text-xs rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100 flex items-center gap-1"
@@ -335,7 +455,6 @@ export default function Toolbar({
 
         <div className="w-px h-5 bg-gray-200 mx-1.5" />
 
-        {/* Formatting */}
         <div className="flex items-center gap-1">
           <select
             value={fontFamily}
@@ -363,7 +482,6 @@ export default function Toolbar({
 
         <div className="w-px h-5 bg-gray-200 mx-1.5" />
 
-        {/* Stroke & Fill */}
         <div className="flex items-center gap-1.5">
           <div className="flex items-center gap-1">
             <span className="text-[10px] text-gray-400">Stroke</span>
@@ -398,7 +516,6 @@ export default function Toolbar({
 
         <div className="flex-1" />
 
-        {/* Undo / Redo */}
         <div className="flex items-center gap-0.5">
           <button
             onClick={onUndo}
@@ -454,7 +571,6 @@ export default function Toolbar({
 
         <div className="w-px h-5 bg-gray-200 mx-1.5" />
 
-        {/* Zoom */}
         <div className="flex items-center gap-0.5">
           <button
             onClick={onZoomOut}
@@ -501,13 +617,12 @@ export default function Toolbar({
 
         <div className="w-px h-5 bg-gray-200 mx-1.5" />
 
-        {/* Export */}
         <div className="relative">
           <button
             onClick={() => {
               setShowExport(!showExport);
-              setShowSticky(false);
-              setShowObjects(false);
+              setShowAdvanced(false);
+              setShowTemplates(false);
             }}
             className="px-2.5 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1"
           >
@@ -530,13 +645,14 @@ export default function Toolbar({
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="absolute top-full right-0 mt-1 p-1 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[120px]"
+                className="absolute top-full right-0 mt-1 p-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[120px]"
               >
                 {[
-                  { label: 'Export PNG', fn: onExportPNG },
-                  { label: 'Export JPG', fn: onExportJPG },
-                  { label: 'Export PDF', fn: onExportPDF },
-                  { label: 'Export JSON', fn: onExportJSON },
+                  { label: 'PNG', fn: onExportPNG },
+                  { label: 'JPG', fn: onExportJPG },
+                  { label: 'SVG', fn: onExportSVG },
+                  { label: 'PDF', fn: onExportPDF },
+                  { label: 'JSON', fn: onExportJSON },
                 ].map((item) => (
                   <button
                     key={item.label}

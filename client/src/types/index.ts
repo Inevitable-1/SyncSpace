@@ -260,10 +260,19 @@ export type ToolType =
   | 'eraser'
   | 'triangle'
   | 'diamond'
-  | 'sticky-yellow'
-  | 'sticky-green'
-  | 'sticky-blue'
-  | 'sticky-pink'
+  | 'pentagon'
+  | 'hexagon'
+  | 'star'
+  | 'cloud'
+  | 'cylinder'
+  | 'database'
+  | 'document'
+  | 'folder'
+  | 'process'
+  | 'decision'
+  | 'actor'
+  | 'mindmap'
+  | 'connector'
   | 'image';
 
 export interface WhiteboardObject {
@@ -295,6 +304,19 @@ export interface WhiteboardObject {
   italic?: boolean;
   underline?: boolean;
   align?: 'left' | 'center' | 'right';
+  dashed?: boolean;
+  cornerRadius?: number;
+  shadow?: boolean;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetX?: number;
+  shadowOffsetY?: number;
+  points_count?: number;
+  fromId?: string;
+  toId?: string;
+  startArrow?: boolean;
+  endArrow?: boolean;
+  connectorStyle?: 'straight' | 'elbow';
   [key: string]: unknown;
 }
 

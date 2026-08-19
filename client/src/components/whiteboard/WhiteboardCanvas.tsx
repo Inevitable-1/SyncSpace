@@ -80,18 +80,57 @@ function ImageObject({
   );
 }
 
-const STICKY_COLORS: Record<string, string> = {
-  'sticky-yellow': '#FEF3C7',
-  'sticky-green': '#D1FAE5',
-  'sticky-blue': '#DBEAFE',
-  'sticky-pink': '#FCE7F3',
+function polyPoints(cx: number, cy: number, r: number, sides: number, rotationDeg = -90): number[] {
+  const pts: number[] = [];
+  const rad = (Math.PI / 180) * rotationDeg;
+  for (let i = 0; i < sides; i++) {
+    const angle = rad + (2 * Math.PI * i) / sides;
+    pts.push(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+  }
+  return pts;
+}
+
+function starPoints(
+  cx: number,
+  cy: number,
+  outerR: number,
+  innerR: number,
+  spikes: number,
+): number[] {
+  const pts: number[] = [];
+  const rot = (Math.PI / 180) * -90;
+  for (let i = 0; i < spikes * 2; i++) {
+    const angle = rot + (Math.PI * i) / spikes;
+    const r = i % 2 === 0 ? outerR : innerR;
+    pts.push(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+  }
+  return pts;
+}
+
+const SHAPE_FUNCS: Record<string, (cx: number, cy: number, w: number, h: number) => number[]> = {
+  pentagon: (cx, cy, w, h) => {
+    const r = Math.min(w, h) / 2;
+    return polyPoints(cx, cy, r, 5);
+  },
+  hexagon: (cx, cy, w, h) => {
+    const r = Math.min(w, h) / 2;
+    return polyPoints(cx, cy, r, 6);
+  },
+  star: (cx, cy, w, h) => {
+    const outer = Math.min(w, h) / 2;
+    return starPoints(cx, cy, outer, outer * 0.4, 5);
+  },
 };
 
-const STICKY_TEXT_COLORS: Record<string, string> = {
-  'sticky-yellow': '#92400E',
-  'sticky-green': '#065F46',
-  'sticky-blue': '#1E40AF',
-  'sticky-pink': '#9D174D',
+const shapeShadow = (obj: WhiteboardObject) => {
+  if (!obj.shadow) return {};
+  return {
+    shadowColor: obj.shadowColor || 'rgba(0,0,0,0.3)',
+    shadowBlur: obj.shadowBlur ?? 8,
+    shadowOffsetX: obj.shadowOffsetX ?? 2,
+    shadowOffsetY: obj.shadowOffsetY ?? 2,
+    shadowOpacity: 0.5,
+  };
 };
 
 export default function WhiteboardCanvas({
@@ -122,6 +161,7 @@ export default function WhiteboardCanvas({
   const [currentObject, setCurrentObject] = useState<WhiteboardObject | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [showGrid, setShowGrid] = useState(false);
+  const [connectorStart, setConnectorStart] = useState<string | null>(null);
 
   useEffect(() => {
     const updateSize = () => {
@@ -202,6 +242,44 @@ export default function WhiteboardCanvas({
         return;
       }
 
+      if (tool === 'connector') {
+        const target = e.target;
+        const objId = target.id();
+        if (objId && objId !== 'grid-bg') {
+          if (!connectorStart) {
+            setConnectorStart(objId);
+          } else {
+            const id = `conn-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const fromObj = objects.find((o) => o.id === connectorStart);
+            const toObj = objects.find((o) => o.id === objId);
+            if (fromObj && toObj) {
+              const fx = fromObj.x + (fromObj.width || 0) / 2;
+              const fy = fromObj.y + (fromObj.height || 0) / 2;
+              const tx = toObj.x + (toObj.width || 0) / 2;
+              const ty = toObj.y + (toObj.height || 0) / 2;
+              const conn: WhiteboardObject = {
+                id,
+                type: 'connector',
+                x: fx,
+                y: fy,
+                points: [0, 0, tx - fx, ty - fy],
+                stroke: strokeColor,
+                strokeWidth,
+                opacity,
+                fromId: connectorStart,
+                toId: objId,
+                startArrow: false,
+                endArrow: true,
+                fill: strokeColor,
+              };
+              onDraw(conn);
+            }
+            setConnectorStart(null);
+          }
+        }
+        return;
+      }
+
       if (tool === 'text') {
         const id = `text-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const newObj: WhiteboardObject = {
@@ -209,7 +287,7 @@ export default function WhiteboardCanvas({
           type: 'text',
           x: pos.x,
           y: pos.y,
-          text: 'Type here...',
+          text: '',
           stroke: strokeColor,
           fill: strokeColor,
           fontSize,
@@ -219,39 +297,72 @@ export default function WhiteboardCanvas({
           italic: false,
           underline: false,
           align: 'left',
+          width: 200,
         };
         onDraw(newObj);
-        setEditingTextId(id);
+        setTimeout(() => setEditingTextId(id), 50);
         return;
       }
 
       if (tool === 'image') return;
 
-      if (tool.startsWith('sticky-')) {
-        const id = `sticky-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const newObj: WhiteboardObject = {
+      const SHAPE_TOOL_MAP: Record<string, string> = {
+        rectangle: 'rect',
+        circle: 'ellipse',
+        triangle: 'triangle',
+        diamond: 'diamond',
+        pentagon: 'polygon',
+        hexagon: 'polygon',
+        star: 'polygon',
+        cloud: 'cloud',
+        cylinder: 'cylinder',
+        database: 'database',
+        document: 'document',
+        folder: 'folder',
+        process: 'rect',
+        decision: 'diamond',
+        actor: 'actor',
+        mindmap: 'mindmap',
+      };
+
+      const shapeType = SHAPE_TOOL_MAP[tool] || tool;
+
+      if (shapeType === 'line' || tool === 'line') {
+        const id = `line-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        setIsDrawing(true);
+        setCurrentObject({
           id,
-          type: 'sticky',
-          x: pos.x - 75,
-          y: pos.y - 75,
-          width: 150,
-          height: 150,
-          fill: STICKY_COLORS[tool] || '#FEF3C7',
-          text: 'Note',
-          fontSize: 14,
-          fontFamily: 'Inter',
-          opacity: 1,
-          stroke: 'transparent',
-          strokeWidth: 0,
-        };
-        onDraw(newObj);
+          type: 'line',
+          x: pos.x,
+          y: pos.y,
+          points: [0, 0, 0, 0],
+          stroke: strokeColor,
+          strokeWidth,
+          opacity,
+        });
         return;
       }
 
-      setIsDrawing(true);
+      if (shapeType === 'arrow' || tool === 'arrow') {
+        const id = `arrow-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        setIsDrawing(true);
+        setCurrentObject({
+          id,
+          type: 'arrow',
+          x: pos.x,
+          y: pos.y,
+          points: [0, 0, 0, 0],
+          stroke: strokeColor,
+          strokeWidth,
+          opacity,
+          fill: strokeColor,
+        });
+        return;
+      }
 
       if (tool === 'pencil') {
         const id = `pencil-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        setIsDrawing(true);
         setCurrentObject({
           id,
           type: 'line',
@@ -265,20 +376,26 @@ export default function WhiteboardCanvas({
           lineCap: 'round',
           lineJoin: 'round',
         });
-      } else if (tool === 'line') {
-        const id = `line-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        return;
+      }
+
+      setIsDrawing(true);
+      const id = `${tool}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      if (shapeType === 'ellipse') {
         setCurrentObject({
           id,
-          type: 'line',
+          type: 'ellipse',
           x: pos.x,
           y: pos.y,
-          points: [0, 0, 0, 0],
+          radiusX: 0,
+          radiusY: 0,
           stroke: strokeColor,
+          fill: fillColor,
           strokeWidth,
           opacity,
         });
-      } else if (tool === 'rectangle') {
-        const id = `rect-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      } else if (shapeType === 'rect') {
         setCurrentObject({
           id,
           type: 'rect',
@@ -290,39 +407,14 @@ export default function WhiteboardCanvas({
           fill: fillColor,
           strokeWidth,
           opacity,
+          cornerRadius: 4,
         });
-      } else if (tool === 'circle') {
-        const id = `circle-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      } else if (shapeType === 'triangle' || shapeType === 'diamond' || shapeType === 'polygon') {
+        const isPolygon = shapeType === 'polygon';
+        const subType = isPolygon ? tool : shapeType;
         setCurrentObject({
           id,
-          type: 'circle',
-          x: pos.x,
-          y: pos.y,
-          radiusX: 0,
-          radiusY: 0,
-          stroke: strokeColor,
-          fill: fillColor,
-          strokeWidth,
-          opacity,
-        });
-      } else if (tool === 'arrow') {
-        const id = `arrow-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        setCurrentObject({
-          id,
-          type: 'arrow',
-          x: pos.x,
-          y: pos.y,
-          points: [0, 0, 0, 0],
-          stroke: strokeColor,
-          strokeWidth,
-          opacity,
-          fill: strokeColor,
-        });
-      } else if (tool === 'triangle') {
-        const id = `tri-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        setCurrentObject({
-          id,
-          type: 'triangle',
+          type: subType,
           x: pos.x,
           y: pos.y,
           width: 0,
@@ -332,11 +424,10 @@ export default function WhiteboardCanvas({
           strokeWidth,
           opacity,
         });
-      } else if (tool === 'diamond') {
-        const id = `dia-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      } else {
         setCurrentObject({
           id,
-          type: 'diamond',
+          type: shapeType,
           x: pos.x,
           y: pos.y,
           width: 0,
@@ -360,6 +451,8 @@ export default function WhiteboardCanvas({
       onSelect,
       onDelete,
       onDraw,
+      objects,
+      connectorStart,
     ],
   );
 
@@ -391,7 +484,6 @@ export default function WhiteboardCanvas({
       const dx = pos.x - (currentObject.x + (lastPoint[0] as number));
       const dy = pos.y - (currentObject.y + (lastPoint[1] as number));
       const distance = Math.sqrt(dx * dx + dy * dy);
-
       setCurrentObject({
         ...currentObject,
         points: [...(currentObject.points || []), pos.x - currentObject.x, pos.y - currentObject.y],
@@ -402,17 +494,17 @@ export default function WhiteboardCanvas({
         ...currentObject,
         points: [0, 0, pos.x - currentObject.x, pos.y - currentObject.y],
       });
-    } else if (tool === 'rectangle' || tool === 'triangle' || tool === 'diamond') {
-      setCurrentObject({
-        ...currentObject,
-        width: pos.x - currentObject.x,
-        height: pos.y - currentObject.y,
-      });
-    } else if (tool === 'circle') {
+    } else if (currentObject.type === 'ellipse') {
       setCurrentObject({
         ...currentObject,
         radiusX: Math.abs(pos.x - currentObject.x),
         radiusY: Math.abs(pos.y - currentObject.y),
+      });
+    } else {
+      setCurrentObject({
+        ...currentObject,
+        width: pos.x - currentObject.x,
+        height: pos.y - currentObject.y,
       });
     }
   }, [isPanning, isDrawing, currentObject, tool, lastPanPoint, getPointerPosition, onCursorMove]);
@@ -426,15 +518,26 @@ export default function WhiteboardCanvas({
     if (isDrawing && currentObject) {
       const hasSize =
         (tool === 'pencil' && currentObject.points && currentObject.points.length > 2) ||
-        (tool === 'line' && currentObject.points) ||
-        (tool === 'arrow' && currentObject.points) ||
-        (tool === 'rectangle' &&
+        ((tool === 'line' || tool === 'arrow') && currentObject.points) ||
+        ((tool === 'rectangle' || tool === 'process') &&
           (Math.abs(currentObject.width || 0) > 2 || Math.abs(currentObject.height || 0) > 2)) ||
         (tool === 'circle' &&
           ((currentObject.radiusX || 0) > 2 || (currentObject.radiusY || 0) > 2)) ||
-        (tool === 'triangle' &&
-          (Math.abs(currentObject.width || 0) > 2 || Math.abs(currentObject.height || 0) > 2)) ||
-        (tool === 'diamond' &&
+        ([
+          'triangle',
+          'diamond',
+          'pentagon',
+          'hexagon',
+          'star',
+          'cloud',
+          'cylinder',
+          'database',
+          'document',
+          'folder',
+          'decision',
+          'actor',
+          'mindmap',
+        ].includes(tool) &&
           (Math.abs(currentObject.width || 0) > 2 || Math.abs(currentObject.height || 0) > 2));
 
       if (hasSize) {
@@ -548,6 +651,7 @@ export default function WhiteboardCanvas({
       if (e.key === 'Escape') {
         onSelect([]);
         setEditingTextId(null);
+        setConnectorStart(null);
       }
     },
     [selectedIds, editingTextId, onDelete, onSelect],
@@ -557,6 +661,338 @@ export default function WhiteboardCanvas({
     window.addEventListener('keydown', handleDeleteKey);
     return () => window.removeEventListener('keydown', handleDeleteKey);
   }, [handleDeleteKey]);
+
+  const renderPolygonShape = (obj: WhiteboardObject, isPreview = false) => {
+    const cx = (obj.x || 0) + (obj.width || 0) / 2;
+    const cy = (obj.y || 0) + (obj.height || 0) / 2;
+    const w = Math.abs(obj.width || 0);
+    const h = Math.abs(obj.height || 0);
+    const func = SHAPE_FUNCS[obj.type];
+    if (!func) return null;
+    const points = func(cx, cy, w, h);
+    return (
+      <Line
+        key={obj.id}
+        id={obj.id}
+        x={0}
+        y={0}
+        points={points}
+        closed
+        stroke={obj.stroke || '#000'}
+        fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+        strokeWidth={obj.strokeWidth || 2}
+        opacity={obj.opacity ?? 1}
+        dash={obj.dashed ? [8, 4] : undefined}
+        draggable={tool === 'pointer' && !isPreview}
+        {...shapeShadow(obj)}
+        onClick={() => {
+          if (tool === 'pointer') onSelect([obj.id]);
+        }}
+        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
+      />
+    );
+  };
+
+  const renderCloud = (obj: WhiteboardObject, isPreview = false) => {
+    const w = obj.width || 0;
+    const h = obj.height || 0;
+    const cx = w / 2;
+    const cy = h / 2;
+    const r = Math.min(Math.abs(w), Math.abs(h)) / 2;
+    const points: number[] = [];
+    const bumps = 8;
+    for (let i = 0; i < bumps; i++) {
+      const angle = (2 * Math.PI * i) / bumps - Math.PI / 2;
+      const br = r * (0.85 + 0.15 * Math.sin(i * 2.5));
+      points.push(cx + br * Math.cos(angle), cy + br * Math.sin(angle));
+    }
+    return (
+      <Line
+        key={obj.id}
+        id={obj.id}
+        x={obj.x}
+        y={obj.y}
+        points={points}
+        closed
+        tension={0.5}
+        stroke={obj.stroke || '#000'}
+        fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+        strokeWidth={obj.strokeWidth || 2}
+        opacity={obj.opacity ?? 1}
+        draggable={tool === 'pointer' && !isPreview}
+        {...shapeShadow(obj)}
+        onClick={() => {
+          if (tool === 'pointer') onSelect([obj.id]);
+        }}
+        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
+      />
+    );
+  };
+
+  const renderCylinder = (obj: WhiteboardObject, isPreview = false) => {
+    const w = obj.width || 0;
+    const h = obj.height || 0;
+    const ry = Math.min(h * 0.15, 20);
+    return (
+      <Group
+        key={obj.id}
+        id={obj.id}
+        x={obj.x}
+        y={obj.y}
+        opacity={obj.opacity ?? 1}
+        draggable={tool === 'pointer' && !isPreview}
+        onClick={() => {
+          if (tool === 'pointer') onSelect([obj.id]);
+        }}
+        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
+      >
+        <Rect
+          x={0}
+          y={ry}
+          width={w}
+          height={h - ry * 2}
+          stroke={obj.stroke || '#000'}
+          fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+          strokeWidth={obj.strokeWidth || 2}
+          dash={obj.dashed ? [8, 4] : undefined}
+          {...shapeShadow(obj)}
+        />
+        <Line
+          points={[0, ry, w, ry]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[0, h - ry, w, h - ry]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[0, ry, 0, h - ry]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[w, ry, w, h - ry]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+      </Group>
+    );
+  };
+
+  const renderDatabase = (obj: WhiteboardObject, isPreview = false) => {
+    const w = obj.width || 0;
+    const h = obj.height || 0;
+    const ry = Math.min(h * 0.12, 18);
+    return (
+      <Group
+        key={obj.id}
+        id={obj.id}
+        x={obj.x}
+        y={obj.y}
+        opacity={obj.opacity ?? 1}
+        draggable={tool === 'pointer' && !isPreview}
+        onClick={() => {
+          if (tool === 'pointer') onSelect([obj.id]);
+        }}
+        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
+      >
+        <Line
+          points={[0, ry, 0, h - ry]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[w, ry, w, h - ry]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[0, ry, w, ry]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[0, h - ry, w, h - ry]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[0, ry, w / 2, 0, w, ry]}
+          closed
+          fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+      </Group>
+    );
+  };
+
+  const renderDocument = (obj: WhiteboardObject, isPreview = false) => {
+    const w = obj.width || 0;
+    const h = obj.height || 0;
+    const fold = Math.min(w * 0.2, 30);
+    return (
+      <Group
+        key={obj.id}
+        id={obj.id}
+        x={obj.x}
+        y={obj.y}
+        opacity={obj.opacity ?? 1}
+        draggable={tool === 'pointer' && !isPreview}
+        onClick={() => {
+          if (tool === 'pointer') onSelect([obj.id]);
+        }}
+        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
+      >
+        <Line
+          points={[0, 0, w - fold, 0, w, fold, w, h, 0, h]}
+          closed
+          fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+          dash={obj.dashed ? [8, 4] : undefined}
+          {...shapeShadow(obj)}
+        />
+        <Line
+          points={[w - fold, 0, w - fold, fold, w, fold]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+      </Group>
+    );
+  };
+
+  const renderFolder = (obj: WhiteboardObject, isPreview = false) => {
+    const w = obj.width || 0;
+    const h = obj.height || 0;
+    const tab = Math.min(h * 0.2, 20);
+    return (
+      <Group
+        key={obj.id}
+        id={obj.id}
+        x={obj.x}
+        y={obj.y}
+        opacity={obj.opacity ?? 1}
+        draggable={tool === 'pointer' && !isPreview}
+        onClick={() => {
+          if (tool === 'pointer') onSelect([obj.id]);
+        }}
+        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
+      >
+        <Line
+          points={[0, tab, w * 0.35, tab, w * 0.4, 0, w, 0, w, h, 0, h]}
+          closed
+          fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+          dash={obj.dashed ? [8, 4] : undefined}
+          {...shapeShadow(obj)}
+        />
+      </Group>
+    );
+  };
+
+  const renderActor = (obj: WhiteboardObject, isPreview = false) => {
+    const w = obj.width || 0;
+    const h = obj.height || 0;
+    const headR = Math.min(w, h) * 0.12;
+    const headY = headR + 4;
+    const shoulderY = headY + headR + 4;
+    const waistY = shoulderY + h * 0.3;
+    const footY = h;
+    const cx = w / 2;
+    return (
+      <Group
+        key={obj.id}
+        id={obj.id}
+        x={obj.x}
+        y={obj.y}
+        opacity={obj.opacity ?? 1}
+        draggable={tool === 'pointer' && !isPreview}
+        onClick={() => {
+          if (tool === 'pointer') onSelect([obj.id]);
+        }}
+        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
+      >
+        <Circle
+          x={cx}
+          y={headY}
+          radius={headR}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+          fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+        />
+        <Line
+          points={[cx, shoulderY, cx, waistY]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[
+            w * 0.15,
+            shoulderY + (waistY - shoulderY) * 0.3,
+            w * 0.85,
+            shoulderY + (waistY - shoulderY) * 0.3,
+          ]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[cx, waistY, w * 0.2, footY]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+        <Line
+          points={[cx, waistY, w * 0.8, footY]}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+        />
+      </Group>
+    );
+  };
+
+  const renderMindmapNode = (obj: WhiteboardObject, isPreview = false) => {
+    const w = obj.width || 0;
+    const h = obj.height || 0;
+    const r = Math.min(w, h) / 2;
+    return (
+      <Group
+        key={obj.id}
+        id={obj.id}
+        x={obj.x}
+        y={obj.y}
+        opacity={obj.opacity ?? 1}
+        draggable={tool === 'pointer' && !isPreview}
+        onClick={() => {
+          if (tool === 'pointer') onSelect([obj.id]);
+        }}
+        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
+      >
+        <Rect
+          x={0}
+          y={0}
+          width={w}
+          height={h}
+          cornerRadius={r}
+          fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+          stroke={obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+          dash={obj.dashed ? [8, 4] : undefined}
+          {...shapeShadow(obj)}
+        />
+      </Group>
+    );
+  };
 
   const renderTriangle = (obj: WhiteboardObject, isPreview = false) => {
     const w = obj.width || 0;
@@ -574,7 +1010,9 @@ export default function WhiteboardCanvas({
         fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
         strokeWidth={obj.strokeWidth || 2}
         opacity={obj.opacity ?? 1}
+        dash={obj.dashed ? [8, 4] : undefined}
         draggable={tool === 'pointer' && !isPreview}
+        {...shapeShadow(obj)}
         onClick={() => {
           if (tool === 'pointer') onSelect([obj.id]);
         }}
@@ -600,54 +1038,15 @@ export default function WhiteboardCanvas({
         fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
         strokeWidth={obj.strokeWidth || 2}
         opacity={obj.opacity ?? 1}
+        dash={obj.dashed ? [8, 4] : undefined}
         draggable={tool === 'pointer' && !isPreview}
+        {...shapeShadow(obj)}
         onClick={() => {
           if (tool === 'pointer') onSelect([obj.id]);
         }}
         onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
         onTransformEnd={() => handleObjectTransformEnd(obj.id)}
       />
-    );
-  };
-
-  const renderSticky = (obj: WhiteboardObject) => {
-    return (
-      <Group
-        key={obj.id}
-        id={obj.id}
-        x={obj.x}
-        y={obj.y}
-        opacity={obj.opacity ?? 1}
-        draggable={tool === 'pointer'}
-        onClick={() => {
-          if (tool === 'pointer') onSelect([obj.id]);
-        }}
-        onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
-        onTransformEnd={() => handleObjectTransformEnd(obj.id)}
-      >
-        <Rect
-          width={obj.width || 150}
-          height={obj.height || 150}
-          fill={obj.fill as string}
-          cornerRadius={4}
-          shadowColor="rgba(0,0,0,0.15)"
-          shadowBlur={8}
-          shadowOffset={{ x: 2, y: 2 }}
-          shadowOpacity={0.3}
-        />
-        <Text
-          text={(obj.text as string) || 'Note'}
-          x={8}
-          y={8}
-          width={(obj.width || 150) - 16}
-          height={(obj.height || 150) - 16}
-          fontSize={obj.fontSize || 14}
-          fontFamily={(obj.fontFamily as string) || 'Inter'}
-          fill={STICKY_TEXT_COLORS[obj.fill as string] || '#374151'}
-          align="left"
-          onDblClick={() => handleTextDblClick(obj.id)}
-        />
-      </Group>
     );
   };
 
@@ -666,8 +1065,6 @@ export default function WhiteboardCanvas({
       onTransformEnd: () => handleObjectTransformEnd(obj.id),
     };
 
-    if (obj.type === 'sticky') return renderSticky(obj);
-
     if (obj.type === 'image') {
       return (
         <ImageObject
@@ -679,6 +1076,42 @@ export default function WhiteboardCanvas({
           onClick={() => {
             if (tool === 'pointer') onSelect([obj.id]);
           }}
+        />
+      );
+    }
+
+    if (obj.type === 'connector') {
+      const fromObj = objects.find((o) => o.id === obj.fromId);
+      const toObj = objects.find((o) => o.id === obj.toId);
+      let pts = (obj.points as number[]) || [0, 0, 100, 100];
+      if (fromObj && toObj) {
+        const fx = fromObj.x + (fromObj.width || 0) / 2;
+        const fy = fromObj.y + (fromObj.height || 0) / 2;
+        const tx = toObj.x + (toObj.width || 0) / 2;
+        const ty = toObj.y + (toObj.height || 0) / 2;
+        pts = [0, 0, tx - fx, ty - fy];
+      }
+      return (
+        <Arrow
+          key={obj.id}
+          id={obj.id}
+          x={fromObj ? fromObj.x + (fromObj.width || 0) / 2 : obj.x}
+          y={fromObj ? fromObj.y + (fromObj.height || 0) / 2 : obj.y}
+          points={pts}
+          stroke={obj.stroke || '#000'}
+          fill={obj.fill || obj.stroke || '#000'}
+          strokeWidth={obj.strokeWidth || 2}
+          pointerLength={10}
+          pointerWidth={10}
+          hitStrokeWidth={20}
+          opacity={obj.opacity ?? 1}
+          {...shapeShadow(obj)}
+          draggable={tool === 'pointer'}
+          onClick={() => {
+            if (tool === 'pointer') onSelect([obj.id]);
+          }}
+          onDragEnd={(e) => handleObjectDragEnd(obj.id, e)}
+          onTransformEnd={() => handleObjectTransformEnd(obj.id)}
         />
       );
     }
@@ -695,7 +1128,9 @@ export default function WhiteboardCanvas({
             tension={obj.tension as number | undefined}
             lineCap={obj.lineCap as 'round' | 'butt' | 'square' | undefined}
             lineJoin={obj.lineJoin as 'round' | 'bevel' | 'miter' | undefined}
+            dash={obj.dashed ? [8, 4] : undefined}
             hitStrokeWidth={20}
+            {...shapeShadow(obj)}
           />
         );
       case 'rect':
@@ -708,10 +1143,12 @@ export default function WhiteboardCanvas({
             stroke={obj.stroke || '#000'}
             fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
             strokeWidth={obj.strokeWidth || 2}
-            cornerRadius={4}
+            cornerRadius={obj.cornerRadius ?? 4}
+            dash={obj.dashed ? [8, 4] : undefined}
+            {...shapeShadow(obj)}
           />
         );
-      case 'circle':
+      case 'ellipse':
         return (
           <Circle
             key={obj.id}
@@ -721,6 +1158,8 @@ export default function WhiteboardCanvas({
             stroke={obj.stroke || '#000'}
             fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
             strokeWidth={obj.strokeWidth || 2}
+            dash={obj.dashed ? [8, 4] : undefined}
+            {...shapeShadow(obj)}
           />
         );
       case 'arrow':
@@ -735,6 +1174,8 @@ export default function WhiteboardCanvas({
             pointerLength={10}
             pointerWidth={10}
             hitStrokeWidth={20}
+            dash={obj.dashed ? [8, 4] : undefined}
+            {...shapeShadow(obj)}
           />
         );
       case 'text':
@@ -749,13 +1190,48 @@ export default function WhiteboardCanvas({
             fill={(obj.fill as string) || obj.stroke || '#000'}
             align={(obj.align as 'left' | 'center' | 'right') || 'left'}
             textDecoration={obj.underline ? 'underline' : ''}
+            width={(obj.width as number) || undefined}
             onDblClick={() => handleTextDblClick(obj.id)}
+            {...shapeShadow(obj)}
           />
         );
       case 'triangle':
         return renderTriangle(obj);
       case 'diamond':
+      case 'decision':
         return renderDiamond(obj);
+      case 'pentagon':
+      case 'hexagon':
+      case 'star':
+        return renderPolygonShape(obj);
+      case 'cloud':
+        return renderCloud(obj);
+      case 'cylinder':
+        return renderCylinder(obj);
+      case 'database':
+        return renderDatabase(obj);
+      case 'document':
+        return renderDocument(obj);
+      case 'folder':
+        return renderFolder(obj);
+      case 'process':
+        return (
+          <Rect
+            key={obj.id}
+            {...commonProps}
+            width={obj.width || 0}
+            height={obj.height || 0}
+            stroke={obj.stroke || '#000'}
+            fill={obj.fill === 'transparent' ? undefined : (obj.fill as string)}
+            strokeWidth={obj.strokeWidth || 2}
+            dash={obj.dashed ? [8, 4] : undefined}
+            {...shapeShadow(obj)}
+          />
+        );
+      case 'actor':
+        return renderActor(obj);
+      case 'mindmap':
+        return renderMindmapNode(obj);
       default:
         return null;
     }
@@ -773,6 +1249,7 @@ export default function WhiteboardCanvas({
             tension={0.5}
             lineCap="round"
             lineJoin="round"
+            dash={currentObject.dashed ? [8, 4] : undefined}
           />
         );
       case 'rect':
@@ -785,10 +1262,11 @@ export default function WhiteboardCanvas({
             stroke={currentObject.stroke || '#000'}
             fill={currentObject.fill === 'transparent' ? undefined : (currentObject.fill as string)}
             strokeWidth={currentObject.strokeWidth || 2}
-            cornerRadius={4}
+            cornerRadius={currentObject.cornerRadius ?? 4}
+            dash={currentObject.dashed ? [8, 4] : undefined}
           />
         );
-      case 'circle':
+      case 'ellipse':
         return (
           <Circle
             x={currentObject.x}
@@ -798,6 +1276,7 @@ export default function WhiteboardCanvas({
             stroke={currentObject.stroke || '#000'}
             fill={currentObject.fill === 'transparent' ? undefined : (currentObject.fill as string)}
             strokeWidth={currentObject.strokeWidth || 2}
+            dash={currentObject.dashed ? [8, 4] : undefined}
           />
         );
       case 'arrow':
@@ -811,12 +1290,45 @@ export default function WhiteboardCanvas({
             strokeWidth={currentObject.strokeWidth || 2}
             pointerLength={10}
             pointerWidth={10}
+            dash={currentObject.dashed ? [8, 4] : undefined}
           />
         );
       case 'triangle':
         return renderTriangle(currentObject, true);
       case 'diamond':
+      case 'decision':
         return renderDiamond(currentObject, true);
+      case 'pentagon':
+      case 'hexagon':
+      case 'star':
+        return renderPolygonShape(currentObject, true);
+      case 'cloud':
+        return renderCloud(currentObject, true);
+      case 'cylinder':
+        return renderCylinder(currentObject, true);
+      case 'database':
+        return renderDatabase(currentObject, true);
+      case 'document':
+        return renderDocument(currentObject, true);
+      case 'folder':
+        return renderFolder(currentObject, true);
+      case 'process':
+        return (
+          <Rect
+            x={currentObject.x}
+            y={currentObject.y}
+            width={currentObject.width || 0}
+            height={currentObject.height || 0}
+            stroke={currentObject.stroke || '#000'}
+            fill={currentObject.fill === 'transparent' ? undefined : (currentObject.fill as string)}
+            strokeWidth={currentObject.strokeWidth || 2}
+            dash={currentObject.dashed ? [8, 4] : undefined}
+          />
+        );
+      case 'actor':
+        return renderActor(currentObject, true);
+      case 'mindmap':
+        return renderMindmapNode(currentObject, true);
       default:
         return null;
     }
