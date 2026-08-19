@@ -232,22 +232,6 @@ export interface NotificationState {
   error: string | null;
 }
 
-export interface Stats {
-  totalWorkspaces: number;
-  totalRooms: number;
-  filesShared: number;
-  onlineMembers: number;
-  activeSessions: number;
-  recentActivity: number;
-  projectsCreated: number;
-  growth: {
-    workspaces: number;
-    rooms: number;
-    members: number;
-    activity: number;
-  };
-}
-
 export type ToolType =
   | 'pointer'
   | 'hand'
@@ -431,14 +415,6 @@ export interface FileState {
   folders: string[];
   isLoading: boolean;
   error: string | null;
-}
-
-export interface SearchResult {
-  type: 'task' | 'file' | 'message' | 'member' | 'workspace';
-  id: string;
-  title: string;
-  subtitle: string;
-  url: string;
 }
 
 export type MeetingStatus = 'scheduled' | 'ongoing' | 'completed' | 'cancelled';

@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFileSync } from 'fs';
+import { logger } from './utils/logger.js';
 import authRoutes from './routes/auth.js';
 import workspaceRoutes from './routes/workspace.js';
 import roomRoutes from './routes/room.js';
@@ -158,9 +159,9 @@ function printRoutes(): void {
     'ALL     /api/documents/*',
     'ALL     /api/meetings/*',
   ];
-  console.log('\n=== Registered Routes ===');
-  registeredRoutes.forEach((r) => console.log(`  ${r}`));
-  console.log(`\n  Total: ${registeredRoutes.length} route groups\n`);
+  logger.info('\n=== Registered Routes ===');
+  registeredRoutes.forEach((r) => logger.info(`  ${r}`));
+  logger.info(`\n  Total: ${registeredRoutes.length} route groups\n`);
 }
 
 export { printRoutes };
