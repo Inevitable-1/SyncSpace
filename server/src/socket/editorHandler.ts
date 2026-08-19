@@ -13,6 +13,8 @@ interface EditorUser {
 interface EditorRoomState {
   documents: Map<string, string>;
   users: Map<string, EditorUser>;
+  code: string;
+  language: string;
 }
 
 const editorRooms = new Map<string, EditorRoomState>();
@@ -40,6 +42,8 @@ function getEditorRoom(roomId: string): EditorRoomState {
     editorRooms.set(roomId, {
       documents: new Map(),
       users: new Map(),
+      code: '',
+      language: 'java',
     });
   }
   return editorRooms.get(roomId)!;
@@ -249,10 +253,166 @@ export function initializeEditorHandlers(io: Server): void {
       handleEditorLeave(socket, data.roomId);
     });
 
+    // ========== Code Editor Events ==========
+
+    socket.on('code:join', (data: { roomId: string; userName: string; userId: string }) => {
+      const { roomId, userName, userId } = data;
+
+      socket.join(`code:${roomId}`);
+
+      const room = getEditorRoom(roomId);
+      const colorIndex = room.users.size % CURSOR_COLORS.length;
+      const userColor = CURSOR_COLORS[colorIndex];
+
+      const editorUser: EditorUser = {
+        userId,
+        userName,
+        color: userColor,
+        cursor: null,
+        selection: null,
+        fileName: '',
+      };
+
+      room.users.set(socket.id, editorUser);
+
+      const usersList = Array.from(room.users.entries()).map(([id, u]) => ({
+        socketId: id,
+        ...u,
+        status: 'editing' as const,
+      }));
+
+      socket.emit('code:joined', {
+        code: room.code,
+        language: room.language,
+        users: usersList,
+      });
+
+      socket.to(`code:${roomId}`).emit('code:user-joined', {
+        socketId: socket.id,
+        ...editorUser,
+        status: 'editing',
+      });
+
+      logger.info(`${userName} joined code room ${roomId}`);
+    });
+
+    socket.on('code:leave', (data: { roomId: string }) => {
+      handleCodeLeave(socket, data.roomId);
+    });
+
+    socket.on(
+      'code:update',
+      (data: { roomId: string; code: string; cursor?: { line: number; column: number } }) => {
+        const { roomId, code, cursor } = data;
+        const room = getEditorRoom(roomId);
+
+        room.code = code;
+
+        const user = room.users.get(socket.id);
+        if (user && cursor) {
+          user.cursor = cursor;
+        }
+
+        const userName = user?.userName || 'Unknown';
+        const color = user?.color || '#999';
+
+        socket.to(`code:${roomId}`).emit('code:update', {
+          socketId: socket.id,
+          code,
+          cursor,
+          userName,
+          color,
+        });
+      },
+    );
+
+    socket.on('code:cursor', (data: { roomId: string; line: number; column: number }) => {
+      const { roomId, line, column } = data;
+      const room = getEditorRoom(roomId);
+      const user = room.users.get(socket.id);
+
+      if (user) {
+        user.cursor = { line, column };
+      }
+
+      socket.to(`code:${roomId}`).emit('code:cursor', {
+        socketId: socket.id,
+        userName: user?.userName || 'Unknown',
+        color: user?.color || '#999',
+        line,
+        column,
+      });
+    });
+
+    socket.on('code:language', (data: { roomId: string; language: string }) => {
+      const { roomId, language } = data;
+      const room = getEditorRoom(roomId);
+      room.language = language;
+
+      socket.to(`code:${roomId}`).emit('code:language', { language });
+    });
+
+    socket.on('code:save', async (data: { roomId: string; code: string; language: string }) => {
+      const { roomId, code, language } = data;
+
+      try {
+        const { CodeDocument } = await import('../models/CodeDocument.js');
+
+        const langExt: Record<string, string> = {
+          java: '.java',
+          python: '.py',
+          c: '.c',
+          cpp: '.cpp',
+        };
+        const ext = langExt[language] || '.txt';
+        const fileName = `Main${ext}`;
+        const filePath = `/${fileName}`;
+
+        const doc = await CodeDocument.findOne({
+          room: roomId,
+          path: filePath,
+          isDeleted: { $ne: true },
+        });
+
+        if (doc) {
+          doc.content = code;
+          doc.language = language;
+          doc.lastEditedBy = socket.data.userId;
+          doc.versionTimestamps.push(new Date());
+          await doc.save();
+        } else {
+          await CodeDocument.create({
+            name: fileName,
+            path: filePath,
+            content: code,
+            language,
+            room: roomId,
+            workspace: roomId,
+            createdBy: socket.data.userId,
+            lastEditedBy: socket.data.userId,
+            parentPath: '/',
+            isFolder: false,
+            versionTimestamps: [new Date()],
+          });
+        }
+
+        io.to(`code:${roomId}`).emit('code:saved', {
+          savedBy: socket.data.userId,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        logger.error('Failed to save code:', error);
+        socket.emit('code:save-error', { error: 'Failed to save' });
+      }
+    });
+
     socket.on('disconnect', () => {
       editorRooms.forEach((_, roomId) => {
         if (socket.rooms.has(`editor:${roomId}`)) {
           handleEditorLeave(socket, roomId);
+        }
+        if (socket.rooms.has(`code:${roomId}`)) {
+          handleCodeLeave(socket, roomId);
         }
       });
     });
@@ -274,6 +434,28 @@ function handleEditorLeave(socket: Socket, roomId: string): void {
     socket.leave(`editor:${roomId}`);
 
     logger.info(`${user.userName} left editor room ${roomId}`);
+
+    if (room.users.size === 0) {
+      editorRooms.delete(roomId);
+    }
+  }
+}
+
+function handleCodeLeave(socket: Socket, roomId: string): void {
+  const room = editorRooms.get(roomId);
+  if (!room) return;
+
+  const user = room.users.get(socket.id);
+  if (user) {
+    socket.to(`code:${roomId}`).emit('code:user-left', {
+      socketId: socket.id,
+      userId: user.userId,
+    });
+
+    room.users.delete(socket.id);
+    socket.leave(`code:${roomId}`);
+
+    logger.info(`${user.userName} left code room ${roomId}`);
 
     if (room.users.size === 0) {
       editorRooms.delete(roomId);

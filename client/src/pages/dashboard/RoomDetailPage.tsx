@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
@@ -17,11 +17,8 @@ import KanbanBoard from '../../components/tasks/KanbanBoard';
 import FileExplorer from '../../components/files/FileExplorer';
 import GlobalSearch from '../../components/collaboration/GlobalSearch';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import Spinner from '../../components/common/Spinner';
 import { useToast } from '../../components/common/Toast';
 import type { RootState, AppDispatch } from '../../store';
-
-const CodeIDE = lazy(() => import('../../components/editor/CodeIDE'));
 
 const ROOM_TYPE_BADGES: Record<string, { label: string; color: string }> = {
   whiteboard: { label: 'Whiteboard', color: '#8b5cf6' },
@@ -223,22 +220,25 @@ export default function RoomDetailPage() {
         );
 
       case 'code':
-        return workspaceId ? (
-          <Suspense
-            fallback={
-              <div className="card flex items-center justify-center py-20">
-                <Spinner size="lg" />
-              </div>
-            }
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-12 text-center"
           >
-            <CodeIDE roomId={room._id} workspaceId={workspaceId} workspaceName={wsName} />
-          </Suspense>
-        ) : (
-          <div className="card p-12 text-center">
-            <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-              Loading workspace...
+            <div className="text-6xl mb-4">💻</div>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+              Collaborative Code Editor
+            </h3>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-tertiary)' }}>
+              Write, edit, and collaborate on code in real-time with your team.
+              <br />
+              Supports Java, Python, C, and C++.
             </p>
-          </div>
+            <button onClick={() => navigate(`/code-editor/${room!._id}`)} className="btn-primary">
+              Open Code Editor →
+            </button>
+          </motion.div>
         );
 
       case 'files':

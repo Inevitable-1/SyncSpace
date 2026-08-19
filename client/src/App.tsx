@@ -40,6 +40,7 @@ import LoadingScreen from './components/logo/LoadingScreen';
 import Spinner from './components/common/Spinner';
 
 const WhiteboardPage = lazy(() => import('./pages/WhiteboardPage'));
+const CodeEditorPage = lazy(() => import('./pages/CodeEditorPage'));
 
 const INTRO_STORAGE_KEY = 'syncspace-intro-played';
 
@@ -233,6 +234,25 @@ function Root() {
                   }
                 >
                   <WhiteboardPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/code-editor/:roomId"
+            element={
+              <ProtectedRoute>
+                <Suspense
+                  fallback={
+                    <div
+                      className="min-h-screen flex items-center justify-center"
+                      style={{ background: '#1e1e1e' }}
+                    >
+                      <Spinner size="lg" />
+                    </div>
+                  }
+                >
+                  <CodeEditorPage />
                 </Suspense>
               </ProtectedRoute>
             }
