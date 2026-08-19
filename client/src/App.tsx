@@ -227,7 +227,7 @@ function Root() {
               <ProtectedRoute>
                 <Suspense
                   fallback={
-                    <div className="min-h-screen bg-surface-950 flex items-center justify-center">
+                    <div className="min-h-screen bg-white flex items-center justify-center">
                       <Spinner size="lg" />
                     </div>
                   }

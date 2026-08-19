@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, animate } from 'framer-motion';
 import {
@@ -16,7 +16,7 @@ import { fetchRooms } from '../../features/room/roomSlice';
 import { fetchMeetings } from '../../features/meeting/meetingSlice';
 import { setUser } from '../../features/auth/authSlice';
 import { profileService } from '../../services/profileService';
-import type { ContributionScore } from '../../services/profileService';
+import type { ContributionScore, HeatmapData } from '../../services/profileService';
 import type { RootState, AppDispatch } from '../../store';
 import type { User } from '../../types';
 
@@ -48,6 +48,208 @@ function persistUser(user: User) {
   }
 }
 
+function ContributionHeatmap({ heatmap }: { heatmap: HeatmapData }) {
+  const [tooltip, setTooltip] = useState<{
+    date: string;
+    count: number;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const { weeks, monthLabels } = useMemo(() => {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 364);
+
+    const startDay = startDate.getDay();
+    const adjustedStart = new Date(startDate);
+    adjustedStart.setDate(adjustedStart.getDate() - startDay);
+
+    const dateMap = new Map<string, number>();
+    heatmap.heatmap.forEach((d) => dateMap.set(d.date, d.count));
+
+    const weeks: { date: Date; count: number; dateStr: string }[][] = [];
+    let currentWeek: { date: Date; count: number; dateStr: string }[] = [];
+    const current = new Date(adjustedStart);
+    const monthLabels: { label: string; index: number }[] = [];
+    let lastMonth = -1;
+
+    while (current <= today) {
+      const dateStr = current.toISOString().split('T')[0];
+      const count = dateMap.get(dateStr) || 0;
+      currentWeek.push({ date: new Date(current), count, dateStr });
+
+      if (current.getMonth() !== lastMonth) {
+        monthLabels.push({
+          label: current.toLocaleDateString('en', { month: 'short' }),
+          index: weeks.length,
+        });
+        lastMonth = current.getMonth();
+      }
+
+      if (current.getDay() === 6) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    if (currentWeek.length > 0) weeks.push(currentWeek);
+
+    return { weeks, monthLabels };
+  }, [heatmap]);
+
+  const maxCount = useMemo(() => Math.max(1, ...heatmap.heatmap.map((d) => d.count)), [heatmap]);
+
+  const getIntensity = useCallback(
+    (count: number) => {
+      if (count === 0) return 0;
+      const ratio = count / maxCount;
+      if (ratio < 0.25) return 1;
+      if (ratio < 0.5) return 2;
+      if (ratio < 0.75) return 3;
+      return 4;
+    },
+    [maxCount],
+  );
+
+  const intensityColors = [
+    'bg-white/[0.04]',
+    'bg-emerald-900/60',
+    'bg-emerald-700/70',
+    'bg-emerald-500/80',
+    'bg-emerald-400',
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.3 }}
+      className="rounded-2xl p-4 sm:p-5 backdrop-blur-2xl border border-white/[0.08] bg-[rgba(255,255,255,0.04)]"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: 'rgba(0,229,255,0.15)' }}
+          >
+            <svg
+              className="w-4 h-4"
+              style={{ color: '#00E5FF' }}
+              viewBox="0 0 16 16"
+              fill="currentColor"
+            >
+              <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm-.5 3.5a.5.5 0 011 0v3h3a.5.5 0 010 1h-3.5v3a.5.5 0 01-1 0v-3H4a.5.5 0 010-1h3v-3z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-white">
+              {heatmap.totalContributions} contributions in the last year
+            </p>
+            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Activity heatmap
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            Less
+          </span>
+          {intensityColors.map((c, i) => (
+            <span key={i} className={`w-2.5 h-2.5 rounded-sm ${c} border border-white/[0.06]`} />
+          ))}
+          <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            More
+          </span>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto scrollbar-thin">
+        <div className="inline-flex flex-col gap-0.5 min-w-full">
+          <div className="flex gap-0.5 ml-8">
+            {monthLabels.map((m, i) => (
+              <span
+                key={i}
+                className="text-[9px] shrink-0"
+                style={{
+                  color: 'rgba(255,255,255,0.4)',
+                  marginLeft: i === 0 ? `${m.index * 13}px` : undefined,
+                }}
+              >
+                {m.label}
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-0.5">
+            <div className="flex flex-col gap-0.5 mr-1.5 justify-between py-0">
+              {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((d, i) => (
+                <span
+                  key={i}
+                  className="text-[8px] h-[11px] leading-[11px]"
+                  style={{ color: 'rgba(255,255,255,0.35)' }}
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+            {weeks.map((week, wi) => (
+              <div key={wi} className="flex flex-col gap-0.5">
+                {week.map((day) => (
+                  <div
+                    key={day.dateStr}
+                    className={`w-[11px] h-[11px] rounded-[2px] border border-white/[0.06] cursor-pointer transition-all hover:scale-150 hover:border-white/30 hover:z-10 relative ${intensityColors[getIntensity(day.count)]}`}
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTooltip({
+                        date: day.date.toLocaleDateString('en', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        }),
+                        count: day.count,
+                        x: rect.left + rect.width / 2,
+                        y: rect.top - 8,
+                      });
+                    }}
+                    onMouseLeave={() => setTooltip(null)}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {tooltip && (
+        <div
+          className="fixed z-[100] px-2.5 py-1.5 rounded-lg text-[10px] font-semibold text-white bg-[#0a1628] border border-white/15 shadow-xl pointer-events-none whitespace-nowrap"
+          style={{ left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, -100%)' }}
+        >
+          {tooltip.count} contribution{tooltip.count !== 1 ? 's' : ''} on {tooltip.date}
+        </div>
+      )}
+
+      {heatmap.recentActions.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-white/[0.06]">
+          <p className="text-[10px] font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            Recent activity
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {heatmap.recentActions.map((a, i) => (
+              <span
+                key={i}
+                className="px-2 py-0.5 rounded-md text-[9px] font-medium bg-white/[0.06] text-white/60 border border-white/[0.06]"
+              >
+                {a.action}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export default function ProfilePage() {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -55,6 +257,7 @@ export default function ProfilePage() {
   const { showToast } = useToast();
 
   const [contributions, setContributions] = useState<ContributionScore | null>(null);
+  const [heatmap, setHeatmap] = useState<HeatmapData | null>(null);
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
   const [editBio, setEditBio] = useState('');
@@ -70,6 +273,10 @@ export default function ProfilePage() {
     profileService
       .getContributionScore()
       .then(setContributions)
+      .catch(() => {});
+    profileService
+      .getHeatmapData()
+      .then(setHeatmap)
       .catch(() => {});
   }, [dispatch]);
 
@@ -353,6 +560,9 @@ export default function ProfilePage() {
           </motion.div>
         )}
       </div>
+
+      {/* Contribution Heatmap */}
+      {heatmap && heatmap.heatmap.length > 0 && <ContributionHeatmap heatmap={heatmap} />}
 
       {/* Edit Profile Modal */}
       {showEdit && (

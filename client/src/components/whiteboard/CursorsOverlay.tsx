@@ -12,7 +12,7 @@ export default function CursorsOverlay({ cursors }: CursorsOverlayProps) {
           key={socketId}
           className="absolute pointer-events-none z-30 transition-transform duration-100"
           style={{
-            transform: `translate(${cursor.x || 0}px, ${cursor.y || 0}px)`,
+            transform: `translate(${cursor.x || 0}px, ${cursor.y || 40}px)`,
           }}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="drop-shadow-md">

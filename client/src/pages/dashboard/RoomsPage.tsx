@@ -23,7 +23,6 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import Spinner from '../../components/common/Spinner';
 import { useToast } from '../../components/common/Toast';
 import { fetchRooms, createRoom, deleteRoom, joinRoom } from '../../features/room/roomSlice';
-import { fetchWorkspaces } from '../../features/workspace/workspaceSlice';
 import type { RootState, AppDispatch } from '../../store';
 import type { Room } from '../../types';
 
@@ -79,7 +78,6 @@ function RoomAvatar({ initial, color }: { initial: string; color: string }) {
 export default function RoomsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { rooms, isLoading } = useSelector((state: RootState) => state.room);
-  const { workspaces } = useSelector((state: RootState) => state.workspace);
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -93,7 +91,6 @@ export default function RoomsPage() {
 
   useEffect(() => {
     dispatch(fetchRooms(undefined));
-    dispatch(fetchWorkspaces());
   }, [dispatch]);
 
   useEffect(() => {
@@ -155,8 +152,6 @@ export default function RoomsPage() {
     else navigate(`/dashboard/rooms/${room._id}`);
   };
 
-  const defaultWorkspaceId = workspaces.length > 0 ? workspaces[0]._id : '';
-
   const stats = [
     {
       label: 'Total Rooms',
@@ -208,7 +203,6 @@ export default function RoomsPage() {
         <button
           onClick={() => setShowCreateModal(true)}
           className="btn-primary flex items-center gap-2"
-          disabled={workspaces.length === 0}
         >
           <PlusIcon className="w-4 h-4" /> New Room
         </button>
@@ -361,11 +355,7 @@ export default function RoomsPage() {
             }
             action={
               !search ? (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="btn-primary"
-                  disabled={workspaces.length === 0}
-                >
+                <button onClick={() => setShowCreateModal(true)} className="btn-primary">
                   Create Room
                 </button>
               ) : undefined
@@ -514,7 +504,6 @@ export default function RoomsPage() {
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreate}
-          workspaceId={defaultWorkspaceId}
           isLoading={isLoading}
         />
       )}

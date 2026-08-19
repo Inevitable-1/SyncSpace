@@ -4,7 +4,7 @@ export interface IRoomDocument extends Document {
   name: string;
   description: string;
   type: 'whiteboard' | 'code' | 'document';
-  workspace: mongoose.Types.ObjectId;
+  workspace?: mongoose.Types.ObjectId;
   owner: mongoose.Types.ObjectId;
   inviteCode: string;
   isActive: boolean;
@@ -38,7 +38,7 @@ const roomSchema = new Schema<IRoomDocument>(
     workspace: {
       type: Schema.Types.ObjectId,
       ref: 'Workspace',
-      required: true,
+      required: false,
     },
     owner: {
       type: Schema.Types.ObjectId,

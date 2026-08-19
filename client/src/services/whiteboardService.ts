@@ -20,4 +20,13 @@ export const whiteboardService = {
     const { data } = await api.put(`/whiteboards/${roomId}`, { objects });
     return data.data.whiteboard as WhiteboardData;
   },
+
+  async uploadImage(roomId: string, file: File): Promise<{ url: string; name: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const { data } = await api.post(`/whiteboards/${roomId}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data.data;
+  },
 };

@@ -52,8 +52,8 @@ export default function CreateRoomModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && selectedWsId) {
-      onSubmit({ name: name.trim(), type, workspaceId: selectedWsId });
+    if (name.trim()) {
+      onSubmit({ name: name.trim(), type, workspaceId: selectedWsId || '' });
       setName('');
       setType('whiteboard');
     }
@@ -101,7 +101,7 @@ export default function CreateRoomModal({
               autoFocus
             />
           </div>
-          {workspaces.length > 1 && (
+          {workspaces.length > 0 && (
             <div>
               <label
                 className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
@@ -115,6 +115,7 @@ export default function CreateRoomModal({
                 className="input-base"
                 style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
               >
+                <option value="">No workspace</option>
                 {workspaces.map((ws) => (
                   <option key={ws._id} value={ws._id}>
                     {ws.name}
@@ -167,7 +168,7 @@ export default function CreateRoomModal({
             <button
               type="submit"
               className="btn-primary flex items-center gap-2"
-              disabled={!name.trim() || !selectedWsId || isLoading}
+              disabled={!name.trim() || isLoading}
             >
               {isLoading ? <Spinner size="sm" className="text-white" /> : 'Create Room'}
             </button>

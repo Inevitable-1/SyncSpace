@@ -249,7 +249,22 @@ export interface Stats {
 }
 
 export type ToolType =
-  'pointer' | 'hand' | 'pencil' | 'line' | 'rectangle' | 'circle' | 'arrow' | 'text' | 'eraser';
+  | 'pointer'
+  | 'hand'
+  | 'pencil'
+  | 'line'
+  | 'rectangle'
+  | 'circle'
+  | 'arrow'
+  | 'text'
+  | 'eraser'
+  | 'triangle'
+  | 'diamond'
+  | 'sticky-yellow'
+  | 'sticky-green'
+  | 'sticky-blue'
+  | 'sticky-pink'
+  | 'image';
 
 export interface WhiteboardObject {
   id: string;
@@ -275,6 +290,11 @@ export interface WhiteboardObject {
   tension?: number;
   lineCap?: string;
   lineJoin?: string;
+  src?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  align?: 'left' | 'center' | 'right';
   [key: string]: unknown;
 }
 

@@ -15,32 +15,35 @@ export async function createRoom(req: AuthRequest, res: Response): Promise<void>
 
   const { name, type, description, workspaceId } = req.body;
 
-  if (!workspaceId) {
-    throw new AppError('Workspace ID is required', 400);
+  if (workspaceId) {
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace || workspace.isDeleted) {
+      throw new AppError('Workspace not found', 404);
+    }
+
+    const userId = req.user.userId;
+    const isMember =
+      workspace.owner.toString() === userId ||
+      workspace.members.some((m) => m.toString() === userId);
+
+    if (!isMember) {
+      throw new AppError('Not authorized to create rooms in this workspace', 403);
+    }
   }
 
-  const workspace = await Workspace.findById(workspaceId);
-
-  if (!workspace || workspace.isDeleted) {
-    throw new AppError('Workspace not found', 404);
-  }
-
-  const userId = req.user.userId;
-  const isMember =
-    workspace.owner.toString() === userId || workspace.members.some((m) => m.toString() === userId);
-
-  if (!isMember) {
-    throw new AppError('Not authorized to create rooms in this workspace', 403);
-  }
-
-  const room = await Room.create({
+  const roomData: Record<string, unknown> = {
     name,
     description: description || '',
     type: type || 'whiteboard',
-    workspace: workspaceId,
     owner: req.user.userId,
     participants: [req.user.userId],
-  });
+  };
+  if (workspaceId) {
+    roomData.workspace = workspaceId;
+  }
+
+  const room = await Room.create(roomData);
 
   await logActivity({
     userId: req.user.userId,

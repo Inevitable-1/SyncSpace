@@ -9,7 +9,7 @@ export const roomService = {
     return data.data.rooms as Room[];
   },
 
-  async create(data: { name: string; type?: string; workspaceId: string }): Promise<Room> {
+  async create(data: { name: string; type?: string; workspaceId?: string }): Promise<Room> {
     const { data: res } = await api.post('/rooms', data);
     return res.data.room as Room;
   },

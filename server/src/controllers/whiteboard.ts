@@ -72,3 +72,26 @@ export async function saveWhiteboard(req: AuthRequest, res: Response): Promise<v
     data: { whiteboard },
   });
 }
+
+export async function uploadImage(req: AuthRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    throw new AppError('Not authenticated', 401);
+  }
+
+  if (!req.file) {
+    throw new AppError('No file uploaded', 400);
+  }
+
+  const roomIdParam = req.params.roomId as string;
+  const room = await Room.findById(roomIdParam);
+  if (!room || room.isDeleted) {
+    throw new AppError('Room not found', 404);
+  }
+
+  const imageUrl = `/uploads/${req.file.filename}`;
+
+  res.json({
+    success: true,
+    data: { url: imageUrl, name: req.file.originalname },
+  });
+}

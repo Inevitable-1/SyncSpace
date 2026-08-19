@@ -19,6 +19,16 @@ export interface IWhiteboardObject {
   scaleX?: number;
   scaleY?: number;
   closed?: boolean;
+  radiusX?: number;
+  radiusY?: number;
+  tension?: number;
+  lineCap?: string;
+  lineJoin?: string;
+  src?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  align?: string;
   [key: string]: unknown;
 }
 
@@ -50,6 +60,16 @@ const whiteboardObjectSchema = new Schema<IWhiteboardObject>(
     scaleX: { type: Number },
     scaleY: { type: Number },
     closed: { type: Boolean },
+    radiusX: { type: Number },
+    radiusY: { type: Number },
+    tension: { type: Number },
+    lineCap: { type: String },
+    lineJoin: { type: String },
+    src: { type: String },
+    bold: { type: Boolean },
+    italic: { type: Boolean },
+    underline: { type: Boolean },
+    align: { type: String },
   },
   { _id: false, strict: false },
 );

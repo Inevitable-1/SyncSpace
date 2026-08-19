@@ -24,7 +24,7 @@ export const fetchRooms = createAsyncThunk(
 
 export const createRoom = createAsyncThunk(
   'room/create',
-  async (data: { name: string; type?: string; workspaceId: string }, { rejectWithValue }) => {
+  async (data: { name: string; type?: string; workspaceId?: string }, { rejectWithValue }) => {
     try {
       return await roomService.create(data);
     } catch (err: unknown) {
