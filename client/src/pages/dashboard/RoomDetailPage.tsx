@@ -204,7 +204,7 @@ export default function RoomDetailPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card p-12 text-center"
+            className="card p-12 text-center h-full flex flex-col items-center justify-center"
           >
             <div className="text-6xl mb-4">🎨</div>
             <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -224,7 +224,7 @@ export default function RoomDetailPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card p-12 text-center"
+            className="card p-12 text-center h-full flex flex-col items-center justify-center"
           >
             <div className="text-6xl mb-4">💻</div>
             <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -282,7 +282,7 @@ export default function RoomDetailPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-lg space-y-6"
+            className="max-w-lg space-y-6 h-full overflow-auto"
           >
             <div className="card p-6 space-y-4">
               <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
