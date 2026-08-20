@@ -1,3 +1,18 @@
+/**
+ * Application logger using Winston.
+ *
+ * Provides structured logging with timestamps, service name, and log levels.
+ * In development, logs are colorized for readability. In production, logs
+ * are output as JSON for machine parsing.
+ *
+ * Log levels (from most to least verbose):
+ * - debug: Detailed debugging information
+ * - info: General application events
+ * - warn: Warning conditions
+ * - error: Error conditions
+ *
+ * Configure via LOG_LEVEL environment variable (default: 'info').
+ */
 import winston from 'winston';
 
 export const logger = winston.createLogger({

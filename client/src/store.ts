@@ -1,3 +1,21 @@
+/**
+ * Redux Toolkit store configuration for SyncSpace.
+ *
+ * Central state management with 13 slices covering all application domains:
+ * - auth: User authentication state (tokens, user info, loading)
+ * - workspace: Workspace CRUD and selection
+ * - room: Room management within workspaces
+ * - chat: Chat messages and typing indicators
+ * - presence: Online user tracking per room
+ * - notification: In-app notifications
+ * - members: Workspace member management
+ * - invites: Workspace invitation management
+ * - tasks: Task management (kanban board)
+ * - files: File upload and management
+ * - editor: Code editor state
+ * - activity: Activity feed
+ * - meeting: Meeting scheduling and management
+ */
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './features/auth/authSlice';
 import workspaceReducer from './features/workspace/workspaceSlice';
@@ -31,5 +49,8 @@ export const store = configureStore({
   },
 });
 
+/** Root state type — use `useSelector((state: RootState) => ...)` */
 export type RootState = ReturnType<typeof store.getState>;
+
+/** Dispatch type — use `useAppDispatch()` from hooks/useAppDispatch.ts */
 export type AppDispatch = typeof store.dispatch;
