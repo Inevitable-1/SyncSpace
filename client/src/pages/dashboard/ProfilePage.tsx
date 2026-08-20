@@ -390,7 +390,7 @@ export default function ProfilePage() {
         style={{ background: '#08111f' }}
       >
         {/* Cover */}
-        <div className="h-16 sm:h-20 relative overflow-hidden">
+        <div className="h-44 sm:h-52 relative overflow-hidden">
           {displayCover ? (
             <img src={displayCover} alt="Cover" className="w-full h-full object-cover" />
           ) : (
@@ -403,7 +403,7 @@ export default function ProfilePage() {
                 'radial-gradient(circle at 20% 30%, rgba(0,229,255,0.35) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(124,58,237,0.25) 0%, transparent 45%)',
             }}
           />
-          <div className="absolute top-2 right-3">
+          <div className="absolute top-3 right-4">
             <label className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-semibold bg-black/30 text-white backdrop-blur-sm border border-white/20 hover:bg-black/50 transition-all cursor-pointer">
               {coverUploading ? (
                 <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -417,15 +417,15 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Info */}
-        <div className="px-4 pb-4 relative">
-          <div className="flex items-end gap-3 -mt-7">
+        <div className="px-4 sm:px-6 pb-5 relative">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3 -mt-12 sm:-mt-14">
             {/* Avatar */}
-            <label className="relative group cursor-pointer flex-shrink-0">
+            <label className="relative group cursor-pointer flex-shrink-0 self-center sm:self-auto">
               <motion.div
                 initial={{ scale: 0.85, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 16 }}
-                className="w-16 h-16 rounded-xl bg-gradient-to-br from-[#00E5FF] to-[#7C3AED] flex items-center justify-center text-white text-xl font-black shadow-lg ring-3 ring-[#08111f] overflow-hidden"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-[#00E5FF] to-[#7C3AED] flex items-center justify-center text-white text-3xl sm:text-4xl font-black shadow-xl ring-4 ring-[#08111f] overflow-hidden"
               >
                 {displayAvatar ? (
                   <img
@@ -437,11 +437,11 @@ export default function ProfilePage() {
                   displayName.charAt(0).toUpperCase()
                 )}
               </motion.div>
-              <div className="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 {avatarUploading ? (
-                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <PencilIcon className="w-4 h-4 text-white" />
+                  <PencilIcon className="w-5 h-5 text-white" />
                 )}
               </div>
               <input
@@ -453,9 +453,9 @@ export default function ProfilePage() {
             </label>
 
             {/* Name + Info */}
-            <div className="flex-1 min-w-0 pb-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base sm:text-lg font-black tracking-tight text-white truncate">
+            <div className="flex-1 min-w-0 pb-1 text-center sm:text-left">
+              <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white truncate">
                   {displayName}
                 </h1>
                 <span className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full text-[9px] font-bold bg-[#14F195]/15 text-[#14F195] border border-[#14F195]/30">
@@ -465,12 +465,15 @@ export default function ProfilePage() {
                   {role}
                 </span>
               </div>
-              <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <p
+                className="text-xs sm:text-sm truncate mt-0.5"
+                style={{ color: 'rgba(255,255,255,0.5)' }}
+              >
                 {displayEmail}
               </p>
               {displayBio && (
                 <p
-                  className="text-xs mt-0.5 line-clamp-1"
+                  className="text-xs sm:text-sm mt-0.5 line-clamp-1"
                   style={{ color: 'rgba(255,255,255,0.45)' }}
                 >
                   {displayBio}
@@ -485,9 +488,9 @@ export default function ProfilePage() {
                 setEditBio(displayBio || '');
                 setShowEdit(true);
               }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold bg-white/10 text-white border border-white/15 hover:bg-white/15 transition-all flex-shrink-0"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/10 text-white border border-white/15 hover:bg-white/15 transition-all flex-shrink-0 self-center sm:self-auto"
             >
-              <PencilIcon className="w-3 h-3" /> Edit
+              <PencilIcon className="w-3.5 h-3.5" /> Edit
             </button>
           </div>
         </div>
