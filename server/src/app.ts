@@ -71,7 +71,20 @@ export const io = new Server(httpServer, {
   cors: corsOptions,
 });
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
+        imgSrc: ["'self'", 'data:', 'https://unpkg.com'],
+        fontSrc: ["'self'", 'https://unpkg.com'],
+        connectSrc: ["'self'"],
+      },
+    },
+  }),
+);
 app.use(compression());
 app.use(cors(corsOptions));
 app.use(express.json());
