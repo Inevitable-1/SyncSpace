@@ -20,7 +20,6 @@ import DashboardHome from './pages/dashboard/DashboardHome';
 import WorkspacesPage from './pages/dashboard/WorkspacesPage';
 import WorkspaceDetailPage from './pages/dashboard/WorkspaceDetailPage';
 import RoomsPage from './pages/dashboard/RoomsPage';
-import RoomDetailPage from './pages/dashboard/RoomDetailPage';
 import SharedWithMePage from './pages/dashboard/SharedWithMePage';
 import ActivityPage from './pages/dashboard/ActivityPage';
 import TrashPage from './pages/dashboard/TrashPage';
@@ -39,8 +38,7 @@ import LogoMark from './components/logo/LogoMark';
 import LoadingScreen from './components/logo/LoadingScreen';
 import Spinner from './components/common/Spinner';
 
-const WhiteboardPage = lazy(() => import('./pages/WhiteboardPage'));
-const CodeEditorPage = lazy(() => import('./pages/CodeEditorPage'));
+const RoomRouter = lazy(() => import('./pages/rooms/RoomRouter'));
 
 const INTRO_STORAGE_KEY = 'syncspace-intro-played';
 
@@ -211,7 +209,23 @@ function Root() {
             <Route path="workspaces" element={<WorkspacesPage />} />
             <Route path="workspaces/:id" element={<WorkspaceDetailPage />} />
             <Route path="rooms" element={<RoomsPage />} />
-            <Route path="rooms/:id" element={<RoomDetailPage />} />
+            <Route
+              path="rooms/:id"
+              element={
+                <Suspense
+                  fallback={
+                    <div
+                      className="min-h-screen flex items-center justify-center"
+                      style={{ background: 'var(--bg-secondary)' }}
+                    >
+                      <Spinner size="lg" />
+                    </div>
+                  }
+                >
+                  <RoomRouter />
+                </Suspense>
+              }
+            />
             <Route path="meetings" element={<MeetingsPage />} />
             <Route path="shared" element={<SharedWithMePage />} />
             <Route path="activity" element={<ActivityPage />} />
@@ -222,41 +236,6 @@ function Root() {
             <Route path="insights" element={<InsightsPage />} />
             <Route path="files" element={<FileManagerPage />} />
           </Route>
-          <Route
-            path="/whiteboard/:roomId"
-            element={
-              <ProtectedRoute>
-                <Suspense
-                  fallback={
-                    <div className="min-h-screen bg-white flex items-center justify-center">
-                      <Spinner size="lg" />
-                    </div>
-                  }
-                >
-                  <WhiteboardPage />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/code-editor/:roomId"
-            element={
-              <ProtectedRoute>
-                <Suspense
-                  fallback={
-                    <div
-                      className="min-h-screen flex items-center justify-center"
-                      style={{ background: '#1e1e1e' }}
-                    >
-                      <Spinner size="lg" />
-                    </div>
-                  }
-                >
-                  <CodeEditorPage />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>
