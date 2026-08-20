@@ -18,6 +18,69 @@
 
 ---
 
+## Architecture Milestones
+
+### Milestone 1: Monolith → API Server (Day 1)
+**Date:** July 17 | **Commit:** `c792f09`
+
+Initial architecture established:
+- Express HTTP server serving REST endpoints
+- MongoDB with Mongoose ODM for data persistence
+- JWT authentication with access + refresh token pair
+- React SPA with Vite dev server
+- Docker Compose for local development
+
+```
+┌──────────────┐     ┌──────────────┐
+│  React SPA   │────▶│  Express API │────▶ MongoDB
+│  (Vite)      │     │  (Port 5000) │
+└──────────────┘     └──────────────┘
+```
+
+### Milestone 2: Real-time Layer (Day 5)
+**Date:** July 23 | **Commits:** `244ccef`, `c3287e3`, `2fbb190`
+
+Socket.IO added to Express server:
+- JWT authentication on socket connection
+- Room-based event routing (`room:${id}`, `chat:${id}`)
+- Presence tracking via `RoomPresence` model
+- Chat with typing indicators and read receipts
+
+```
+┌──────────────┐     ┌──────────────┐
+│  React SPA   │────▶│  Express API │────▶ MongoDB
+│  + Socket.IO │◄───▶│  + Socket.IO │
+└──────────────┘     └──────────────┘
+```
+
+### Milestone 3: Multi-Editor Architecture (Day 6)
+**Date:** July 25 | **Commit:** `27ce4d1`
+
+Dual editor system with separate socket handlers:
+- `whiteboardHandler.ts` — Canvas events (draw, cursor, undo/redo)
+- `editorHandler.ts` — Code events (code:join, code:update, code:cursor)
+- Each editor type gets its own Socket.IO room prefix
+
+### Milestone 4: Type-Based Room Routing (Day 20)
+**Date:** August 20 | **Commits:** `1282ce2`, `d9cb266`
+
+Room pages separated by type with dedicated layouts:
+- `RoomRouter` → dispatches to `WhiteboardRoom`, `CodeEditorRoom`, or `DocumentRoom`
+- Each room page owns its own socket connection (no sharing)
+- DashboardLayout detects room routes and adjusts layout accordingly
+
+```
+┌──────────────────────────────────────────────────┐
+│  RoomRouter (fetches room, checks type)          │
+│  ┌──────────┬──────────┬──────────┐              │
+│  │Whiteboard│CodeEditor│ Document │ ← 320px chat │
+│  │  Room    │  Room    │  Room    │   + feature  │
+│  └──────────┴──────────┴──────────┘              │
+└──────────────────────────────────────────────────┘
+```
+
+---
+
 ## Timeline
 
 ### Phase 1: Foundation & Authentication (July 17–21)
@@ -45,7 +108,7 @@ Jul 21 ────────────────────────�
      └── Application stability fixes
 ```
 
-**Milestone 1: Core Platform** — Authentication, workspace management, dashboard shell.
+**Milestone 1:** Core Platform — Authentication, workspace management, dashboard shell.
 
 ---
 
@@ -85,7 +148,7 @@ Jul 27 ────────────────────────�
      └── Production-ready collaboration platform
 ```
 
-**Milestone 2: Real-time Collaboration** — Chat, presence, collaborative code editing, whiteboard.
+**Milestone 2:** Real-time Collaboration — Chat, presence, collaborative code editing, whiteboard.
 
 ---
 
@@ -123,7 +186,7 @@ Aug 06 ────────────────────────�
      └── OpenAPI/Swagger documentation endpoint
 ```
 
-**Milestone 3: Review Ready** — Demo mode, documentation, stable release for Week 1 & 2 review.
+**Milestone 3:** Review Ready — Demo mode, documentation, stable release for Week 1 & 2 review.
 
 ---
 
@@ -164,7 +227,7 @@ Aug 14 ────────────────────────�
      └── Final UX polish
 ```
 
-**Milestone 4: Feature Complete** — All dashboard pages, analytics, meetings, branding.
+**Milestone 4:** Feature Complete — All dashboard pages, analytics, meetings, branding.
 
 ---
 
@@ -202,7 +265,7 @@ Aug 17 ────────────────────────�
      └── Registered routes logging
 ```
 
-**Milestone 5: Production Hardened** — Secure auth, rate limiting, real APIs, no mock data.
+**Milestone 5:** Production Hardened — Secure auth, rate limiting, real APIs, no mock data.
 
 ---
 
@@ -246,7 +309,7 @@ Aug 20 ────────────────────────�
      └── Run button + output console panel
 ```
 
-**Milestone 6: Production Release** — Room architecture, whiteboard overhaul, code execution, critical bug fixes.
+**Milestone 6:** Production Release — Room architecture, whiteboard overhaul, code execution, critical bug fixes.
 
 ---
 
@@ -303,6 +366,42 @@ Phase 1 (Jul 17)              Phase 2 (Jul 23)              Phase 6 (Aug 20)
 | Phase 5 | 18 | Aug 15–17 | Auth overhaul & security |
 | Phase 6 | 14 | Aug 18–20 | Visual overhaul & rooms |
 | **Total** | **88** | **Jul 17–Aug 20** | |
+
+---
+
+## Data Flow Architecture
+
+### Authentication Flow
+```
+Client                    Server                    Database
+  │                         │                         │
+  │── POST /auth/login ────▶│── bcrypt.compare ──────▶│
+  │                         │◀── user document ───────│
+  │◀── accessToken ─────────│                         │
+  │    + refreshToken       │── save refreshToken ───▶│
+  │    (httpOnly cookie)    │                         │
+```
+
+### Real-time Chat Flow
+```
+User A                    Socket.IO                 User B
+  │                         │                         │
+  │── send-message ────────▶│── ChatMessage.create ──▶│MongoDB
+  │                         │── emit receive-message ▶│
+  │                         │◀── broadcast ───────────│
+  │                         │   to chat:${roomId}     │
+```
+
+### Code Collaboration Flow
+```
+User A                    Socket.IO                 User B
+  │                         │                         │
+  │── code:update ─────────▶│── broadcast ───────────▶│
+  │   {code, cursor}        │   to code:${roomId}     │
+  │                         │                         │
+  │── code:save ───────────▶│── CodeDocument.save ──▶│MongoDB
+  │                         │── emit code:saved ─────▶│
+```
 
 ---
 
