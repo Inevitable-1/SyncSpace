@@ -16,19 +16,19 @@ import type { RootState } from '../../store';
 
 interface WhiteboardRoomProps {
   room: Room;
-  isConnected: boolean;
 }
 
-export default function WhiteboardRoom({ room, isConnected }: WhiteboardRoomProps) {
+export default function WhiteboardRoom({ room }: WhiteboardRoomProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
 
-  const { startTyping, stopTyping } = useCollaborationSocket({
-    roomId: room._id,
-    userName: user?.name || 'Anonymous',
-    enabled: true,
-  });
+  const { isConnected, startTyping, stopTyping, sendMessage, editMessageById, deleteMessageById } =
+    useCollaborationSocket({
+      roomId: room._id,
+      userName: user?.name || 'Anonymous',
+      enabled: true,
+    });
 
   const [objects, setObjects] = useState<WhiteboardObject[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -342,7 +342,14 @@ export default function WhiteboardRoom({ room, isConnected }: WhiteboardRoomProp
           <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
         </div>
         <div className="flex-1 min-h-0">
-          <ChatPanel roomId={room._id} onTypingStart={startTyping} onTypingStop={stopTyping} />
+          <ChatPanel
+            roomId={room._id}
+            onTypingStart={startTyping}
+            onTypingStop={stopTyping}
+            sendMessage={sendMessage}
+            onEditMessage={editMessageById}
+            onDeleteMessage={deleteMessageById}
+          />
         </div>
       </div>
 

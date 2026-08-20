@@ -4,13 +4,13 @@ import { useSelector } from 'react-redux';
 import MonacoEditor, { type OnMount } from '@monaco-editor/react';
 import { useCodeSocket, type CodeUser } from '../../hooks/useCodeSocket';
 import { useCollaborationSocket } from '../../hooks/useCollaborationSocket';
+import { codeService, type RunCodeResult } from '../../services/codeService';
 import ChatPanel from '../../components/chat/ChatPanel';
 import type { Room } from '../../types';
 import type { RootState } from '../../store';
 
 interface CodeEditorRoomProps {
   room: Room;
-  isConnected: boolean;
 }
 
 const LANGUAGES = [
@@ -45,23 +45,25 @@ int main() {
 }`,
 };
 
-export default function CodeEditorRoom({
-  room,
-  isConnected: _isCollabConnected,
-}: CodeEditorRoomProps) {
+export default function CodeEditorRoom({ room }: CodeEditorRoomProps) {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
 
-  const { startTyping, stopTyping } = useCollaborationSocket({
-    roomId: room._id,
-    userName: user?.name || 'Anonymous',
-    enabled: true,
-  });
+  const { startTyping, stopTyping, sendMessage, editMessageById, deleteMessageById } =
+    useCollaborationSocket({
+      roomId: room._id,
+      userName: user?.name || 'Anonymous',
+      enabled: true,
+    });
 
   const [language, setLanguage] = useState('java');
   const [code, setCode] = useState(DEFAULT_CODE.java);
   const [cursorPos, setCursorPos] = useState({ line: 1, column: 1 });
   const [isSaving, setIsSaving] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [output, setOutput] = useState<RunCodeResult | null>(null);
+  const [showOutput, setShowOutput] = useState(false);
+  const [outputHeight, _setOutputHeight] = useState(200);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const codeRef = useRef(code);
@@ -182,6 +184,22 @@ export default function CodeEditorRoom({
     emitCodeChange('');
   }, [emitCodeChange]);
 
+  const handleRun = useCallback(async () => {
+    if (isRunning) return;
+    setIsRunning(true);
+    setShowOutput(true);
+    setOutput(null);
+    try {
+      const result = await codeService.run(language, code);
+      setOutput(result);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to execute code';
+      setOutput({ output: '', error: msg, exitCode: 1, timedOut: false });
+    } finally {
+      setIsRunning(false);
+    }
+  }, [language, code, isRunning]);
+
   const langInfo = LANGUAGES.find((l) => l.id === language);
 
   return (
@@ -223,7 +241,14 @@ export default function CodeEditorRoom({
           <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
         </div>
         <div className="flex-1 min-h-0">
-          <ChatPanel roomId={room._id} onTypingStart={startTyping} onTypingStop={stopTyping} />
+          <ChatPanel
+            roomId={room._id}
+            onTypingStart={startTyping}
+            onTypingStop={stopTyping}
+            sendMessage={sendMessage}
+            onEditMessage={editMessageById}
+            onDeleteMessage={deleteMessageById}
+          />
         </div>
       </div>
 
@@ -271,6 +296,32 @@ export default function CodeEditorRoom({
           </div>
 
           <div className="flex items-center gap-1">
+            <button
+              onClick={handleRun}
+              disabled={isRunning}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded text-[11px] font-semibold transition-colors ${
+                isRunning
+                  ? 'bg-yellow-500/20 text-yellow-400 cursor-not-allowed'
+                  : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+              }`}
+            >
+              {isRunning ? (
+                <svg
+                  className="w-3.5 h-3.5 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4m-3.93 7.07l-2.83-2.83M7.76 7.76L4.93 4.93" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+              )}
+              {isRunning ? 'Running...' : 'Run'}
+            </button>
             <ToolbarButton onClick={handleSave} title="Save">
               {isSaving ? (
                 <svg
@@ -369,6 +420,61 @@ export default function CodeEditorRoom({
             }}
           />
         </div>
+
+        {showOutput && (
+          <div className="flex-shrink-0 border-t border-[#333]" style={{ height: outputHeight }}>
+            <div
+              className="flex items-center justify-between px-3 py-1.5"
+              style={{ background: '#252526' }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-medium text-gray-400">Output</span>
+                {output && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded ${
+                      output.exitCode === 0
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-red-500/20 text-red-400'
+                    }`}
+                  >
+                    {output.timedOut ? 'Timed Out' : `Exit: ${output.exitCode}`}
+                  </span>
+                )}
+                {isRunning && <span className="text-[10px] text-yellow-400">Executing...</span>}
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setOutput(null)}
+                  className="text-[10px] px-1.5 py-0.5 rounded text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setShowOutput(false)}
+                  className="text-[10px] px-1.5 py-0.5 rounded text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <div
+              className="overflow-auto font-mono text-xs leading-relaxed p-3"
+              style={{
+                height: `calc(100% - 32px)`,
+                background: '#1a1a1a',
+                color: '#d4d4d4',
+              }}
+            >
+              {!output && !isRunning && (
+                <span className="text-gray-600">Click Run to execute your code...</span>
+              )}
+              {output?.output && <pre className="whitespace-pre-wrap">{output.output}</pre>}
+              {output?.error && (
+                <pre className="whitespace-pre-wrap text-red-400">{output.error}</pre>
+              )}
+            </div>
+          </div>
+        )}
 
         <div
           className="flex items-center justify-between px-3 py-1 text-[10px] border-t flex-shrink-0"

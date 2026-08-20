@@ -29,6 +29,7 @@ import meetingRoutes from './routes/meeting.js';
 import profileRoutes from './routes/profile.js';
 import dashboardRoutes from './routes/dashboard.js';
 import sharedRoutes from './routes/shared.js';
+import codeRunRoutes from './routes/codeRun.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -130,6 +131,7 @@ app.use('/api/invites', apiRateLimit, inviteRoutes);
 app.use('/api/documents', apiRateLimit, codeDocumentRoutes);
 app.use('/api/meetings', apiRateLimit, meetingRoutes);
 app.use('/api/shared', apiRateLimit, sharedRoutes);
+app.use('/api/code/run', apiRateLimit, codeRunRoutes);
 
 initializeSocketHandlers(io);
 initializeEditorHandlers(io);

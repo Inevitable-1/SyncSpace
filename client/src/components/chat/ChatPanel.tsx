@@ -13,9 +13,19 @@ interface ChatPanelProps {
   roomId: string;
   onTypingStart?: () => void;
   onTypingStop?: () => void;
+  sendMessage?: (content: string, type?: string, replyTo?: string) => void;
+  onEditMessage?: (messageId: string, content: string) => void;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
-export default function ChatPanel({ roomId, onTypingStart, onTypingStop }: ChatPanelProps) {
+export default function ChatPanel({
+  roomId,
+  onTypingStart,
+  onTypingStop,
+  sendMessage: socketSendMessage,
+  onEditMessage,
+  onDeleteMessage,
+}: ChatPanelProps) {
   const dispatch = useAppDispatch();
   const { messages, isLoading, typingUsers } = useSelector((state: RootState) => state.chat);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -63,31 +73,49 @@ export default function ChatPanel({ roomId, onTypingStart, onTypingStop }: ChatP
   const handleSend = useCallback(
     async (content: string, type?: string) => {
       try {
-        await chatService.sendMessage(roomId, content, type, replyTo?._id);
+        if (socketSendMessage) {
+          socketSendMessage(content, type, replyTo?._id);
+        } else {
+          await chatService.sendMessage(roomId, content, type, replyTo?._id);
+        }
         setReplyTo(null);
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       } catch {
         // silent
       }
     },
-    [roomId, replyTo],
+    [roomId, replyTo, socketSendMessage],
   );
 
-  const handleEdit = useCallback(async (messageId: string, content: string) => {
-    try {
-      await chatService.editMessage(messageId, content);
-    } catch {
-      // silent
-    }
-  }, []);
+  const handleEdit = useCallback(
+    async (messageId: string, content: string) => {
+      try {
+        if (onEditMessage) {
+          onEditMessage(messageId, content);
+        } else {
+          await chatService.editMessage(messageId, content);
+        }
+      } catch {
+        // silent
+      }
+    },
+    [onEditMessage],
+  );
 
-  const handleDelete = useCallback(async (messageId: string) => {
-    try {
-      await chatService.deleteMessage(messageId);
-    } catch {
-      // silent
-    }
-  }, []);
+  const handleDelete = useCallback(
+    async (messageId: string) => {
+      try {
+        if (onDeleteMessage) {
+          onDeleteMessage(messageId);
+        } else {
+          await chatService.deleteMessage(messageId);
+        }
+      } catch {
+        // silent
+      }
+    },
+    [onDeleteMessage],
+  );
 
   const otherTypingUsers = typingUsers.filter((t) => t.userId !== user?.id);
 

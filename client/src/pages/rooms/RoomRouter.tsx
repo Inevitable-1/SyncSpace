@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchRooms } from '../../features/room/roomSlice';
-import { useCollaborationSocket } from '../../hooks/useCollaborationSocket';
 import Spinner from '../../components/common/Spinner';
 import type { RootState, AppDispatch } from '../../store';
 import WhiteboardRoom from './WhiteboardRoom';
@@ -14,7 +13,6 @@ export default function RoomRouter() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { rooms } = useSelector((state: RootState) => state.room);
-  const { user } = useSelector((state: RootState) => state.auth);
 
   const room = rooms.find((r) => r._id === id);
 
@@ -23,12 +21,6 @@ export default function RoomRouter() {
       dispatch(fetchRooms(undefined));
     }
   }, [dispatch, room, id]);
-
-  const { isConnected } = useCollaborationSocket({
-    roomId: id || '',
-    userName: user?.name || 'Anonymous',
-    enabled: !!id,
-  });
 
   if (!room) {
     return (
@@ -43,11 +35,11 @@ export default function RoomRouter() {
 
   switch (room.type) {
     case 'whiteboard':
-      return <WhiteboardRoom room={room} isConnected={isConnected} />;
+      return <WhiteboardRoom room={room} />;
     case 'code':
-      return <CodeEditorRoom room={room} isConnected={isConnected} />;
+      return <CodeEditorRoom room={room} />;
     case 'document':
-      return <DocumentRoom room={room} isConnected={isConnected} />;
+      return <DocumentRoom room={room} />;
     default:
       return (
         <div
