@@ -9,7 +9,8 @@ Real-time collaboration · Full-stack TypeScript · Enterprise-grade architectur
 [Features](#features) ·
 [Tech Stack](#tech-stack) ·
 [Installation](#installation) ·
-[API Reference](docs/API_REFERENCE.md)
+[Architecture](ARCHITECTURE.md) ·
+[Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -17,7 +18,7 @@ Real-time collaboration · Full-stack TypeScript · Enterprise-grade architectur
 
 ## Project Overview
 
-SyncSpace is a real-time collaborative workspace for teams. Think **Excalidraw meets VS Code Live Share** — a single platform where teams brainstorm on an infinite whiteboard, write code side by side, chat, and track work on kanban boards, all simultaneously.
+SyncSpace is a real-time collaborative workspace for teams. Think **Excalidraw meets VS Code Live Share** — a single platform where teams brainstorm on an infinite whiteboard, write code side by side, chat, and track work, all simultaneously.
 
 > **Mission:** Making collaboration simple, organized and accessible.
 > **Vision:** One workspace for every team.
@@ -28,25 +29,25 @@ SyncSpace is a real-time collaborative workspace for teams. Think **Excalidraw m
 
 | Module | Highlights |
 | ------ | ---------- |
-| **Real-time Whiteboard** | Drawing tools, shapes, text, undo/redo, multi-user cursors (React Konva) |
-| **Collaborative Code Editor** | Monaco Editor, live cursors, multi-file tabs, file explorer, themes |
-| **Team Chat** | Replies, emoji, typing indicators, seen status |
-| **Kanban Task Board** | 4-column drag-and-drop, priorities, labels, due dates, checklists |
+| **Real-time Whiteboard** | 12 advanced shapes, connector tool, templates, layer ops, PNG/JPG/JSON export (React Konva) |
+| **Collaborative Code Editor** | Monaco Editor, live cursors, multi-language (Java/Python/C/C++), code execution |
+| **Team Chat** | Real-time via Socket.IO, replies, emoji, typing indicators, read receipts |
+| **Document Editor** | Auto-save, multiple documents per room, create/rename/delete |
 
 ### Workspace Management
 
 - Create, edit, archive, trash/restore, favorite and search workspaces
 - Rooms for whiteboard, code and document collaboration
 - Roles (owner / admin / member), suspend / promote / demote
-- Email-based invitations with expiring tokens + join-by-invite-code
+- Email-based invitations with expiring tokens
 
 ### Platform
 
 - **Dashboard** — analytics, activity timeline, notifications, global search (Ctrl+K)
 - **Meetings** — schedule, join and host meetings with real-time status
 - **File Manager** — upload / download, folders, rename, trash, image previews
-- **Insights** — workspace activity and room distribution
-- **JWT Authentication** — multi-step registration with email verification, password hashing (bcrypt), refresh token rotation
+- **Insights** — workspace activity heatmap and room distribution charts
+- **JWT Authentication** — multi-step registration with email verification, refresh token rotation
 
 ## Tech Stack
 
@@ -58,18 +59,6 @@ SyncSpace is a real-time collaborative workspace for teams. Think **Excalidraw m
 | Database | MongoDB 7 |
 | Auth | JWT (access + rotating refresh) · bcrypt · httpOnly cookies |
 | Tooling | npm workspaces · Prettier · Docker Compose |
-
-## Screenshots
-
-> Screenshots coming soon — the app runs at `http://localhost:5173` after setup.
-
-| Landing & Hero | Whiteboard | Code Editor |
-| --- | --- | --- |
-| Animated logo, brand identity | Infinite canvas + cursors | Monaco with live cursors |
-
-| Kanban Board | Team Chat | Dashboard |
-| --- | --- | --- |
-| Drag-and-drop tasks | Threads + typing indicators | Analytics & activity feed |
 
 ## Installation
 
@@ -90,14 +79,12 @@ cd SyncSpace
 npm install
 
 # 3. Start MongoDB
-docker start syncspace-mongo
-# or: docker compose up -d mongo
+docker compose up -d mongo
 
 # 4. Seed demo account and test data
 npx tsx server/src/scripts/seed.ts
 
 # 5. Build and start
-npm run build -w server
 npm run dev
 ```
 
@@ -161,69 +148,35 @@ docker compose up -d
 ```
 SyncSpace/
 ├── client/                        # React frontend
-│   ├── public/                    # logo.svg, favicon.svg
 │   └── src/
-│       ├── components/            # common, layout, whiteboard, editor, chat,
-│       │                          # tasks, collaboration, meeting, files, logo
-│       ├── features/              # 12 Redux slices (auth, room, task, ...)
-│       ├── hooks/                 # useSocket, useCollaborationSocket, useEditorSocket
-│       ├── pages/                 # Landing, About, Features, auth + dashboard pages
-│       ├── services/              # API services (auth, workspace, room, meeting, ...)
+│       ├── components/            # 40 reusable components
+│       ├── features/              # 13 Redux slices
+│       ├── hooks/                 # useCollaborationSocket, useCodeSocket
+│       ├── pages/                 # 25 page components
+│       ├── services/              # 18 API services
 │       └── types/                 # Shared TypeScript interfaces
 ├── server/                        # Express backend
 │   └── src/
 │       ├── models/                # 16 Mongoose models
-│       ├── controllers/           # 15 controllers
-│       ├── routes/                # 15 route files
-│       ├── services/              # Business logic
-│       ├── repositories/          # Data access layer
-│       ├── dto/                   # Data transfer objects
+│       ├── controllers/           # 17 controllers
+│       ├── routes/                # 17 route files
 │       ├── socket/                # Socket.IO handlers (whiteboard, editor)
-│       ├── middleware/            # auth, errorHandler, upload
-│       ├── scripts/               # Database seeder
+│       ├── middleware/            # auth, errorHandler, rateLimit, upload
 │       └── utils/                 # tokens, logger, asyncHandler
-├── docker/                        # Dockerfiles
-├── docker-compose.yml             # MongoDB + server + client
 ├── docs/                          # Architecture, API reference, feature guide
-├── start.sh                       # One-command startup script
-└── package.json                   # npm workspaces root
+└── docker-compose.yml             # MongoDB + Redis + server + client
 ```
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register (name + email) |
-| POST | `/api/auth/login` | Login with email + password |
-| POST | `/api/auth/demo` | Instant demo login |
-| GET | `/api/auth/me` | Get current user |
-| GET | `/api/profile` | Get profile |
-| PUT | `/api/profile` | Update profile |
-| POST | `/api/workspaces` | Create workspace |
-| GET | `/api/workspaces` | List workspaces |
-| GET | `/api/workspaces/:id` | Get workspace detail |
-| DELETE | `/api/workspaces/:id` | Delete workspace |
-| POST | `/api/rooms` | Create room |
-| GET | `/api/workspaces/:id/rooms` | List workspace rooms |
-| POST | `/api/meetings` | Schedule meeting |
-| GET | `/api/meetings` | List meetings |
-| GET | `/api/dashboard` | Dashboard stats |
-| GET | `/api/activities` | Activity feed |
-| GET | `/api/notifications` | Notifications |
-
-Full API reference: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
 
 ## Documentation
 
-- [Architecture](docs/Architecture.md) — system design
-- [Feature Map](docs/FeatureMap.md) — every feature and its status
-- [Data Models](docs/DataModels.md) — all 16 MongoDB models
-- [Routes](docs/Routes.md) — frontend, backend and socket routes
-- [Components](docs/Components.md) — component inventory
-- [API Reference](docs/API_REFERENCE.md) — full endpoint list
-- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) — production notes
-- [Feature Guide](docs/FEATURE_GUIDE.md) — feature walkthrough
-- [Future Roadmap](docs/FutureRoadmap.md) — what's next
+| Document | Description |
+|----------|-------------|
+| [Architecture](ARCHITECTURE.md) | System design, auth flow, socket architecture, data models |
+| [Contributing](CONTRIBUTING.md) | Development setup, coding standards, common patterns |
+| [Work Log](WORK_LOG.md) | Daily activity log with commit references |
+| [Project Timeline](PROJECT_TIMELINE.md) | Milestone-based timeline with architecture evolution |
+| [API Reference](docs/API_REFERENCE.md) | Full endpoint documentation |
+| [Feature Guide](docs/FEATURE_GUIDE.md) | Feature walkthrough |
 
 ## License
 
