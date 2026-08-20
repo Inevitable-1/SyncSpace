@@ -3,7 +3,7 @@
   "info": {
     "title": "SyncSpace API",
     "version": "1.0.0",
-    "description": "Real-time collaborative workspace platform API.\n\nProvides authentication, workspaces, rooms, tasks, files, meetings, whiteboards, chat, and real-time collaboration via Socket.IO.",
+    "description": "Real-time collaborative workspace platform API.\n\nProvides authentication, workspaces, rooms, tasks, files, meetings, whiteboards, chat, code editing, and real-time collaboration via Socket.IO.",
     "contact": {
       "name": "Inevitable-1",
       "url": "https://github.com/Inevitable-1/SyncSpace"
@@ -16,362 +16,406 @@
     }
   ],
   "tags": [
-    {
-      "name": "Health",
-      "description": "Health check"
-    },
-    {
-      "name": "Auth",
-      "description": "Authentication & registration"
-    },
-    {
-      "name": "Profile",
-      "description": "User profile management"
-    },
-    {
-      "name": "Workspaces",
-      "description": "Workspace CRUD & membership"
-    },
-    {
-      "name": "Rooms",
-      "description": "Room management within workspaces"
-    },
-    {
-      "name": "Tasks",
-      "description": "Task management"
-    },
-    {
-      "name": "Files",
-      "description": "File upload & management"
-    },
-    {
-      "name": "Meetings",
-      "description": "Meeting scheduling"
-    },
-    {
-      "name": "Activities",
-      "description": "Activity feed"
-    },
-    {
-      "name": "Notifications",
-      "description": "User notifications"
-    },
-    {
-      "name": "Chat",
-      "description": "Real-time chat"
-    },
-    {
-      "name": "Dashboard",
-      "description": "Dashboard aggregated data"
-    },
-    {
-      "name": "Members",
-      "description": "Workspace member management"
-    },
-    {
-      "name": "Invites",
-      "description": "Workspace invitation system"
-    },
-    {
-      "name": "Whiteboards",
-      "description": "Whiteboard collaboration"
-    },
-    {
-      "name": "Documents",
-      "description": "Code document editing"
-    }
+    { "name": "Health", "description": "Health check endpoints" },
+    { "name": "Auth", "description": "Authentication, registration, and session management" },
+    { "name": "Profile", "description": "User profile management and gamification" },
+    { "name": "Workspaces", "description": "Workspace CRUD, favorites, archive, and membership" },
+    { "name": "Rooms", "description": "Room management within workspaces" },
+    { "name": "Tasks", "description": "Task management with comments" },
+    { "name": "Files", "description": "File upload, download, and management" },
+    { "name": "Meetings", "description": "Meeting scheduling and lifecycle" },
+    { "name": "Activities", "description": "Activity feed and audit trail" },
+    { "name": "Notifications", "description": "User notification management" },
+    { "name": "Chat", "description": "Real-time messaging within rooms" },
+    { "name": "Dashboard", "description": "Aggregated dashboard data" },
+    { "name": "Members", "description": "Workspace member management" },
+    { "name": "Invites", "description": "Workspace invitation system" },
+    { "name": "Whiteboards", "description": "Whiteboard state and image uploads" },
+    { "name": "Documents", "description": "Code document editing and file tree" },
+    { "name": "Code Runner", "description": "Server-side code execution" },
+    { "name": "Shared", "description": "Shared resources across workspaces" }
   ],
   "components": {
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "bearerFormat": "JWT",
+        "description": "JWT access token obtained from login or registration"
       }
     },
     "schemas": {
       "User": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "avatar": {
-            "type": "string"
-          },
-          "bio": {
-            "type": "string"
-          },
-          "isEmailVerified": {
-            "type": "boolean"
-          }
+          "id": { "type": "string" },
+          "name": { "type": "string", "minLength": 2, "maxLength": 50 },
+          "email": { "type": "string", "format": "email" },
+          "avatar": { "type": "string" },
+          "coverImage": { "type": "string" },
+          "bio": { "type": "string", "maxLength": 300 },
+          "isEmailVerified": { "type": "boolean" }
         }
       },
       "Workspace": {
         "type": "object",
         "properties": {
-          "_id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "color": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          },
-          "owner": {
-            "type": "string"
-          },
-          "members": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "isPublic": {
-            "type": "boolean"
-          },
-          "inviteCode": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "_id": { "type": "string" },
+          "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+          "description": { "type": "string", "maxLength": 500 },
+          "color": { "type": "string", "description": "Hex color code", "default": "#6366f1" },
+          "icon": { "type": "string" },
+          "isPublic": { "type": "boolean", "default": false },
+          "inviteCode": { "type": "string", "description": "Auto-generated unique invite code" },
+          "owner": { "type": "string", "description": "User ID of the workspace owner" },
+          "members": { "type": "array", "items": { "type": "string" }, "description": "Array of User IDs" },
+          "isFavorite": { "type": "boolean", "default": false },
+          "isArchived": { "type": "boolean", "default": false },
+          "isDeleted": { "type": "boolean", "default": false },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
       "Room": {
         "type": "object",
         "properties": {
-          "_id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "whiteboard",
-              "code",
-              "file",
-              "chat"
-            ]
-          },
-          "workspace": {
-            "type": "string"
-          },
-          "owner": {
-            "type": "string"
-          },
-          "isActive": {
-            "type": "boolean"
-          }
+          "_id": { "type": "string" },
+          "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+          "description": { "type": "string", "maxLength": 500 },
+          "type": { "type": "string", "enum": ["whiteboard", "code", "document"], "description": "Room collaboration type" },
+          "workspace": { "type": "string", "description": "Parent workspace ID (optional)" },
+          "owner": { "type": "string", "description": "User ID of the room creator" },
+          "inviteCode": { "type": "string", "description": "Auto-generated unique invite code" },
+          "isActive": { "type": "boolean", "default": true },
+          "participants": { "type": "array", "items": { "type": "string" }, "description": "Array of User IDs" },
+          "isDeleted": { "type": "boolean", "default": false },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         }
       },
       "Task": {
         "type": "object",
         "properties": {
-          "_id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "workspace": {
-            "type": "string"
-          },
-          "room": {
-            "type": "string"
-          },
-          "creator": {
-            "type": "string"
-          },
-          "assignee": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "todo",
-              "in-progress",
-              "review",
-              "done"
-            ]
-          },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "low",
-              "medium",
-              "high",
-              "urgent"
-            ]
-          },
-          "labels": {
+          "_id": { "type": "string" },
+          "title": { "type": "string", "maxLength": 200 },
+          "description": { "type": "string", "maxLength": 5000 },
+          "workspace": { "type": "string" },
+          "room": { "type": "string", "description": "Optional linked room ID" },
+          "creator": { "type": "string" },
+          "assignee": { "type": "string", "description": "Optional assigned user ID" },
+          "status": { "type": "string", "enum": ["todo", "in-progress", "review", "completed"] },
+          "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+          "labels": { "type": "array", "items": { "type": "string" } },
+          "dueDate": { "type": "string", "format": "date-time" },
+          "checklist": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "object",
+              "properties": {
+                "text": { "type": "string" },
+                "done": { "type": "boolean" }
+              }
             }
           },
-          "checklist": {
-            "type": "array"
-          }
+          "order": { "type": "number", "description": "Sort order" },
+          "isDeleted": { "type": "boolean", "default": false },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TaskComment": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "task": { "type": "string" },
+          "author": { "type": "string" },
+          "content": { "type": "string", "maxLength": 2000 },
+          "edited": { "type": "boolean" },
+          "editedAt": { "type": "string", "format": "date-time" },
+          "isDeleted": { "type": "boolean", "default": false },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Meeting": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+          "description": { "type": "string", "maxLength": 500 },
+          "workspace": { "type": "string" },
+          "host": { "type": "string" },
+          "participants": { "type": "array", "items": { "type": "string" } },
+          "scheduledAt": { "type": "string", "format": "date-time" },
+          "duration": { "type": "integer", "description": "Duration in minutes", "default": 30, "minimum": 5 },
+          "status": { "type": "string", "enum": ["scheduled", "ongoing", "completed", "cancelled"] },
+          "agenda": { "type": "string", "maxLength": 500 },
+          "notes": { "type": "string", "maxLength": 5000 },
+          "meetingCode": { "type": "string", "description": "Unique auto-generated meeting code" },
+          "endedAt": { "type": "string", "format": "date-time" },
+          "isDeleted": { "type": "boolean", "default": false },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "room": { "type": "string" },
+          "sender": { "$ref": "#/components/schemas/User" },
+          "content": { "type": "string", "maxLength": 5000 },
+          "type": { "type": "string", "enum": ["text", "emoji", "system"] },
+          "replyTo": { "type": "string", "description": "ID of the message being replied to" },
+          "edited": { "type": "boolean", "default": false },
+          "editedAt": { "type": "string", "format": "date-time" },
+          "isDeleted": { "type": "boolean", "default": false },
+          "deletedAt": { "type": "string", "format": "date-time" },
+          "seenBy": { "type": "array", "items": { "type": "string" }, "description": "User IDs who have seen this message" },
+          "createdAt": { "type": "string", "format": "date-time" }
         }
       },
       "Notification": {
         "type": "object",
         "properties": {
-          "_id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "info",
-              "success",
-              "warning",
-              "error"
-            ]
-          },
-          "isRead": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "_id": { "type": "string" },
+          "user": { "type": "string" },
+          "title": { "type": "string", "maxLength": 200 },
+          "message": { "type": "string", "maxLength": 500 },
+          "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+          "entityType": { "type": "string", "enum": ["workspace", "room", "task", "meeting", "member", "invite", "file"] },
+          "entityId": { "type": "string" },
+          "workspaceId": { "type": "string" },
+          "isRead": { "type": "boolean", "default": false },
+          "createdAt": { "type": "string", "format": "date-time" }
         }
       },
       "Activity": {
         "type": "object",
         "properties": {
-          "_id": {
-            "type": "string"
+          "_id": { "type": "string" },
+          "user": { "$ref": "#/components/schemas/User" },
+          "action": { "type": "string", "description": "Activity action (e.g. workspace.created, room.joined)" },
+          "entityType": { "type": "string", "enum": ["workspace", "room", "task", "meeting", "member", "invite", "file", "auth", "whiteboard"] },
+          "entityId": { "type": "string" },
+          "entityName": { "type": "string" },
+          "metadata": { "type": "object", "description": "Additional context data" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "UploadedFile": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "originalName": { "type": "string" },
+          "mimeType": { "type": "string" },
+          "size": { "type": "integer", "description": "File size in bytes" },
+          "workspace": { "type": "string" },
+          "room": { "type": "string" },
+          "folder": { "type": "string", "default": "/" },
+          "uploader": { "type": "string" },
+          "isDeleted": { "type": "boolean", "default": false },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "userId": { "$ref": "#/components/schemas/User" },
+          "workspaceId": { "type": "string" },
+          "role": { "type": "string", "enum": ["owner", "admin", "member"] },
+          "status": { "type": "string", "enum": ["active", "invited", "suspended"] },
+          "joinedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Invite": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "workspaceId": { "type": "string" },
+          "invitedBy": { "type": "string" },
+          "role": { "type": "string", "enum": ["admin", "member"] },
+          "status": { "type": "string", "enum": ["pending", "accepted", "declined", "expired"] },
+          "token": { "type": "string" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Whiteboard": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "roomId": { "type": "string" },
+          "objects": {
+            "type": "array",
+            "items": { "type": "object", "description": "Whiteboard shape object with flexible properties" }
           },
-          "user": {
-            "$ref": "#/components/schemas/User"
+          "createdBy": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CodeDocument": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string", "maxLength": 255 },
+          "path": { "type": "string", "description": "Unique file path within the room" },
+          "content": { "type": "string" },
+          "language": { "type": "string", "description": "Auto-detected from file extension" },
+          "room": { "type": "string" },
+          "workspace": { "type": "string" },
+          "createdBy": { "type": "string" },
+          "lastEditedBy": { "type": "string" },
+          "parentPath": { "type": "string", "default": "/" },
+          "isFolder": { "type": "boolean", "default": false },
+          "isDeleted": { "type": "boolean", "default": false },
+          "versionTimestamps": { "type": "array", "items": { "type": "string", "format": "date-time" } },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Dashboard": {
+        "type": "object",
+        "properties": {
+          "counts": {
+            "type": "object",
+            "properties": {
+              "workspaces": { "type": "integer" },
+              "rooms": { "type": "integer" },
+              "meetings": { "type": "integer" },
+              "members": { "type": "integer" },
+              "activities": { "type": "integer" },
+              "notifications": { "type": "integer" },
+              "tasks": { "type": "integer" }
+            }
           },
-          "action": {
-            "type": "string"
-          },
-          "entityType": {
-            "type": "string"
-          },
-          "entityId": {
-            "type": "string"
-          },
-          "entityName": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "recentActivity": { "type": "array", "items": { "$ref": "#/components/schemas/Activity" } },
+          "upcomingMeetings": { "type": "array", "items": { "$ref": "#/components/schemas/Meeting" } }
         }
       },
       "ContributionScore": {
         "type": "object",
         "properties": {
-          "score": {
-            "type": "integer"
-          },
-          "level": {
-            "type": "integer"
-          },
-          "nextLevelAt": {
-            "type": "integer"
-          },
-          "progress": {
-            "type": "number"
-          },
-          "badges": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
+          "score": { "type": "integer" },
+          "level": { "type": "integer" },
+          "nextLevelAt": { "type": "integer" },
+          "progress": { "type": "number" },
+          "badges": { "type": "array", "items": { "type": "string" } },
           "breakdown": {
             "type": "object",
             "properties": {
-              "workspacesCreated": {
-                "type": "integer"
-              },
-              "roomsCreated": {
-                "type": "integer"
-              },
-              "filesUploaded": {
-                "type": "integer"
-              },
-              "meetingsCreated": {
-                "type": "integer"
-              },
-              "invitesSent": {
-                "type": "integer"
-              },
-              "tasksCreated": {
-                "type": "integer"
-              },
-              "totalActivities": {
-                "type": "integer"
+              "workspacesCreated": { "type": "integer" },
+              "roomsCreated": { "type": "integer" },
+              "filesUploaded": { "type": "integer" },
+              "meetingsCreated": { "type": "integer" },
+              "invitesSent": { "type": "integer" },
+              "tasksCreated": { "type": "integer" },
+              "totalActivities": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "HeatmapData": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": { "type": "string", "format": "date" },
+                "count": { "type": "integer" }
               }
             }
           }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "totalPages": { "type": "integer" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "default": false },
+          "message": { "type": "string" }
+        }
+      },
+      "Success": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "default": true },
+          "message": { "type": "string" }
         }
       }
     }
   },
   "security": [
-    {
-      "bearerAuth": []
-    }
+    { "bearerAuth": [] }
   ],
   "paths": {
-    "/api/health": {
+    "/": {
       "get": {
-        "tags": [
-          "Health"
-        ],
-        "summary": "Health check",
+        "tags": ["Health"],
+        "summary": "API root",
+        "description": "Returns basic API status information",
         "security": [],
         "responses": {
           "200": {
-            "description": "Service is healthy"
+            "description": "API is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "version": { "type": "string" }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
+    "/api/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Returns service health status and current timestamp",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "timestamp": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
     "/api/auth/register": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Register a new user",
+        "description": "Step 1 of registration: collects name and email, creates a pending user, sends a verification email. If the email already exists but is unverified, refreshes the verification token.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -379,23 +423,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email",
-                  "name",
-                  "password"
-                ],
+                "required": ["email", "name"],
                 "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "name": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string",
-                    "minLength": 8
-                  }
+                  "name": { "type": "string", "minLength": 2, "maxLength": 50, "description": "Display name" },
+                  "email": { "type": "string", "format": "email", "description": "Valid email address" }
                 }
               }
             }
@@ -403,58 +434,59 @@
         },
         "responses": {
           "201": {
-            "description": "Verification email sent"
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "409": {
-            "description": "Conflict"
-          }
-        }
-      }
-    },
-    "/api/auth/verify-email": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "summary": "Verify email with token",
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "token"
-                ],
-                "properties": {
-                  "token": {
-                    "type": "string"
+            "description": "Verification email sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "devToken": { "type": "string", "description": "Dev-only verification token" }
                   }
                 }
               }
             }
-          }
-        },
+          },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": { "description": "Email already verified" }
+        }
+      }
+    },
+    "/api/auth/verify-email/{token}": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Verify email with token",
+        "description": "Validates the verification link token (does NOT consume it). Returns the user's name and email for the password setup page.",
+        "security": [],
+        "parameters": [
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Email verification token" }
+        ],
         "responses": {
           "200": {
-            "description": "Email verified"
+            "description": "Email verified, user details returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "name": { "type": "string" },
+                    "email": { "type": "string", "format": "email" }
+                  }
+                }
+              }
+            }
           },
-          "400": {
-            "description": "Validation error"
-          }
+          "400": { "description": "Invalid or expired token" }
         }
       }
     },
     "/api/auth/set-password": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Set initial password after verification",
+        "description": "Final registration step: sets the password, marks email verified, and clears the verification token. Does NOT auto-login.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -462,17 +494,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "token",
-                  "password"
-                ],
+                "required": ["token", "password"],
                 "properties": {
-                  "token": {
-                    "type": "string"
-                  },
+                  "token": { "type": "string", "description": "Email verification token" },
                   "password": {
                     "type": "string",
-                    "minLength": 8
+                    "minLength": 8,
+                    "description": "Password (min 8 chars, must contain uppercase, lowercase, and number)"
                   }
                 }
               }
@@ -480,21 +508,42 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Account created"
-          },
-          "400": {
-            "description": "Validation error"
+          "200": { "description": "Account created successfully" },
+          "400": { "description": "Validation error or weak password" }
+        }
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Resend verification email",
+        "description": "Resends a fresh verification email for unverified accounts.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                }
+              }
+            }
           }
+        },
+        "responses": {
+          "200": { "description": "Verification email resent" },
+          "400": { "description": "Email already verified or not found" }
         }
       }
     },
     "/api/auth/login": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Login with email and password",
+        "description": "Validates credentials, issues access + refresh token pair. Rejects unverified accounts with 403.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -502,18 +551,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email",
-                  "password"
-                ],
+                "required": ["email", "password"],
                 "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "password": {
-                    "type": "string"
-                  }
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
                 }
               }
             }
@@ -521,33 +562,90 @@
         },
         "responses": {
           "200": {
-            "description": "Login successful"
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "accessToken": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
           },
-          "401": {
-            "description": "Unauthorized"
+          "401": { "description": "Invalid credentials" },
+          "403": { "description": "Email not verified" }
+        }
+      }
+    },
+    "/api/auth/demo": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Demo login",
+        "description": "Creates or uses a demo account (demo@syncspace.dev / demo123) and issues tokens.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Demo login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "accessToken": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
           }
+        }
+      }
+    },
+    "/api/auth/refresh-token": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh access token",
+        "description": "Reads refresh token from cookie, validates, rotates (deletes old, creates new), and issues a new access token.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Token refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "accessToken": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid or expired refresh token" }
         }
       }
     },
     "/api/auth/logout": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Logout and clear session",
+        "description": "Deletes the refresh token from DB and clears the cookie.",
         "responses": {
-          "200": {
-            "description": "Logged out"
-          }
+          "200": { "description": "Logged out successfully" }
         }
       }
     },
     "/api/auth/forgot-password": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Request password reset email",
+        "description": "Generates a password reset token, stores hashed version in DB, and sends a reset email. In dev, returns the raw token.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -555,32 +653,25 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email"
-                ],
+                "required": ["email"],
                 "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  }
+                  "email": { "type": "string", "format": "email" }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Reset email sent"
-          }
+          "200": { "description": "Reset email sent" },
+          "404": { "description": "Email not found" }
         }
       }
     },
     "/api/auth/reset-password": {
       "post": {
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "summary": "Reset password with token",
+        "description": "Validates the reset token, sets the new password, and deletes ALL refresh tokens for the user (force re-login everywhere).",
         "security": [],
         "requestBody": {
           "required": true,
@@ -588,17 +679,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "token",
-                  "password"
-                ],
+                "required": ["token", "password"],
                 "properties": {
-                  "token": {
-                    "type": "string"
-                  },
+                  "token": { "type": "string", "description": "Password reset token" },
                   "password": {
                     "type": "string",
-                    "minLength": 8
+                    "minLength": 8,
+                    "description": "New password (min 8 chars, must contain uppercase, lowercase, and number)"
                   }
                 }
               }
@@ -606,138 +693,165 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Password reset"
-          },
-          "400": {
-            "description": "Validation error"
-          }
+          "200": { "description": "Password reset successful" },
+          "400": { "description": "Invalid or expired token" }
         }
       }
     },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current authenticated user",
+        "description": "Returns the authenticated user's profile.",
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Not authenticated" }
+        }
+      }
+    },
+
     "/api/profile": {
       "get": {
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "summary": "Get current user profile",
         "responses": {
           "200": {
-            "description": "Success"
-          }
+            "description": "User profile",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "user": { "$ref": "#/components/schemas/User" } } } } }
+          },
+          "401": { "description": "Not authenticated" }
         }
       },
       "put": {
-        "tags": [
-          "Profile"
-        ],
-        "summary": "Update profile (name, avatar, bio)",
+        "tags": ["Profile"],
+        "summary": "Update profile",
+        "description": "Updates name, avatar, bio, and cover image.",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "avatar": {
-                    "type": "string"
-                  },
-                  "bio": {
-                    "type": "string"
-                  }
+                  "name": { "type": "string", "minLength": 2, "maxLength": 50 },
+                  "avatar": { "type": "string" },
+                  "coverImage": { "type": "string" },
+                  "bio": { "type": "string", "maxLength": 300 }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Profile updated" },
+          "401": { "description": "Not authenticated" }
         }
       },
       "delete": {
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "summary": "Delete account",
+        "description": "Deletes user's Member records, removes from Workspace member lists, deletes the user, and clears refresh token cookie.",
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Account deleted" },
+          "401": { "description": "Not authenticated" }
         }
       }
     },
     "/api/profile/password": {
       "put": {
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "summary": "Change password",
+        "description": "Validates current password, then sets a new one.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "currentPassword",
-                  "newPassword"
-                ],
+                "required": ["currentPassword", "newPassword"],
                 "properties": {
-                  "currentPassword": {
-                    "type": "string"
-                  },
-                  "newPassword": {
-                    "type": "string",
-                    "minLength": 8
-                  }
+                  "currentPassword": { "type": "string" },
+                  "newPassword": { "type": "string", "minLength": 8, "description": "Must contain uppercase, lowercase, and number" }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
+          "200": { "description": "Password changed" },
+          "401": { "description": "Current password is incorrect" }
         }
       }
     },
     "/api/profile/contributions": {
       "get": {
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "summary": "Get contribution score and badges",
+        "description": "Calculates gamification score based on workspaces, rooms, files, meetings, invites, and tasks. Returns level, badges, and breakdown.",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Contribution data",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/ContributionScore" } } } } }
           }
         }
       }
     },
-    "/api/workspaces": {
+    "/api/profile/heatmap": {
       "get": {
-        "tags": [
-          "Workspaces"
-        ],
-        "summary": "List workspaces",
+        "tags": ["Profile"],
+        "summary": "Get activity heatmap data",
+        "description": "Returns 12-month GitHub-style activity heatmap data.",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Heatmap data",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/HeatmapData" } } } } }
+          }
+        }
+      }
+    },
+    "/api/profile/calendar": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get monthly calendar data",
+        "description": "Returns daily activity counts and action breakdown for a specific month.",
+        "parameters": [
+          { "name": "year", "in": "query", "schema": { "type": "integer" }, "description": "Year (defaults to current)" },
+          { "name": "month", "in": "query", "schema": { "type": "integer" }, "description": "Month 1-12 (defaults to current)" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calendar data",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object" } } } } }
+          }
+        }
+      }
+    },
+
+    "/api/workspaces": {
+      "get": {
+        "tags": ["Workspaces"],
+        "summary": "List user's workspaces",
+        "responses": {
+          "200": {
+            "description": "Workspace list",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "workspaces": { "type": "array", "items": { "$ref": "#/components/schemas/Workspace" } } } } } }
           }
         }
       },
       "post": {
-        "tags": [
-          "Workspaces"
-        ],
+        "tags": ["Workspaces"],
         "summary": "Create workspace",
         "requestBody": {
           "required": true,
@@ -745,76 +859,87 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name"
-                ],
+                "required": ["name"],
                 "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  },
-                  "icon": {
-                    "type": "string"
-                  },
-                  "isPublic": {
-                    "type": "boolean"
-                  }
+                  "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+                  "description": { "type": "string", "maxLength": 500 },
+                  "color": { "type": "string", "description": "Hex color code" },
+                  "icon": { "type": "string" },
+                  "isPublic": { "type": "boolean", "default": false }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Workspace created"
+          "201": { "description": "Workspace created", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "workspace": { "$ref": "#/components/schemas/Workspace" } } } } } },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/workspaces/search": {
+      "get": {
+        "tags": ["Workspaces"],
+        "summary": "Search workspaces",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Search query string" }
+        ],
+        "responses": {
+          "200": { "description": "Search results" }
+        }
+      }
+    },
+    "/api/workspaces/trash": {
+      "get": {
+        "tags": ["Workspaces"],
+        "summary": "Get trashed workspaces",
+        "description": "Returns soft-deleted workspaces that can be restored.",
+        "responses": {
+          "200": { "description": "Trashed workspaces" }
+        }
+      }
+    },
+    "/api/workspaces/join": {
+      "post": {
+        "tags": ["Workspaces"],
+        "summary": "Join workspace by invite code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["inviteCode"],
+                "properties": {
+                  "inviteCode": { "type": "string" }
+                }
+              }
+            }
           }
+        },
+        "responses": {
+          "200": { "description": "Joined workspace" },
+          "404": { "description": "Invalid invite code" }
         }
       }
     },
     "/api/workspaces/{id}": {
       "get": {
-        "tags": [
-          "Workspaces"
-        ],
+        "tags": ["Workspaces"],
         "summary": "Get workspace by ID",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "404": {
-            "description": "Not found"
-          }
+          "200": { "description": "Workspace details", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "workspace": { "$ref": "#/components/schemas/Workspace" } } } } } },
+          "404": { "description": "Workspace not found" }
         }
       },
       "put": {
-        "tags": [
-          "Workspaces"
-        ],
+        "tags": ["Workspaces"],
         "summary": "Update workspace",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "content": {
@@ -822,100 +947,173 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "color": {
-                    "type": "string"
-                  },
-                  "isPublic": {
-                    "type": "boolean"
-                  }
+                  "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+                  "description": { "type": "string", "maxLength": 500 },
+                  "color": { "type": "string" },
+                  "icon": { "type": "string" },
+                  "isPublic": { "type": "boolean" }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Workspace updated" }
         }
       },
       "delete": {
-        "tags": [
-          "Workspaces"
-        ],
+        "tags": ["Workspaces"],
         "summary": "Delete workspace (soft delete)",
+        "description": "Soft-deletes a workspace. Can be restored from trash.",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
+          "200": { "description": "Workspace deleted" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/rooms": {
+      "get": {
+        "tags": ["Workspaces"],
+        "summary": "List rooms in workspace",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Workspace ID" }
+        ],
+        "responses": {
+          "200": { "description": "Room list" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/meetings": {
+      "get": {
+        "tags": ["Workspaces"],
+        "summary": "List meetings in workspace",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Workspace ID" }
+        ],
+        "responses": {
+          "200": { "description": "Meeting list" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/restore": {
+      "post": {
+        "tags": ["Workspaces"],
+        "summary": "Restore deleted workspace",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Workspace restored" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/invite-code": {
+      "post": {
+        "tags": ["Workspaces"],
+        "summary": "Regenerate workspace invite code",
+        "description": "Generates a new invite code for the workspace, invalidating the old one.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "New invite code generated" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/invite": {
+      "post": {
+        "tags": ["Workspaces"],
+        "summary": "Invite user to workspace",
+        "description": "Creates an email invitation to the workspace.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "role": { "type": "string", "enum": ["admin", "member"], "default": "member" }
+                }
+              }
+            }
           }
+        },
+        "responses": {
+          "201": { "description": "Invite sent" },
+          "409": { "description": "User already a member" }
         }
       }
     },
     "/api/workspaces/{id}/favorite": {
       "post": {
-        "tags": [
-          "Workspaces"
-        ],
+        "tags": ["Workspaces"],
         "summary": "Toggle workspace favorite",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Favorite toggled" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/archive": {
+      "post": {
+        "tags": ["Workspaces"],
+        "summary": "Archive workspace",
+        "description": "Sets isArchived = true (owner-only).",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Workspace archived" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/unarchive": {
+      "post": {
+        "tags": ["Workspaces"],
+        "summary": "Unarchive workspace",
+        "description": "Sets isArchived = false (owner-only).",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Workspace unarchived" }
+        }
+      }
+    },
+
+    "/api/rooms/stats": {
+      "get": {
+        "tags": ["Rooms"],
+        "summary": "Get room statistics",
+        "description": "Returns detailed stats with 30-day growth percentages for workspaces, rooms, members, and activity.",
+        "responses": {
+          "200": { "description": "Room statistics" }
         }
       }
     },
     "/api/rooms": {
       "get": {
-        "tags": [
-          "Rooms"
-        ],
+        "tags": ["Rooms"],
         "summary": "List rooms",
         "parameters": [
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "workspaceId", "in": "query", "schema": { "type": "string" }, "description": "Filter by workspace" },
+          { "name": "includeDeleted", "in": "query", "schema": { "type": "boolean", "default": false }, "description": "Include soft-deleted rooms" }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Room list" }
         }
       },
       "post": {
-        "tags": [
-          "Rooms"
-        ],
+        "tags": ["Rooms"],
         "summary": "Create room",
         "requestBody": {
           "required": true,
@@ -923,165 +1121,147 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name",
-                  "workspaceId"
-                ],
+                "required": ["name", "workspaceId"],
                 "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "workspaceId": {
-                    "type": "string"
-                  },
-                  "type": {
-                    "type": "string",
-                    "enum": [
-                      "whiteboard",
-                      "code",
-                      "file",
-                      "chat"
-                    ]
-                  },
-                  "description": {
-                    "type": "string"
-                  }
+                  "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+                  "workspaceId": { "type": "string" },
+                  "type": { "type": "string", "enum": ["whiteboard", "code", "document"] },
+                  "description": { "type": "string", "maxLength": 500 }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Room created"
+          "201": { "description": "Room created" }
+        }
+      }
+    },
+    "/api/rooms/join": {
+      "post": {
+        "tags": ["Rooms"],
+        "summary": "Join room by invite code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["inviteCode"],
+                "properties": {
+                  "inviteCode": { "type": "string" }
+                }
+              }
+            }
           }
+        },
+        "responses": {
+          "200": { "description": "Joined room" },
+          "404": { "description": "Invalid invite code" }
         }
       }
     },
     "/api/rooms/{id}": {
       "get": {
-        "tags": [
-          "Rooms"
-        ],
+        "tags": ["Rooms"],
         "summary": "Get room by ID",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "404": {
-            "description": "Not found"
-          }
+          "200": { "description": "Room details" },
+          "404": { "description": "Room not found" }
         }
       },
       "put": {
-        "tags": [
-          "Rooms"
-        ],
+        "tags": ["Rooms"],
         "summary": "Update room",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+                  "type": { "type": "string", "enum": ["whiteboard", "code", "document"] },
+                  "description": { "type": "string", "maxLength": 500 }
+                }
+              }
             }
           }
-        ],
+        },
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Room updated" }
         }
       },
       "delete": {
-        "tags": [
-          "Rooms"
-        ],
-        "summary": "Delete room",
+        "tags": ["Rooms"],
+        "summary": "Delete room (soft delete)",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Room deleted" }
         }
       }
     },
-    "/api/rooms/{id}/stats": {
+    "/api/rooms/{id}/invite-link": {
       "get": {
-        "tags": [
-          "Rooms"
-        ],
-        "summary": "Get room stats",
+        "tags": ["Rooms"],
+        "summary": "Get room invite link",
+        "description": "Returns the room's invite code for sharing.",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Invite code" }
+        }
+      }
+    },
+    "/api/rooms/{id}/restore": {
+      "post": {
+        "tags": ["Rooms"],
+        "summary": "Restore deleted room",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Room restored" }
+        }
+      }
+    },
+
+    "/api/tasks/workspace/{workspaceId}": {
+      "get": {
+        "tags": ["Tasks"],
+        "summary": "List tasks by workspace (path param)",
+        "description": "Lists tasks for a workspace using a path parameter instead of query string.",
+        "parameters": [
+          { "name": "workspaceId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["todo", "in-progress", "review", "completed"] }, "description": "Filter by status" }
+        ],
+        "responses": {
+          "200": { "description": "Task list" }
         }
       }
     },
     "/api/tasks": {
       "get": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "summary": "List tasks",
         "parameters": [
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "workspaceId", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["todo", "in-progress", "review", "completed"] } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Task list" }
         }
       },
       "post": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "summary": "Create task",
         "requestBody": {
           "required": true,
@@ -1089,600 +1269,1096 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "title",
-                  "workspace"
-                ],
+                "required": ["title", "workspace"],
                 "properties": {
-                  "title": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "workspace": {
-                    "type": "string"
-                  },
-                  "room": {
-                    "type": "string"
-                  },
-                  "assignee": {
-                    "type": "string"
-                  },
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "todo",
-                      "in-progress",
-                      "review",
-                      "done"
-                    ]
-                  },
-                  "priority": {
-                    "type": "string",
-                    "enum": [
-                      "low",
-                      "medium",
-                      "high",
-                      "urgent"
-                    ]
-                  },
-                  "labels": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "dueDate": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
+                  "title": { "type": "string", "maxLength": 200 },
+                  "description": { "type": "string", "maxLength": 5000 },
+                  "workspace": { "type": "string", "description": "Workspace ID" },
+                  "room": { "type": "string", "description": "Optional linked room ID" },
+                  "assignee": { "type": "string", "description": "User ID to assign" },
+                  "status": { "type": "string", "enum": ["todo", "in-progress", "review", "completed"], "default": "todo" },
+                  "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"], "default": "medium" },
+                  "labels": { "type": "array", "items": { "type": "string" } },
+                  "dueDate": { "type": "string", "format": "date-time" }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Task created"
-          }
+          "201": { "description": "Task created" }
         }
       }
     },
     "/api/tasks/{id}": {
       "get": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "summary": "Get task by ID",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "404": {
-            "description": "Not found"
-          }
+          "200": { "description": "Task details" },
+          "404": { "description": "Task not found" }
         }
       },
       "put": {
-        "tags": [
-          "Tasks"
-        ],
+        "tags": ["Tasks"],
         "summary": "Update task",
+        "description": "Updates task fields. If status changes to 'completed', logs an additional activity.",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Tasks"
-        ],
-        "summary": "Delete task",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/files": {
-      "get": {
-        "tags": [
-          "Files"
-        ],
-        "summary": "List files",
-        "parameters": [
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Files"
-        ],
-        "summary": "Upload file (multipart/form-data)",
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "file",
-                  "workspaceId"
-                ],
                 "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "workspaceId": {
-                    "type": "string"
-                  },
-                  "roomId": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  }
+                  "title": { "type": "string", "maxLength": 200 },
+                  "description": { "type": "string", "maxLength": 5000 },
+                  "status": { "type": "string", "enum": ["todo", "in-progress", "review", "completed"] },
+                  "priority": { "type": "string", "enum": ["low", "medium", "high", "urgent"] },
+                  "assignee": { "type": "string" },
+                  "labels": { "type": "array", "items": { "type": "string" } },
+                  "dueDate": { "type": "string", "format": "date-time" }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "File uploaded"
-          }
-        }
-      }
-    },
-    "/api/files/{id}": {
-      "get": {
-        "tags": [
-          "Files"
-        ],
-        "summary": "Download file",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Task updated" }
         }
       },
       "delete": {
-        "tags": [
-          "Files"
-        ],
-        "summary": "Delete file",
+        "tags": ["Tasks"],
+        "summary": "Delete task (soft delete)",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Task deleted" }
         }
       }
     },
-    "/api/meetings": {
+    "/api/tasks/{id}/comments": {
       "get": {
-        "tags": [
-          "Meetings"
+        "tags": ["Tasks"],
+        "summary": "List task comments",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Task ID" }
         ],
-        "summary": "List meetings",
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Comment list" }
         }
       },
       "post": {
-        "tags": [
-          "Meetings"
+        "tags": ["Tasks"],
+        "summary": "Add comment to task",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Task ID" }
         ],
-        "summary": "Create meeting",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name",
-                  "workspace",
-                  "scheduledAt",
-                  "duration"
-                ],
+                "required": ["content"],
                 "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "workspace": {
-                    "type": "string"
-                  },
-                  "scheduledAt": {
-                    "type": "string",
-                    "format": "date-time"
-                  },
-                  "duration": {
-                    "type": "integer"
-                  },
-                  "description": {
-                    "type": "string"
-                  }
+                  "content": { "type": "string", "maxLength": 2000 }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Meeting created"
+          "201": { "description": "Comment added" }
+        }
+      }
+    },
+
+    "/api/files/folders": {
+      "get": {
+        "tags": ["Files"],
+        "summary": "List file folders",
+        "description": "Returns distinct folder paths for a workspace.",
+        "parameters": [
+          { "name": "workspaceId", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Folder list" }
+        }
+      }
+    },
+    "/api/files": {
+      "get": {
+        "tags": ["Files"],
+        "summary": "List files",
+        "parameters": [
+          { "name": "workspaceId", "in": "query", "schema": { "type": "string" } },
+          { "name": "folder", "in": "query", "schema": { "type": "string" }, "description": "Filter by folder path" },
+          { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Search by filename" }
+        ],
+        "responses": {
+          "200": { "description": "File list" }
+        }
+      },
+      "post": {
+        "tags": ["Files"],
+        "summary": "Upload file",
+        "description": "Upload a file via multipart/form-data. Max 50MB. Executables are blocked.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "workspaceId"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary", "description": "File to upload (max 50MB)" },
+                  "workspaceId": { "type": "string" },
+                  "roomId": { "type": "string", "description": "Optional room association" },
+                  "folder": { "type": "string", "description": "Target folder path", "default": "/" }
+                }
+              }
+            }
           }
+        },
+        "responses": {
+          "201": { "description": "File uploaded" }
+        }
+      }
+    },
+    "/api/files/avatar": {
+      "post": {
+        "tags": ["Files"],
+        "summary": "Upload user avatar",
+        "description": "Uploads and sets user avatar image.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Avatar updated" }
+        }
+      }
+    },
+    "/api/files/cover": {
+      "post": {
+        "tags": ["Files"],
+        "summary": "Upload user cover image",
+        "description": "Uploads and sets user cover image.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cover image updated" }
+        }
+      }
+    },
+    "/api/files/{id}/download": {
+      "get": {
+        "tags": ["Files"],
+        "summary": "Download file",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "File stream (Content-Disposition: attachment)" }
+        }
+      }
+    },
+    "/api/files/{id}/rename": {
+      "put": {
+        "tags": ["Files"],
+        "summary": "Rename file",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "File renamed" }
+        }
+      }
+    },
+    "/api/files/{id}": {
+      "delete": {
+        "tags": ["Files"],
+        "summary": "Delete file (soft delete)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "File deleted" }
+        }
+      }
+    },
+
+    "/api/meetings/stats": {
+      "get": {
+        "tags": ["Meetings"],
+        "summary": "Get meeting statistics",
+        "description": "Returns counts: total, upcoming, ongoing, completed.",
+        "responses": {
+          "200": { "description": "Meeting statistics" }
+        }
+      }
+    },
+    "/api/meetings": {
+      "get": {
+        "tags": ["Meetings"],
+        "summary": "List meetings",
+        "description": "Lists meetings where user is host or participant, with optional workspace filter.",
+        "parameters": [
+          { "name": "workspaceId", "in": "query", "schema": { "type": "string" }, "description": "Filter by workspace" }
+        ],
+        "responses": {
+          "200": { "description": "Meeting list" }
+        }
+      },
+      "post": {
+        "tags": ["Meetings"],
+        "summary": "Create meeting",
+        "description": "Creates a meeting, logs activity, and sends notifications to all participants.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "workspace", "scheduledAt"],
+                "properties": {
+                  "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+                  "description": { "type": "string", "maxLength": 500 },
+                  "workspace": { "type": "string" },
+                  "scheduledAt": { "type": "string", "format": "date-time" },
+                  "duration": { "type": "integer", "default": 30, "minimum": 5, "description": "Duration in minutes" },
+                  "participants": { "type": "array", "items": { "type": "string" }, "description": "User IDs" },
+                  "agenda": { "type": "string", "maxLength": 500 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Meeting created" }
         }
       }
     },
     "/api/meetings/{id}": {
       "get": {
-        "tags": [
-          "Meetings"
-        ],
+        "tags": ["Meetings"],
         "summary": "Get meeting by ID",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "404": {
-            "description": "Not found"
-          }
+          "200": { "description": "Meeting details" },
+          "404": { "description": "Meeting not found" }
         }
       },
       "put": {
-        "tags": [
-          "Meetings"
-        ],
+        "tags": ["Meetings"],
         "summary": "Update meeting",
+        "description": "Updates meeting fields (host-only). Auto-sets endedAt on completion.",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "scheduledAt": { "type": "string", "format": "date-time" },
+                  "duration": { "type": "integer" },
+                  "status": { "type": "string", "enum": ["scheduled", "ongoing", "completed", "cancelled"] },
+                  "agenda": { "type": "string" },
+                  "notes": { "type": "string", "maxLength": 5000 }
+                }
+              }
             }
           }
-        ],
+        },
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Meeting updated" }
         }
       },
       "delete": {
-        "tags": [
-          "Meetings"
-        ],
-        "summary": "Delete meeting",
+        "tags": ["Meetings"],
+        "summary": "Delete meeting (soft delete)",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Meeting deleted" }
         }
       }
     },
+    "/api/meetings/{id}/start": {
+      "post": {
+        "tags": ["Meetings"],
+        "summary": "Start meeting",
+        "description": "Sets status to 'ongoing' (host-only). Logs activity.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Meeting started" }
+        }
+      }
+    },
+    "/api/meetings/{id}/end": {
+      "post": {
+        "tags": ["Meetings"],
+        "summary": "End meeting",
+        "description": "Sets status to 'completed' and records endedAt (host-only).",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Meeting ended" }
+        }
+      }
+    },
+    "/api/meetings/{id}/join": {
+      "post": {
+        "tags": ["Meetings"],
+        "summary": "Join meeting",
+        "description": "Adds user to participants, auto-starts if still scheduled.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Joined meeting" }
+        }
+      }
+    },
+
     "/api/activities": {
       "get": {
-        "tags": [
-          "Activities"
-        ],
+        "tags": ["Activities"],
         "summary": "List recent activities",
+        "description": "Returns the current user's activities, sorted newest-first.",
         "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 20
-            }
-          },
-          {
-            "name": "workspaceId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 }, "description": "Max results (1-100)" },
+          { "name": "entityType", "in": "query", "schema": { "type": "string", "enum": ["workspace", "room", "task", "meeting", "member", "invite", "file", "auth", "whiteboard"] }, "description": "Filter by entity type" }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Activity list" }
         }
       }
     },
+    "/api/activities/clear": {
+      "delete": {
+        "tags": ["Activities"],
+        "summary": "Clear all activities",
+        "description": "Deletes all activities for the current user.",
+        "responses": {
+          "200": { "description": "Activities cleared" }
+        }
+      }
+    },
+    "/api/activities/{id}": {
+      "delete": {
+        "tags": ["Activities"],
+        "summary": "Delete activity",
+        "description": "Deletes a single activity by ID (owner-only).",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Activity deleted" }
+        }
+      }
+    },
+
     "/api/notifications": {
       "get": {
-        "tags": [
-          "Notifications"
-        ],
-        "summary": "List notifications with unread count",
+        "tags": ["Notifications"],
+        "summary": "List notifications",
+        "description": "Returns notifications (max 100) with unread count.",
         "responses": {
           "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/notifications/{id}/read": {
-      "put": {
-        "tags": [
-          "Notifications"
-        ],
-        "summary": "Mark notification as read",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+            "description": "Notification list with unread count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "notifications": { "type": "array", "items": { "$ref": "#/components/schemas/Notification" } },
+                    "unreadCount": { "type": "integer" }
+                  }
+                }
+              }
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
           }
         }
       }
     },
     "/api/notifications/read-all": {
       "put": {
-        "tags": [
-          "Notifications"
-        ],
+        "tags": ["Notifications"],
         "summary": "Mark all notifications as read",
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "All notifications marked as read" }
         }
       }
     },
+    "/api/notifications/clear": {
+      "delete": {
+        "tags": ["Notifications"],
+        "summary": "Clear all notifications",
+        "description": "Deletes all notifications for the current user.",
+        "responses": {
+          "200": { "description": "Notifications cleared" }
+        }
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "put": {
+        "tags": ["Notifications"],
+        "summary": "Mark notification as read",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Notification marked as read" }
+        }
+      }
+    },
+    "/api/notifications/{id}": {
+      "delete": {
+        "tags": ["Notifications"],
+        "summary": "Delete notification",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Notification deleted" }
+        }
+      }
+    },
+
+    "/api/chat/{roomId}": {
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Get chat messages for a room",
+        "description": "Fetches messages with cursor-based pagination. Max 100 per request. Returns in chronological order.",
+        "parameters": [
+          { "name": "roomId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "maximum": 100 } },
+          { "name": "before", "in": "query", "schema": { "type": "string" }, "description": "Cursor: message ID to fetch messages before" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "messages": { "type": "array", "items": { "$ref": "#/components/schemas/ChatMessage" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Send chat message",
+        "description": "Creates a new chat message (text, emoji, or system type) with optional replyTo reference.",
+        "parameters": [
+          { "name": "roomId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": { "type": "string", "maxLength": 5000 },
+                  "type": { "type": "string", "enum": ["text", "emoji", "system"], "default": "text" },
+                  "replyTo": { "type": "string", "description": "ID of the message being replied to" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Message sent" }
+        }
+      }
+    },
+    "/api/chat/{messageId}": {
+      "put": {
+        "tags": ["Chat"],
+        "summary": "Edit chat message",
+        "description": "Edits a message (sender-only). Sets edited and editedAt flags.",
+        "parameters": [
+          { "name": "messageId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["content"],
+                "properties": {
+                  "content": { "type": "string", "maxLength": 5000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Message edited" }
+        }
+      },
+      "delete": {
+        "tags": ["Chat"],
+        "summary": "Delete chat message",
+        "description": "Soft-deletes a message (sender-only). Sets isDeleted and deletedAt.",
+        "parameters": [
+          { "name": "messageId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Message deleted" }
+        }
+      }
+    },
+    "/api/chat/{roomId}/seen": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Mark messages as seen",
+        "description": "Bulk-updates seenBy array for all unseen messages in a room.",
+        "parameters": [
+          { "name": "roomId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Messages marked as seen" }
+        }
+      }
+    },
+
     "/api/dashboard": {
       "get": {
-        "tags": [
-          "Dashboard"
-        ],
+        "tags": ["Dashboard"],
         "summary": "Get dashboard summary",
+        "description": "Returns aggregated data: workspace/room/meeting/member/activity/notification/task counts, recent activity (last 10), and upcoming meetings (next 5).",
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Dashboard data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Dashboard" }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-    "/api/chat/{roomId}/messages": {
-      "get": {
-        "tags": [
-          "Chat"
-        ],
-        "summary": "Get chat messages for a room",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 50
-            }
-          },
-          {
-            "name": "before",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
+
     "/api/workspaces/{id}/members": {
       "get": {
-        "tags": [
-          "Members"
-        ],
+        "tags": ["Members"],
         "summary": "List workspace members",
+        "description": "Paginated member list with role/status filtering.",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Workspace ID" },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } },
+          { "name": "sort", "in": "query", "schema": { "type": "string" } },
+          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "name": "role", "in": "query", "schema": { "type": "string", "enum": ["owner", "admin", "member"] } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["active", "invited", "suspended"] } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Member list with pagination" }
         }
       },
       "post": {
-        "tags": [
-          "Members"
-        ],
+        "tags": ["Members"],
         "summary": "Add member to workspace",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email"
-                ],
+                "required": ["userId"],
                 "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "role": {
-                    "type": "string",
-                    "enum": [
-                      "admin",
-                      "member",
-                      "viewer"
-                    ]
-                  }
+                  "userId": { "type": "string", "description": "MongoDB ObjectId of the user" },
+                  "role": { "type": "string", "enum": ["admin", "member"], "default": "member" }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Member added"
-          }
+          "201": { "description": "Member added" },
+          "409": { "description": "User already a member" }
         }
       }
     },
-    "/api/workspaces/{id}/invites": {
+    "/api/workspaces/{id}/members/stats": {
       "get": {
-        "tags": [
-          "Invites"
-        ],
-        "summary": "List pending invites",
+        "tags": ["Members"],
+        "summary": "Get member statistics",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Success"
+          "200": { "description": "Member statistics" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/members/{memberId}/role": {
+      "put": {
+        "tags": ["Members"],
+        "summary": "Update member role",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "memberId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": { "type": "string", "enum": ["admin", "member"] }
+                }
+              }
+            }
           }
+        },
+        "responses": {
+          "200": { "description": "Role updated" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/members/{memberId}/suspend": {
+      "put": {
+        "tags": ["Members"],
+        "summary": "Suspend member",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "memberId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Member suspended" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/members/{memberId}/reactivate": {
+      "put": {
+        "tags": ["Members"],
+        "summary": "Reactivate suspended member",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "memberId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Member reactivated" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/members/{memberId}": {
+      "delete": {
+        "tags": ["Members"],
+        "summary": "Remove member",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "memberId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Member removed" }
+        }
+      }
+    },
+
+    "/api/workspaces/{id}/invites": {
+      "get": {
+        "tags": ["Invites"],
+        "summary": "List workspace invites",
+        "description": "Paginated invite list with status/search filtering.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } },
+          { "name": "sort", "in": "query", "schema": { "type": "string" } },
+          { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["pending", "accepted", "declined", "expired"] } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Invite list" }
         }
       },
       "post": {
-        "tags": [
-          "Invites"
-        ],
-        "summary": "Create invite link",
+        "tags": ["Invites"],
+        "summary": "Create invite",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "role": { "type": "string", "enum": ["admin", "member"], "default": "member" }
+                }
+              }
             }
           }
+        },
+        "responses": {
+          "201": { "description": "Invite created" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/invites/stats": {
+      "get": {
+        "tags": ["Invites"],
+        "summary": "Get invite statistics",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Invite statistics" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/invites/pending": {
+      "get": {
+        "tags": ["Invites"],
+        "summary": "List pending invites for current user",
+        "description": "Returns pending invites for the current user's email.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Pending invite list" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/invites/{token}/accept": {
+      "post": {
+        "tags": ["Invites"],
+        "summary": "Accept workspace invite",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Invite accepted, joined workspace" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/invites/{token}/decline": {
+      "post": {
+        "tags": ["Invites"],
+        "summary": "Decline workspace invite",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Invite declined" }
+        }
+      }
+    },
+    "/api/workspaces/{id}/invites/{inviteId}": {
+      "delete": {
+        "tags": ["Invites"],
+        "summary": "Revoke workspace invite",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "inviteId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Invite revoked" }
+        }
+      }
+    },
+
+    "/api/invites": {
+      "get": {
+        "tags": ["Invites"],
+        "summary": "List pending invites for current user (global)",
+        "description": "Returns all pending invites for the current user's email across all workspaces.",
+        "responses": {
+          "200": { "description": "Pending invite list" }
+        }
+      }
+    },
+    "/api/invites/{token}/accept": {
+      "post": {
+        "tags": ["Invites"],
+        "summary": "Accept invite by token (global)",
+        "parameters": [
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Invite accepted" }
+        }
+      }
+    },
+    "/api/invites/{token}/decline": {
+      "post": {
+        "tags": ["Invites"],
+        "summary": "Decline invite by token (global)",
+        "parameters": [
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Invite declined" }
+        }
+      }
+    },
+
+    "/api/whiteboards/{roomId}": {
+      "get": {
+        "tags": ["Whiteboards"],
+        "summary": "Get whiteboard state",
+        "description": "Fetches whiteboard for a room. Auto-creates if missing.",
+        "parameters": [
+          { "name": "roomId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whiteboard data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "whiteboard": { "$ref": "#/components/schemas/Whiteboard" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Whiteboards"],
+        "summary": "Save whiteboard state",
+        "description": "Upserts whiteboard objects. Logs activity with objectCount metadata.",
+        "parameters": [
+          { "name": "roomId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["objects"],
+                "properties": {
+                  "objects": { "type": "array", "items": { "type": "object" }, "description": "Array of whiteboard shape objects" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Whiteboard saved" }
+        }
+      }
+    },
+    "/api/whiteboards/{roomId}/image": {
+      "post": {
+        "tags": ["Whiteboards"],
+        "summary": "Upload image to whiteboard",
+        "description": "Uploads an image for use on the whiteboard.",
+        "parameters": [
+          { "name": "roomId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "url": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/api/documents/room/{roomId}": {
+      "get": {
+        "tags": ["Documents"],
+        "summary": "List documents in room",
+        "description": "Lists all non-deleted documents in a room, sorted by path.",
+        "parameters": [
+          { "name": "roomId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "documents": { "type": "array", "items": { "$ref": "#/components/schemas/CodeDocument" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{id}": {
+      "get": {
+        "tags": ["Documents"],
+        "summary": "Get document by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Document details" },
+          "404": { "description": "Document not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Documents"],
+        "summary": "Delete document (soft delete)",
+        "description": "Soft-deletes a document. If it's a folder, recursively deletes all children.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Document deleted" }
+        }
+      }
+    },
+    "/api/documents": {
+      "post": {
+        "tags": ["Documents"],
+        "summary": "Create document or folder",
+        "description": "Creates a file or folder within a room. Checks for path uniqueness. Auto-detects language from file extension.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "roomId", "workspaceId"],
+                "properties": {
+                  "name": { "type": "string", "maxLength": 255 },
+                  "content": { "type": "string", "description": "File content (optional for folders)" },
+                  "language": { "type": "string", "description": "Auto-detected from extension if not provided" },
+                  "roomId": { "type": "string", "format": "uuid" },
+                  "workspaceId": { "type": "string", "format": "uuid" },
+                  "parentPath": { "type": "string", "default": "/", "description": "Parent folder path" },
+                  "isFolder": { "type": "boolean", "default": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Document created" },
+          "409": { "description": "Path already exists in this room" }
+        }
+      }
+    },
+    "/api/documents/{id}": {
+      "put": {
+        "tags": ["Documents"],
+        "summary": "Update document content",
+        "description": "Updates content, name, and/or language. Appends to versionTimestamps on content change.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "content": {
@@ -1690,95 +2366,117 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "role": {
-                    "type": "string",
-                    "enum": [
-                      "admin",
-                      "member",
-                      "viewer"
-                    ]
-                  },
-                  "expiresInDays": {
-                    "type": "integer"
-                  }
+                  "content": { "type": "string" },
+                  "name": { "type": "string", "maxLength": 255 },
+                  "language": { "type": "string" }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Invite created"
-          }
+          "200": { "description": "Document updated" }
         }
       }
     },
-    "/api/invites/{code}/accept": {
+    "/api/documents/{id}/rename": {
+      "put": {
+        "tags": ["Documents"],
+        "summary": "Rename document or folder",
+        "description": "Renames a document/folder. If folder, updates all children's paths.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string", "maxLength": 255 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Document renamed" }
+        }
+      }
+    },
+
+    "/api/code/run": {
       "post": {
-        "tags": [
-          "Invites"
-        ],
-        "summary": "Accept workspace invite",
-        "parameters": [
-          {
-            "name": "code",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
+        "tags": ["Code Runner"],
+        "summary": "Execute code",
+        "description": "Executes user-submitted code in a sandboxed temp directory. Supports Java, Python, C, and C++. All executions have a 10-second timeout and 10KB output limit.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["language", "code"],
+                "properties": {
+                  "language": { "type": "string", "enum": ["java", "python", "c", "cpp"], "description": "Programming language" },
+                  "code": { "type": "string", "maxLength": 50000, "description": "Source code to execute" }
+                }
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "Joined workspace"
-          }
+            "description": "Execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "output": { "type": "string", "description": "Standard output" },
+                    "error": { "type": "string", "description": "Standard error output" },
+                    "exitCode": { "type": "integer" },
+                    "timedOut": { "type": "boolean", "description": "Whether execution exceeded 10s timeout" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid language or missing code" }
         }
       }
     },
-    "/api/whiteboards/{roomId}": {
+
+    "/api/shared/workspaces": {
       "get": {
-        "tags": [
-          "Whiteboards"
-        ],
-        "summary": "Get whiteboard state",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "tags": ["Shared"],
+        "summary": "List shared workspaces",
+        "description": "Returns workspaces where the user is a member but NOT the owner.",
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Shared workspace list" }
         }
       }
     },
-    "/api/documents/{roomId}": {
+    "/api/shared/rooms": {
       "get": {
-        "tags": [
-          "Documents"
-        ],
-        "summary": "Get code document",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "tags": ["Shared"],
+        "summary": "List shared rooms",
+        "description": "Returns rooms where the user is a participant but NOT the owner.",
         "responses": {
-          "200": {
-            "description": "Success"
-          }
+          "200": { "description": "Shared room list" }
+        }
+      }
+    },
+    "/api/shared/files": {
+      "get": {
+        "tags": ["Shared"],
+        "summary": "List shared files",
+        "description": "Returns files uploaded by OTHER users (max 50).",
+        "responses": {
+          "200": { "description": "Shared file list" }
         }
       }
     }

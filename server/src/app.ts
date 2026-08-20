@@ -96,10 +96,152 @@ app.get('/api/docs', (_req, res) => {
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>SyncSpace API Docs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>SyncSpace API Documentation</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    .topbar {
+      display: none;
+    }
+    .swagger-ui .info {
+      margin: 20px 0;
+    }
+    .swagger-ui .info .title {
+      color: #06b6d4 !important;
+      font-size: 28px !important;
+    }
+    .swagger-ui .info .description p {
+      color: #94a3b8 !important;
+      font-size: 14px !important;
+    }
+    .swagger-ui .scheme-container {
+      background: #1e293b !important;
+      box-shadow: none !important;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .swagger-ui .scheme-container .schemes > label {
+      color: #cbd5e1 !important;
+    }
+    .swagger-ui .opblock-tag {
+      color: #06b6d4 !important;
+      font-size: 18px !important;
+      border-bottom: 1px solid #1e293b !important;
+    }
+    .swagger-ui .opblock-tag:hover {
+      color: #22d3ee !important;
+    }
+    .swagger-ui .opblock .opblock-summary-description {
+      color: #94a3b8 !important;
+    }
+    .swagger-ui .opblock .opblock-section-header {
+      background: rgba(6, 182, 212, 0.1) !important;
+    }
+    .swagger-ui .opblock .opblock-section-header h4 {
+      color: #06b6d4 !important;
+    }
+    .swagger-ui .btn {
+      border-color: #06b6d4 !important;
+      color: #06b6d4 !important;
+    }
+    .swagger-ui .btn:hover {
+      background: rgba(6, 182, 212, 0.1) !important;
+    }
+    .swagger-ui .model-title {
+      color: #e2e8f0 !important;
+    }
+    .swagger-ui .model {
+      color: #94a3b8 !important;
+    }
+    .swagger-ui .model-toggle::after {
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2306b6d4' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat center;
+    }
+    .swagger-ui table thead tr td,
+    .swagger-ui table thead tr th {
+      border-bottom: 1px solid #334155 !important;
+      color: #94a3b8 !important;
+    }
+    .swagger-ui .response-col_status {
+      color: #06b6d4 !important;
+    }
+    .swagger-ui .response-col_links {
+      color: #94a3b8 !important;
+    }
+    .swagger-ui .markdown p,
+    .swagger-ui .markdown li,
+    .swagger-ui .renderedMarkdown p,
+    .swagger-ui .renderedMarkdown li {
+      color: #94a3b8 !important;
+    }
+    .swagger-ui .markdown code,
+    .swagger-ui .renderedMarkdown code {
+      background: #1e293b !important;
+      color: #22d3ee !important;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .swagger-ui .opblock-description-wrapper p {
+      color: #94a3b8 !important;
+    }
+    #swagger-ui .wrapper {
+      max-width: 1200px;
+    }
+    .header-bar {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-bottom: 1px solid #334155;
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-bar h1 {
+      color: #06b6d4;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .header-bar .version {
+      background: rgba(6, 182, 212, 0.15);
+      color: #06b6d4;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .header-bar .links {
+      display: flex;
+      gap: 16px;
+    }
+    .header-bar .links a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+    .header-bar .links a:hover {
+      color: #06b6d4;
+    }
+  </style>
 </head>
 <body>
+  <div class="header-bar">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <h1>SyncSpace API</h1>
+      <span class="version">v1.0.0</span>
+    </div>
+    <div class="links">
+      <a href="/" target="_blank">API Root</a>
+      <a href="/api/health" target="_blank">Health Check</a>
+      <a href="https://github.com/Inevitable-1/SyncSpace" target="_blank">GitHub</a>
+    </div>
+  </div>
   <div id="swagger-ui"></div>
   <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
   <script>
@@ -108,6 +250,14 @@ app.get('/api/docs', (_req, res) => {
       dom_id: '#swagger-ui',
       presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
       layout: 'BaseLayout',
+      deepLinking: true,
+      docExpansion: 'list',
+      defaultModelsExpandDepth: 1,
+      defaultModelExpandDepth: 2,
+      tryItOutEnabled: true,
+      filter: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
     });
   </script>
 </body>
