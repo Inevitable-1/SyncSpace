@@ -33,7 +33,7 @@ export default function RoomRouter() {
   if (!room) {
     return (
       <div
-        className="flex items-center justify-center h-screen"
+        className="flex items-center justify-center h-full"
         style={{ background: 'var(--bg-secondary)' }}
       >
         <Spinner size="lg" />
@@ -51,7 +51,7 @@ export default function RoomRouter() {
     default:
       return (
         <div
-          className="flex items-center justify-center h-screen"
+          className="flex items-center justify-center h-full"
           style={{ background: 'var(--bg-secondary)' }}
         >
           <div className="text-center">

@@ -186,7 +186,7 @@ export default function CodeEditorRoom({
 
   return (
     <div
-      className="flex h-screen w-screen overflow-hidden"
+      className="flex h-full w-full overflow-hidden"
       style={{ background: 'var(--bg-secondary)' }}
     >
       <div
